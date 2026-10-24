@@ -1,12 +1,12 @@
 packages:
   - packages/*
   - apps/*
-  - frontend
   - spikes
   # DemoBoard is deployed on its own with npm (IMPLEMENTATION_PLAN Phase 1 task 7)
   - "!apps/demoboard"
 allowBuilds:
   esbuild: true
+  unrs-resolver: true
 overrides:
   "webpack@5.105.0>schema-utils": 4.5.0
   "terser-webpack-plugin@5.6.1>schema-utils": 4.5.0

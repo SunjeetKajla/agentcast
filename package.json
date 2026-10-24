@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev:web": "pnpm --filter agentcast-frontend dev",
+    "dev:web": "pnpm --filter @agentcast/web dev",
     "build:web": "pnpm --filter agentcast-frontend build",
     "dev:worker": "pnpm --filter @agentcast/worker dev",
     "typecheck": "pnpm -r --parallel --if-present typecheck",
