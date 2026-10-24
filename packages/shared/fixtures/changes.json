@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "jobId": "job_fixture_rerun",
+  "parentJobId": "job_fixture",
+  "at": "2026-10-24T12:00:00.000Z",
+  "changed": true,
+  "summary": "UI changed in 1 of 1 flows: the \"New project\" button is now \"Create project\".",
+  "flows": [
+    {
+      "flowId": "flow-template",
+      "title": "Create a project from a template",
+      "status": "changed",
+      "seconds": { "before": 6, "after": 6.2 },
+      "steps": [
+        {
+          "stepId": "s1",
+          "label": "Create project",
+          "locator": {
+            "before": "getByRole('button', { name: 'New project', exact: true })",
+            "after": "getByRole('button', { name: 'Create project', exact: true })",
+            "strategy": "llm"
+          },
+          "visual": { "page": 0.03, "element": 0.21 }
+        }
+      ]
+    }
+  ]
+}

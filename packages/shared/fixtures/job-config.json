@@ -1,0 +1,22 @@
+{
+  "url": "https://demoboard.vercel.app/",
+  "auth": {
+    "mode": "public"
+  },
+  "stylePrompt": "Punchy Product Hunt launch, 30 s",
+  "mode": "launch",
+  "variants": {
+    "aspects": [
+      "16x9",
+      "9x16"
+    ],
+    "langs": [
+      "en",
+      "hi"
+    ],
+    "formFactors": [
+      "desktop"
+    ]
+  },
+  "autopilot": false
+}

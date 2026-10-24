@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "lang": "en",
+  "hook": "Launch plans in minutes, not days.",
+  "titleCard": "Launch plans in minutes",
+  "cta": "Try DemoBoard free today.",
+  "posting": {
+    "title": "DemoBoard: launch plans in minutes",
+    "description": "Start from a proven template, name your project, and your launch plan is ready.",
+    "hashtags": ["#productivity", "#launch", "#producthunt"]
+  },
+  "segments": [
+    { "beatId": "b-hook", "text": "Launch plans in minutes, not days.", "onScreen": ["Launch plans in minutes"], "maxSeconds": 3 },
+    { "beatId": "b-core-1", "text": "Start from a proven template.", "onScreen": ["1 click"], "maxSeconds": 1.4 },
+    { "beatId": "b-headline", "text": "No blank page.", "onScreen": ["No blank page"], "maxSeconds": 2 },
+    { "beatId": "b-core-2", "text": "Name it, and your plan is ready.", "onScreen": ["Your plan, ready"], "maxSeconds": 2.5 },
+    { "beatId": "b-cta", "text": "Try DemoBoard free today.", "onScreen": ["Try DemoBoard free"], "maxSeconds": 3 }
+  ]
+}

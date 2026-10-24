@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "url": "https://demoboard.vercel.app/",
+  "name": "DemoBoard",
+  "oneLiner": "Plan and launch projects from proven templates, with AI-drafted content.",
+  "valueProps": [
+    "Start any project from a proven template in one click",
+    "AI drafts briefs, checklists and copy for you",
+    "See progress across every project on one dashboard"
+  ],
+  "audience": "Small product and marketing teams",
+  "tone": ["friendly", "confident"],
+  "keyTerms": ["template", "launch plan", "dashboard", "AI draft"],
+  "pages": [
+    { "url": "https://demoboard.vercel.app/", "title": "DemoBoard" },
+    { "url": "https://demoboard.vercel.app/features", "title": "Features" }
+  ]
+}

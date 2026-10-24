@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 5,
+  "fps": 30,
+  "style": {
+    "palette": { "bg": "#0e1512", "fg": "#eef5f1", "accent": "#5fd3a5", "surface": "#18221d", "accent2": "#f2b84b" },
+    "fonts": { "display": "Space Grotesk", "text": "Inter" },
+    "look": { "theme": "dark", "title": "wordmark", "statement": "panel", "backdrop": "glow", "chrome": "browser", "radius": 10 },
+    "pacing": "punchy",
+    "edit": "trailer",
+    "captionStyle": "minimal",
+    "music": { "mood": "upbeat", "duckDb": -13, "gainDb": -6 },
+    "sfx": "auto",
+    "frame": "tilt",
+    "motion": {
+      "personality": "energetic",
+      "easing": [0.22, 1, 0.36, 1],
+      "durations": { "quick": 0.15, "standard": 0.25, "slow": 0.4 },
+      "cameraScale": 2,
+      "overshoot": 0.15,
+      "entrance": "snap",
+      "hold": 0.6,
+      "zoom": 1.8
+    }
+  },
+  "intro": {
+    "component": "TitleCard",
+    "props": { "title": { "en": "Launch plans in minutes", "hi": "मिनटों में launch plan" }, "url": "demoboard.vercel.app" },
+    "seconds": 3
+  },
+  "segments": [
+    {
+      "kind": "shot",
+      "id": "shot-core-1",
+      "beatId": "b-core-1",
+      "flowId": "flow-template",
+      "formFactorSource": "desktop",
+      "in": 0,
+      "out": 2,
+      "camera": [
+        { "t": 0, "target": "full", "zoom": 1, "ease": "cut" },
+        { "t": 1.1, "target": [380, 300, 300, 180], "zoom": 1.8, "ease": "spring" }
+      ],
+      "cursor": "auto",
+      "callouts": [{ "t": 1.3, "text": { "en": "1 click", "hi": "1 click" }, "anchor": [380, 300, 300, 180], "lift": true }],
+      "sfx": [{ "t": 1.6, "kind": "click" }],
+      "transitionIn": "zoom-through"
+    },
+    {
+      "kind": "statement",
+      "id": "statement-headline",
+      "beatId": "b-headline",
+      "text": { "en": "No blank page", "hi": "खाली पन्ना नहीं" },
+      "seconds": 2,
+      "transitionIn": "slide"
+    },
+    {
+      "kind": "shot",
+      "id": "shot-core-2",
+      "beatId": "b-core-2",
+      "flowId": "flow-template",
+      "formFactorSource": "desktop",
+      "in": 2,
+      "out": 5.6,
+      "ramps": [{ "from": 2.7, "to": 3.5, "speed": 3 }],
+      "camera": [
+        { "t": 2, "target": [480, 520, 480, 44], "zoom": 1.6, "ease": "smooth" },
+        { "t": 3.8, "target": [840, 620, 160, 44], "zoom": 1.8, "ease": "spring" },
+        { "t": 5, "target": "full", "zoom": 1, "ease": "smooth" }
+      ],
+      "cursor": "auto",
+      "lowerThirds": [{ "t": 4.6, "text": { "en": "Your plan, ready", "hi": "आपका plan तैयार" } }],
+      "sfx": [{ "t": 4.4, "kind": "click" }],
+      "transitionIn": "zoom-through"
+    }
+  ],
+  "outro": {
+    "component": "Outro",
+    "props": { "cta": { "en": "Try DemoBoard free", "hi": "DemoBoard free में आज़माएँ" }, "url": "demoboard.vercel.app" },
+    "seconds": 3
+  }
+}

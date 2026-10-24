@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "lang": "hi",
+  "hook": "दिनों में नहीं, मिनटों में launch plan तैयार।",
+  "titleCard": "मिनटों में launch plan",
+  "cta": "आज ही DemoBoard free में आज़माएँ।",
+  "posting": {
+    "title": "DemoBoard: मिनटों में launch plan",
+    "description": "एक proven template चुनें, project का नाम दें, और आपका launch plan तैयार है।",
+    "hashtags": ["#productivity", "#launch", "#producthunt"]
+  },
+  "segments": [
+    { "beatId": "b-hook", "text": "दिनों में नहीं, मिनटों में launch plan तैयार।", "onScreen": ["मिनटों में launch plan"], "maxSeconds": 3 },
+    { "beatId": "b-core-1", "text": "एक proven template से शुरू करें।", "onScreen": ["1 click"], "maxSeconds": 1.4 },
+    { "beatId": "b-headline", "text": "खाली पन्ने से छुटकारा।", "onScreen": ["खाली पन्ना नहीं"], "maxSeconds": 2 },
+    { "beatId": "b-core-2", "text": "नाम दें, और आपका plan तैयार है।", "onScreen": ["आपका plan तैयार"], "maxSeconds": 2.5 },
+    { "beatId": "b-cta", "text": "आज ही DemoBoard free में आज़माएँ।", "onScreen": ["DemoBoard free में आज़माएँ"], "maxSeconds": 3 }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 2,
+  "id": "job_fixture",
+  "createdAt": "2026-10-24T10:00:00.000Z",
+  "updatedAt": "2026-10-24T10:00:36.000Z",
+  "status": "waiting",
+  "config": {
+    "url": "https://demoboard.vercel.app/",
+    "auth": {
+      "mode": "public"
+    },
+    "stylePrompt": "Punchy Product Hunt launch, 30 s",
+    "mode": "launch",
+    "variants": {
+      "aspects": [
+        "16x9",
+        "9x16"
+      ],
+      "langs": [
+        "en",
+        "hi"
+      ],
+      "formFactors": [
+        "desktop"
+      ]
+    },
+    "autopilot": false
+  },
+  "stages": {
+    "understand": {
+      "status": "done",
+      "attempts": 1,
+      "startedAt": "2026-10-24T10:00:00.000Z",
+      "finishedAt": "2026-10-24T10:00:09.000Z"
+    },
+    "auth": {
+      "status": "skipped",
+      "attempts": 0,
+      "message": "Public site: no sign-in needed"
+    },
+    "discover": {
+      "status": "done",
+      "attempts": 1,
+      "startedAt": "2026-10-24T10:00:00.000Z",
+      "finishedAt": "2026-10-24T10:00:18.000Z"
+    },
+    "flow-runs": {
+      "status": "done",
+      "attempts": 1,
+      "startedAt": "2026-10-24T10:00:00.000Z",
+      "finishedAt": "2026-10-24T10:00:33.000Z"
+    },
+    "gate-flows": {
+      "status": "waiting",
+      "attempts": 1,
+      "startedAt": "2026-10-24T10:00:34.500Z",
+      "message": "Waiting for your review"
+    },
+    "record": {
+      "status": "pending",
+      "attempts": 0
+    },
+    "script": {
+      "status": "pending",
+      "attempts": 0
+    },
+    "gate-script": {
+      "status": "pending",
+      "attempts": 0
+    },
+    "voice": {
+      "status": "pending",
+      "attempts": 0
+    },
+    "direct": {
+      "status": "pending",
+      "attempts": 0
+    },
+    "preview": {
+      "status": "pending",
+      "attempts": 0
+    },
+    "gate-preview": {
+      "status": "pending",
+      "attempts": 0
+    },
+    "render": {
+      "status": "pending",
+      "attempts": 0
+    }
+  }
+}

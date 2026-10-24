@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "url": "https://demoboard.vercel.app/",
+  "theme": "dark",
+  "palette": {
+    "bg": "#0e1512",
+    "fg": "#eef5f1",
+    "accent": "#5fd3a5",
+    "surface": "#18221d",
+    "accent2": "#f2b84b"
+  },
+  "accentFrom": "buttons",
+  "found": ["#0e1512", "#5fd3a5", "#18221d", "#f2b84b"],
+  "fonts": {
+    "display": { "family": "Space Grotesk", "source": "__Space_Grotesk_a1b2c3", "exact": true, "category": "sans-serif" },
+    "text": { "family": "Inter", "source": "__Inter_d65c78", "exact": true, "category": "sans-serif" }
+  },
+  "radius": 10
+}

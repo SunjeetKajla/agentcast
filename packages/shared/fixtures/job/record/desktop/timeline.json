@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "recordingId": "rec_fixture_desktop",
+  "formFactor": "desktop",
+  "viewport": { "w": 1440, "h": 900, "dpr": 1 },
+  "fps": 30,
+  "duration": 6,
+  "flows": [{ "flowId": "flow-template", "in": 0, "out": 6 }],
+  "events": [
+    {
+      "t": 0.55,
+      "flowId": "flow-template",
+      "stepId": "s1",
+      "kind": "click",
+      "label": "New project",
+      "bbox": [1240, 40, 140, 40],
+      "cursor": { "from": [720, 450], "to": [1310, 60], "t0": 0, "t1": 0.5 },
+      "url": "https://demoboard.vercel.app/dashboard"
+    },
+    { "t": 1, "flowId": "flow-template", "stepId": "s1", "kind": "settled", "label": "New project", "url": "https://demoboard.vercel.app/dashboard" },
+    {
+      "t": 1.6,
+      "flowId": "flow-template",
+      "stepId": "s2",
+      "kind": "click",
+      "label": "Launch plan",
+      "bbox": [380, 300, 300, 180],
+      "cursor": { "from": [1310, 60], "to": [530, 390], "t0": 1.1, "t1": 1.55 },
+      "url": "https://demoboard.vercel.app/dashboard"
+    },
+    { "t": 2, "flowId": "flow-template", "stepId": "s2", "kind": "settled", "label": "Launch plan", "url": "https://demoboard.vercel.app/dashboard" },
+    {
+      "t": 2.6,
+      "flowId": "flow-template",
+      "stepId": "s3",
+      "kind": "type",
+      "label": "Project name",
+      "bbox": [480, 520, 480, 44],
+      "cursor": { "from": [530, 390], "to": [720, 542], "t0": 2.1, "t1": 2.5 },
+      "value": "Q4 Launch",
+      "url": "https://demoboard.vercel.app/dashboard"
+    },
+    { "t": 3.7, "flowId": "flow-template", "stepId": "s3", "kind": "settled", "label": "Project name", "url": "https://demoboard.vercel.app/dashboard" },
+    {
+      "t": 4.4,
+      "flowId": "flow-template",
+      "stepId": "s4",
+      "kind": "click",
+      "label": "Create project",
+      "bbox": [840, 620, 160, 44],
+      "cursor": { "from": [720, 542], "to": [920, 642], "t0": 3.8, "t1": 4.3 },
+      "url": "https://demoboard.vercel.app/dashboard"
+    },
+    { "t": 5.2, "flowId": "flow-template", "stepId": "s4", "kind": "settled", "label": "Create project", "url": "https://demoboard.vercel.app/projects/q4-launch" }
+  ],
+  "dead": [[4.6, 5]]
+}
