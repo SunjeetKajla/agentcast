@@ -157,26 +157,8 @@ Tasks
 
 1. **Browser launcher:** `packages/recorder/src/browser.ts` launches full bundled Chromium in modern headless mode per form factor, using `playwright-extra` with `puppeteer-extra-plugin-stealth` by default (`stealth: false` opts out). Keep Playwright/CDP APIs and create an isolated plugin instance per launcher. `gpu.ts` tries dGPU → iGPU → CPU; route NVIDIA PRIME/Mesa per child process, verify the actual WebGL renderer and CDP hardware-compositing status, and close failed browsers before fallback. Disable the plugin's WebGL vendor spoofing so diagnostics remain truthful; preserve mobile/custom UAs. Return renderer and attempt diagnostics on the session. Context with viewport/DPR/UA, inject storageState (cookies via `context.addCookies`, localStorage via `addInitScript` keyed by origin). Close in `finally` and on process exit. The referenced `spikes/s1-record/record.ts` is absent in this checkout; capture and CFR remain separate tasks.
 2. **Recording hygiene:** `addStyleTag` (hide scrollbars, `caret-color: transparent`, redaction blur for selectors + regex-matched text nodes via a MutationObserver script), dismiss cookie banners (common selectors + "Accept" role buttons), wait for fonts (`document.fonts.ready`).
-3. **Screencast capture:**
-   ```ts
-   const cdp = await page.context().newCDPSession(page);
-   await cdp.send("Page.startScreencast", {
-     format: "jpeg",
-     quality: 85,
-     maxWidth: W * dpr,
-     maxHeight: H * dpr,
-   });
-   cdp.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
-     frames.push({
-       file: await writeFrame(data),
-       ts: metadata.timestamp!,
-       recvAt: performance.now(),
-     });
-     await cdp.send("Page.screencastFrameAck", { sessionId });
-   });
-   ```
-   On stop: compute clock offset (median of `recvAt − ts`), write ffmpeg concat list with per-frame `duration`, then `ffmpeg -f concat -i frames.txt -vf fps=30,format=yuv420p -c:v libx264 -crf 16 recording.mp4`.
-   Handle page navigations: the screencast continues on same-target navigations. Re-attach on new tabs/popups (force `target=_self` by intercepting `window.open` where possible).
+3. **Screencast capture and Live mode:** `packages/recorder/src/screencast.ts` registers the CDP listener before starting JPEG capture (quality 85, viewport × DPR). The launcher matches physical compositor DSF to context DPR without changing CSS coordinates or input hit testing. Capture logs receipt time immediately, prefers CDP monotonic timestamps when available, converts seconds to milliseconds, ACKs before disk I/O, and drains a bounded serialized JPEG write queue on stop. Invalid clocks, disk errors, closed pages and queue overflow fail the take. `timing.ts` aligns frames using the median clock offset, preserves source-frame durations and the terminal hold in a generated ffconcat manifest with a 1 ms image timebase. `encode.ts` actually probes NVENC → Quick Sync → x264 using 640×360 frames, converts JPEG full-range colour to limited-range H.264 `yuv420p`, writes 30 fps with GOP 15 and fast-start metadata, and validates every decoded presentation timestamp, expected physical dimensions, duration, frame count and keyframe spacing with ffprobe. Only validated footage is atomically published; existing outputs are never overwritten.
+   `recordLive()` in `live.ts` opens a fresh browser per take, runs `prepare` before capture and a replayable action callback during capture, and records expected motion through `controls.motion()`. The stall check evaluates original source gaps, including motion-window boundaries: max >250 ms or p95 >60 ms retries the complete take, up to three. Static holds are preserved and report `not-applicable` when there is no expected motion. Cancel, timeout or action failure cleans up without publishing partial output; action failures are not automatically replayed. GPU/encoder choice, source timings and take reports are returned in memory. Timeline/replay-plan/event artifacts and the worker/CLI wiring remain tasks 7/11. Same-target navigations retain capture; new tabs/popups currently fail explicitly. Automatic target reattachment remains pending.
 4. **Locator resolver** (`packages/recorder/src/flow/locate.ts`; includes the settle before the first step, a 4 s wait for late elements, the on-screen and same-link tie-breaks, fuzzy text, and repairs for clicks agents leave out: alternative starts, `findBridge`, `findGapClick`, PRD §9.3): cache hit → `getByRole(role, {name, exact})` → `getByLabel` → `getByPlaceholder` → `getByText(text, {exact})` → fuzzy text → **LLM heal**: write `page.locator('body').ariaSnapshot()` + step intent + a screenshot into a task dir and run a fast-tier `json` task, which returns a role+name that then gets verified. Require exactly one visible, enabled match (prefer within viewport, else nearest to `near` text). Persist to `replay-plan.json`.
 5. **Human-like actuator:** mouse path = cubic Bézier with slight overshoot, duration `clamp(300, 700, 120 + dist*0.5)` ms, dispatched in ~60 Hz `mouse.move` steps. Hover dwell. Click. Typing via `keyboard.type(text, {delay: 35–70ms jitter})`. Scroll via eased `mouse.wheel` increments. Mobile: `tap` + touch scroll.
 6. **Settle detection:** `Promise.race([waitForLoadState('networkidle'), domStable(300ms)])`, capped at 4 s. Time beyond 600 ms is recorded as a dead interval.

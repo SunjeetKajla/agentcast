@@ -94,6 +94,7 @@ describe("recorder browser lifecycle", () => {
   it("enables headless launch and Playwright shutdown handling", async () => {
     const session = await launchRecorderBrowser();
     expect(mocks.launch).toHaveBeenCalledWith({
+      args: ["--force-device-scale-factor=2"],
       headless: true,
       handleSIGINT: true,
       handleSIGTERM: true,

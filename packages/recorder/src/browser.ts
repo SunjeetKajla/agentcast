@@ -52,6 +52,17 @@ export async function launchRecorderBrowser(
 ): Promise<RecorderBrowser> {
   const formFactor = options.formFactor ?? "desktop";
   const mobile = formFactor === "mobile";
+  const deviceScaleFactor = options.deviceScaleFactor ?? (mobile ? 3 : 2);
+  if (!Number.isFinite(deviceScaleFactor) || deviceScaleFactor <= 0)
+    throw new Error("Device scale factor must be positive");
+  if (
+    options.launchOptions?.args?.some((arg) =>
+      arg.startsWith("--force-device-scale-factor"),
+    )
+  )
+    throw new Error(
+      "Use deviceScaleFactor instead of a raw device-scale-factor flag",
+    );
   const launcher = addExtra(chromium);
   if (options.stealth !== false) {
     const stealth = StealthPlugin();
@@ -64,7 +75,15 @@ export async function launchRecorderBrowser(
   }
   const { browser, gpu } = await launchGpuBrowser(
     (launchOptions) => launcher.launch(launchOptions),
-    options.launchOptions,
+    {
+      ...options.launchOptions,
+      // Match the real compositor DSF to the emulated DPR. Changing emulation's
+      // view scale instead produces larger frames but breaks Playwright hit tests.
+      args: [
+        ...(options.launchOptions?.args ?? []),
+        `--force-device-scale-factor=${deviceScaleFactor}`,
+      ],
+    },
     options.gpu,
   );
 
@@ -86,7 +105,7 @@ export async function launchRecorderBrowser(
       viewport:
         options.viewport ??
         (mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 }),
-      deviceScaleFactor: options.deviceScaleFactor ?? (mobile ? 3 : 2),
+      deviceScaleFactor,
       userAgent:
         options.userAgent ??
         (mobile ? devices["Pixel 7"]!.userAgent : undefined),

@@ -24,7 +24,7 @@ describe.skipIf(!browserAvailable)("recorder browser in Chromium", () => {
         { launchOptions, gpu: preference },
         async ({ page, gpu }) => {
           console.info(
-            `[recorder GPU] ${preference} -> ${gpu.backend}: ${gpu.renderer}`,
+            `[recorder GPU] ${preference} -> ${gpu.backend}: ${gpu.renderer}; ${JSON.stringify(gpu.attempts)}`,
           );
           if (preference === "cpu") {
             expect(gpu.backend).toBe("cpu");
