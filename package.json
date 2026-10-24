@@ -7,6 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev:worker": "pnpm --filter @agentcast/worker dev",
     "typecheck": "pnpm -r --parallel --if-present typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
