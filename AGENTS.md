@@ -14,7 +14,7 @@ Read these before making design decisions:
 
 ## Current status
 
-**Nothing is built yet. Every spike, phase and task is pending.** The repo holds only the docs: `PRD.md`, `IMPLEMENTATION_PLAN.md`, this file and `TEAM_TASKS.md`. Four people are building it at a 24-hour hackathon. `TEAM_TASKS.md` says who owns which directories and sets the git rules. Read it before you start a task.
+**Only the workspace scaffold exists. Every spike, phase and task is pending.** There's the pnpm workspace, root config (`tsconfig.base.json`, `vitest.config.ts`, prettier, `.env.example`), and an empty shell for each package in Layout (`package.json` with its internal and external dependencies already declared, `tsconfig.json`, `src/index.ts`), plus `spikes/` as one workspace package. Plus the docs: `PRD.md`, `IMPLEMENTATION_PLAN.md`, this file and `TEAM_TASKS.md`. Four people are building it at a 24-hour hackathon. `TEAM_TASKS.md` says who owns which directories and sets the git rules. Read it before you start a task.
 
 - `PRD.md` and `IMPLEMENTATION_PLAN.md` describe what to build. File and function names in them are the planned names.
 - `DESIGN.md` and `spikes/` don't exist yet. Aditya writes `DESIGN.md` first; until it lands, follow PRD §5.1 for the screens.
@@ -52,9 +52,9 @@ pnpm workspace monorepo, TypeScript strict throughout. Internal packages export 
 
 ## Commands
 
-**None of these work yet** (there's no `package.json`). They're the commands the build should provide, kept here as the spec. When one lands, mark it as working here; don't add commands that aren't in this list or in the plan.
+**Working now:** `pnpm install`, `pnpm typecheck`, `pnpm test`. The rest are the commands the build should provide, kept here as the spec. When one lands, add it to this line; don't add commands that aren't in this list or in the plan.
 
-- `pnpm install`: install everything. pnpm blocks dependency build scripts by default; approve one with `pnpm approve-builds <pkg>`.
+- `pnpm install`: install everything. pnpm blocks dependency build scripts by default; approve one with `pnpm approve-builds <pkg>` (it's recorded under `allowBuilds` in `pnpm-workspace.yaml`). Add a dependency to your own package with `pnpm --filter @agentcast/<pkg> add <dep>`; Remotion packages stay pinned to one exact version.
 - `pnpm typecheck`: `tsc` in every package
 - `pnpm test`: vitest across the repo. LLM adapter tests use fake CLIs (`packages/llm/src/test/fake-claude.mjs`, `fake-codex.mjs`) and the TinyFish client tests a local fake server, so tests spend no quota.
 - `pnpm dev:worker`: the worker on http://127.0.0.1:4000 (resumes unfinished jobs on start). Run it alongside `pnpm dev:web`.

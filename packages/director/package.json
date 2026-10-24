@@ -1,0 +1,19 @@
+{
+  "name": "@agentcast/director",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Claude Code director: workspace, checks, repair rounds, revisions.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentcast/llm": "workspace:*",
+    "@agentcast/shared": "workspace:*",
+    "@agentcast/video": "workspace:*",
+    "zod": "^4.6.7"
+  }
+}

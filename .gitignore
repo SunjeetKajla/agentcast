@@ -1,0 +1,27 @@
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Job data, recordings and renders (AGENTS.md rule 10)
+.agentcast/
+out/
+spikes/output/
+*.mp4
+*.webm
+*.mov
+!packages/shared/fixtures/**
+
+# Music library: tags.json is committed, audio isn't
+assets/music/*
+!assets/music/tags.json
+!assets/music/README.md
+!assets/music/LICENSES.md
+
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+.vercel/
+.DS_Store
+*.log

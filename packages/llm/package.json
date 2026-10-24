@@ -1,0 +1,17 @@
+{
+  "name": "@agentcast/llm",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The LLM runner (PRD §9.9). The only place that spawns claude/codex/opencode.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentcast/shared": "workspace:*",
+    "zod": "^4.6.7"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@agentcast/spikes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway Phase 0 experiments, one folder per person (spikes/<name>-*). Results go in spikes/RESULTS.md.",
+  "dependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}
