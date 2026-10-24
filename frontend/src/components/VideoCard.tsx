@@ -1,0 +1,87 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import type { Job } from "@/lib/types";
+
+interface VideoCardProps {
+  job: Job;
+}
+
+export default function VideoCard({ job }: VideoCardProps) {
+  let fallbackTitle = "Untitled Video";
+  try {
+    fallbackTitle = new URL(job.url).hostname;
+  } catch {}
+  const title = job.title || fallbackTitle;
+  const duration = job.duration
+    ? `${Math.floor(job.duration / 60)}:${String(job.duration % 60).padStart(2, "0")}`
+    : "--:--";
+
+  return (
+    <Link href={`/video/${job.job_id}`} className="block">
+      <motion.div
+        whileHover={{ y: -6, boxShadow: "0 16px 40px rgba(139,92,246,0.25)" }}
+        transition={{ type: "spring", stiffness: 350, damping: 22 }}
+        className="group cursor-pointer overflow-hidden rounded-2xl border border-border/80 bg-card transition-colors hover:border-accent/50"
+      >
+        {/* Thumbnail container */}
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-accent/20 via-purple-900/30 to-black">
+          {job.thumbnail_url ? (
+            <img
+              src={job.thumbnail_url}
+              alt={title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-4xl select-none">
+              🎬
+            </div>
+          )}
+
+          {/* Dark gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+          {/* Format badge on thumbnail */}
+          <div className="absolute top-3 right-3">
+            <span className="rounded-md bg-black/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-white/90 backdrop-blur-md border border-white/10">
+              {job.format}
+            </span>
+          </div>
+
+          {/* Duration tag on thumbnail */}
+          <div className="absolute bottom-3 right-3">
+            <span className="rounded-md bg-black/80 px-2 py-0.5 font-mono text-[11px] text-white/90 backdrop-blur-md">
+              {duration}
+            </span>
+          </div>
+
+          {/* Centered play icon on hover */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-xl shadow-accent/50 transition-transform group-hover:scale-110">
+              <svg className="h-5 w-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="p-4 space-y-1.5">
+          <h3 className="line-clamp-1 text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+            {title}
+          </h3>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="capitalize">{job.style}</span>
+            <span className="text-[11px] text-muted-foreground/70">
+              {new Date(job.created_at).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </Link>
+  );
+}
