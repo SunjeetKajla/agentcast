@@ -39,6 +39,7 @@ next-env.d.ts
 *.mp3
 *.wav
 !packages/shared/fixtures/**
+!frontend/public/*.mp4
 
 # Music library: tags.json is committed, audio isn't
 assets/music/*
