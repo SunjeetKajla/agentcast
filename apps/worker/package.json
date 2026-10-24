@@ -8,6 +8,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -22,6 +24,7 @@
     "@agentcast/voice": "workspace:*",
     "fastify": "^5.12.7",
     "p-limit": "^7.3.3",
-    "pino": "^10.4.0"
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
   }
 }

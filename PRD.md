@@ -997,7 +997,7 @@ and hidden files and paths escaping the workspace (including symlinks) are rejec
 
 ## 10. Data contracts
 
-All artifacts live in `~/.agentcast/jobs/<jobId>/` and carry `"schemaVersion"`. Zod schemas live in `packages/shared`.
+All artifacts live in `~/.agentcast/jobs/<jobId>/` and carry `"schemaVersion"`. Zod schemas live in `packages/shared/src` and are the source of truth; the types below mirror them. `jobPaths` (`src/paths.ts`) names every path in a job dir, and the `ARTIFACTS` registry maps each path to its schema. `readArtifact` / `writeArtifact` (`@agentcast/shared/node`) validate on every read and write, and writes are atomic. `packages/shared/fixtures/` holds a small, consistent fixture job that the tests keep valid.
 
 Exploration recovery contracts (`packages/shared/src/exploration.ts`):
 
@@ -1009,10 +1009,11 @@ Exploration recovery contracts (`packages/shared/src/exploration.ts`):
 | `explore/discovery-run.json`, `explore/runs/<flowId>[-repair].json` | 1       | Provider fields at the top level plus schemaVersion; goals and live/video URLs removed, secret values redacted.            |
 | `explore/failures/<taskId-or-flowId>.json`                          | 1       | Time, sanitized start/current URL, classified error, optional run/step ID, safe actions and optional screenshot path/accessibility snapshot. Images are binary sibling files.            |
 
-`flows.json`, `flow-review.json` and `record/replay-plan.json` retain their existing versions and validate on read/write. Task IDs distinguish scout, initial flow, repair and user-added requests. `startedAt` survives retries so resuming cannot reset the elapsed budget.
+`explore/flows.json` and `record/replay-plan.json` are at `schemaVersion: 1` (each wraps its contents in an object so it can carry the version); `flow-review.json` is defined with the explore stage. All validate on read/write. Task IDs distinguish scout, initial flow, repair and user-added requests. `startedAt` survives retries so resuming cannot reset the elapsed budget.
 
 ```ts
-// flows.json
+// explore/flows.json
+type FlowsFile = { schemaVersion: 1; flows: Flow[] };
 type Flow = {
   id: string;
   title: string;
@@ -1021,9 +1022,11 @@ type Flow = {
   requiresAuth: boolean;
   rank: number;
   selected: boolean;
-  scoring: FlowScoring;
-  steps: Step[];
-  tinyfishRunId: string;
+  scoring?: FlowScoring; // missing until the judge has run
+  steps: Step[]; // at least one
+  tinyfishRunId?: string; // missing for guided-tour flows, which no agent ran
+  source: "agent" | "tour" | "user"; // default "agent"; "user" = described at gate 1
+  rehearsal?: { ok: boolean; seconds?: number; reason?: string }; // local rehearsal; only flows that replay are eligible
 };
 type Step = {
   id: string;
@@ -1047,17 +1050,18 @@ type Step = {
   secret?: boolean;
   expected?: string;
   narrationHint?: string;
-  screenshotUrl?: string;
+  screenshotUrl?: string; // TinyFish step screenshot
+  frame?: string; // local rehearsal frame after this step, job-relative (gate 1 shows it)
   expect?: Expectation[]; // agent-reported or action-implied (§9.3.1)
 };
 type FlowScoring = {
-  // §9.2.1
+  // §9.2.1; judge scores 0–5, deterministic signals 0–1
   valueAlignment: number;
   visiblePayoff: number;
   lengthFit: number;
   distinctness: number;
   focusMatch?: number;
-  riskPenalty: number;
+  riskPenalty: number; // ≤ 0
   score: number;
   storyRole: "setup" | "core" | "payoff" | "share";
   valuePropCited: string;
@@ -1070,22 +1074,28 @@ type Expectation =
   | { type: "value"; target: string; value: string }
   | { type: "changed" };
 
-// replay-plan.json — cache of resolved locators + learned expectations per form factor
-type ReplayPlan = Record<
-  FormFactor,
-  Record<
-    StepId,
-    {
-      strategy: "role" | "label" | "placeholder" | "text" | "llm";
-      locator: string;
-      lastOk: string;
-      learnedExpect?: Expectation[]; // from the last clean take; preferred over Step.expect
-    }
-  >
->;
+// record/replay-plan.json — cache of resolved locators + learned expectations per form factor
+type ReplayPlan = {
+  schemaVersion: 1;
+  byFormFactor: Partial<
+    Record<
+      FormFactor,
+      Record<
+        StepId,
+        {
+          strategy: LocatorStrategy; // "role" | "label" | "placeholder" | "text" | "llm"
+          locator: string;
+          lastOk: string;
+          learnedExpect?: Expectation[]; // from the last clean take; preferred over Step.expect
+        }
+      >
+    >
+  >;
+};
 
-// recordings/<formFactor>/timeline.json  (the edit timeline)
+// record/<formFactor>/timeline.json  (the edit timeline; times are seconds of recording.mp4 beside it)
 type Timeline = {
+  schemaVersion: 1;
   recordingId: string;
   formFactor: "desktop" | "mobile";
   viewport: { w: number; h: number; dpr: number };
@@ -1112,8 +1122,22 @@ type TimelineEvent = {
   url: string;
 };
 
+// brief/product-brief.json (FR-11, §9.1)
+type ProductBrief = {
+  schemaVersion: 1;
+  url: string;
+  name: string;
+  oneLiner: string;
+  valueProps: string[];
+  audience: string;
+  tone: string[];
+  keyTerms: string[];
+  pages: { url: string; title: string }[]; // the pages the brief was written from
+};
+
 // brief/creative.json (§9.4)
 type CreativeBrief = {
+  schemaVersion: 1;
   prompt?: string; // the user's words, if any
   audience: string;
   goal: string;
@@ -1124,18 +1148,20 @@ type CreativeBrief = {
   mustShow: string[];
   avoid: string[];
   inferred: boolean; // true when there was no prompt
+  summary: string; // one-sentence read-back shown on the job page
 };
 
 // script/storyboard.json — shared by every language (§9.4)
 type Storyboard = {
   schemaVersion: 1;
   arc: "launch" | "tutorial" | "sales";
+  edit: "trailer" | "guide"; // the editing grammar (§9.7.2): trailer for launch and sales, guide for tutorials
   beats: {
     id: string;
-    role: "hook" | "problem" | "setup" | "core" | "payoff" | "cta";
+    role: "hook" | "problem" | "setup" | "core" | "payoff" | "cta" | "headline"; // headline: a trailer statement beat, no footage
     flowId?: string;
     in?: number;
-    out?: number; // footage span, source seconds (all or none)
+    out?: number; // footage span, source seconds (flowId, in, out: all or none; out > in)
     onScreen: {
       kind: "title" | "callout" | "lowerThird";
       text: string;
@@ -1147,12 +1173,13 @@ type Storyboard = {
       focusStepId?: string;
     };
     intent: string; // what the narration must get across
-    maxSeconds: number; // 85% of the footage, or the card's length for hook/cta
+    maxSeconds: number; // 85% of the footage (70% in trailers), or the card's length for hook/cta
   }[];
 };
 
-// script/script.<lang>.json (schemaVersion 2)
+// script/script.<lang>.json
 type Script = {
+  schemaVersion: 2;
   lang: "en" | "hi" | string;
   hook: string;
   titleCard: string;
@@ -1168,6 +1195,7 @@ type Script = {
 
 // voice/<lang>.json — the narration (§9.5); clips at voice/<lang>/<beatId>.mp3
 type Voiceover = {
+  schemaVersion: 1;
   lang: string;
   voiceId: string;
   voiceName: string;
@@ -1234,6 +1262,7 @@ type EDL = {
     | {
         kind: "shot";
         id: string;
+        beatId?: string; // the storyboard beat it plays (rerun remap, director check)
         flowId: string;
         formFactorSource?: "desktop" | "mobile";
         in: number;
@@ -1260,15 +1289,16 @@ type EDL = {
           kind: "whoosh" | "click" | "pop" | "riser" | "hit";
           gain?: number;
         }[]; // v4
-        transitionIn: "cut" | "fade" | "slide" | "zoom-through" | string;
+        transitionIn: Transition;
       }
     | {
         kind: "statement";
         id: string;
+        beatId?: string;
         text: Record<string, string>;
         kicker?: Record<string, string>;
         seconds: number;
-        transitionIn: string;
+        transitionIn: Transition;
       }
     | {
         kind: "montage";
@@ -1276,7 +1306,7 @@ type EDL = {
         clips: { flowId: string; in: number; out: number }[];
         text?: Record<string, string>;
         seconds: number;
-        transitionIn: string;
+        transitionIn: Transition;
       }
     | {
         kind: "stat";
@@ -1287,14 +1317,17 @@ type EDL = {
         decimals?: number;
         label: Record<string, string>;
         seconds: number;
-        transitionIn: string;
+        transitionIn: Transition;
       }
   >;
   outro: { component: string; props: Record<string, unknown>; seconds: number };
 };
+// Named kinds only, so the director can't invent one Remotion can't render; custom transitions are added here (FR-72).
+type Transition = "cut" | "fade" | "slide" | "zoom-through";
 
 // assets/music/tags.json — the music library (§9.7.2)
 type MusicLibrary = {
+  schemaVersion: 1;
   tracks: {
     id: string;
     file: string;
@@ -1310,8 +1343,9 @@ type MusicLibrary = {
   }[];
 };
 
-// brief/brand.json — the brand kit (FR-12, §9.7.3), schemaVersion 2
+// brief/brand.json — the brand kit (FR-12, §9.7.3)
 type Brand = {
+  schemaVersion: 2;
   url: string;
   theme: "light" | "dark"; // from the page's own background
   palette: {
@@ -1325,7 +1359,7 @@ type Brand = {
     "theme-color" | "buttons" | "links" | "screenshot" | "text" | "default"; // text: a greyscale brand
   found: string[]; // screenshot colours, most prominent first
   gradient?: string[]; // the hero's gradient stops
-  fonts: { display: FontChoice; text: FontChoice }; // FontChoice: { family (Google Fonts), source (the site's), exact, category }
+  fonts: { display: FontChoice; text: FontChoice };
   radius: number; // button corners, CSS px; 999 = pill
   logo?: {
     file: string;
@@ -1336,21 +1370,87 @@ type Brand = {
   };
   hero?: { file: string }; // brief/hero.jpg, the first screen
 };
+type FontChoice = {
+  family: string; // Google Fonts family
+  source: string; // the site's own family name, e.g. "__Inter_d65c78"
+  exact: boolean;
+  category: "sans-serif" | "serif" | "monospace" | "display" | "handwriting";
+};
 
-// job.json (Job schemaVersion 2; version 1 files still read)
+// The POST /jobs body. Defaults fill in what the composer leaves out.
 type JobConfig = {
-  url: string;
-  auth: AuthConfig;
-  stylePrompt: string;
+  url: string; // http(s) only (FR-2)
+  auth: AuthConfig; // default { mode: "public" }
+  stylePrompt: string; // the optional video prompt (FR-5); default ""
   focusPrompt?: string;
-  mode: "launch" | "tutorial" | "sales";
-  variants: { aspects; langs; formFactors };
-  autopilot: boolean;
-  rerun?: { of: string; skipIfUnchanged: boolean };
-}; // v2: a re-run of job `of` (§9.8.1)
+  mode: "launch" | "tutorial" | "sales"; // default "launch"
+  variants: {
+    aspects: ("16x9" | "9x16")[]; // "x", not ":", because it goes into file names (out/16x9-en.mp4)
+    langs: string[]; // "en", "hi"
+    formFactors: ("desktop" | "mobile")[];
+  }; // default 16x9 / en / desktop; each list non-empty
+  autopilot: boolean; // default false
+  rerun?: { of: string; skipIfUnchanged: boolean }; // a re-run of job `of` (§9.8.1)
+};
+type AuthConfig =
+  | { mode: "public" }
+  | { mode: "sign-in-once"; profileId?: string } // TinyFish profile + sealed local session (§8.2)
+  | { mode: "vault"; credentialItemIds: string[] };
+
+// state.json — everything the worker needs to resume; what GET /jobs/:id returns
+type Job = {
+  schemaVersion: 2;
+  id: string; // job_<base36 time><hex>
+  createdAt: string;
+  updatedAt: string;
+  status: "queued" | "running" | "waiting" | "done" | "failed" | "cancelled";
+  config: JobConfig;
+  stages: Record<StageName, StageState>;
+};
+type StageName =
+  | "understand" | "auth" | "discover" | "flow-runs" | "gate-flows" | "record" | "script"
+  | "gate-script" | "voice" | "direct" | "preview" | "gate-preview" | "render";
+// The order, labels and dependencies are STAGES in packages/shared/src/job.ts (§7.3). Brand kit and creative brief run inside understand.
+type StageState = {
+  status: "pending" | "running" | "waiting" | "done" | "failed" | "skipped" | "cancelled";
+  attempts: number;
+  startedAt?: string;
+  finishedAt?: string;
+  progress?: number; // 0–1
+  message?: string;
+  error?: { message: string; code?: string; retryable?: boolean };
+  cacheKey?: string;
+};
+
+// POST /jobs/:id/gates/:gate bodies; kept at gates/<gate>.json for later stages
+type FlowsDecision = { action: "approve"; flows?: { id: string; selected: boolean; title?: string }[] }; // array order = new order
+type ScriptDecision = { action: "approve"; edits?: { lang: string; beatId: string; text: string }[] };
+type PreviewDecision = { action: "approve" } | { action: "revise"; revise: string; at?: number }; // revise re-runs direct + preview
+
+// events.ndjson and the SSE stream (GET /jobs/:id/events; the SSE id is seq, so Last-Event-ID resumes)
+type JobEvent = { seq: number; at: string; jobId: string } & (
+  | { type: "job"; status: Job["status"]; message?: string }
+  | { type: "stage"; stage: StageName; status: StageState["status"]; attempt?: number; message?: string; error?: StageState["error"] }
+  | { type: "progress"; stage: StageName; progress: number; message?: string }
+  | { type: "log"; stage?: StageName; level: "info" | "warn" | "error"; message: string }
+  | { type: "llm"; stage: StageName; kind: "text" | "tool_use" | "done" | "error"; text: string } // coding-agent progress
+  | {
+      type: "agent"; // a TinyFish run, for the live agent views
+      stage: StageName;
+      agentId: string;
+      title: string;
+      status: "started" | "step" | "done" | "failed" | "cancelled";
+      streamingUrl?: string;
+      step?: string;
+      screenshot?: string;
+    }
+  | { type: "artifact"; stage: StageName; path: string } // refetch from GET /files/<jobId>/<path>
+  | { type: "action"; gate: "gate-flows" | "gate-script" | "gate-preview"; name: string; status: "started" | "done" | "failed"; message?: string }
+);
 
 // record/changes.json — a re-run's change report (§9.8.1, FR-91)
 type ChangeReport = {
+  schemaVersion: 1;
   jobId: string;
   parentJobId: string;
   at: string;
@@ -1376,7 +1476,7 @@ type ChangeReport = {
 
 `timeline.json` is the edit timeline. **bbox** drives auto-zoom and callout anchors. **t** drives cuts, captions and cursor motion.
 
-`CreativeBrief`, `Storyboard`, `Voiceover`, `Brand` and `ChangeReport` are new schemas; `Job` is at 2 (added `config.rerun`). `Script` (lines keyed by beat) is at `schemaVersion: 2` and `EDL` at 3 (2 added `style.motion`; 3 added `style.frame`, shot titles, lower thirds and callout spotlights); files from before are rejected, not misread (AGENTS.md rule 3). The four personality presets are in `packages/shared/src/motion.ts` (`MOTION_PRESETS`).
+Current versions: `Job` 2, `Script` 2, `Brand` 2, `EDL` 5; everything else 1. A file at any other version is rejected, not misread (AGENTS.md rule 3). Within a version, changes are additive only (new optional fields). Other ranges the schemas enforce: colours are `#rrggbb`, judge scores 0–5, camera zoom 1–2.5, speed ramps 1.25–4×. The four personality presets are in `packages/shared/src/motion.ts` (`MOTION_PRESETS`), and `variantMatrix` (`src/variants.ts`) turns `config.variants` into the outputs (desktop footage serves both aspects, mobile footage 9:16 only).
 
 ---
 
