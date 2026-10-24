@@ -111,12 +111,15 @@ export class Orchestrator {
   /** On start: carry on with every unfinished job. Stages that were running start again. */
   async resumeAll(): Promise<string[]> {
     const resumed: string[] = [];
+    const unreadable: string[] = [];
     for (const id of await this.store.ids()) {
       let live: Live | undefined;
       try {
         live = await this.find(id);
       } catch (err) {
-        this.log.warn({ err, jobId: id }, "can't resume an unreadable job");
+        // Usually a job folder from an older format; one summary line below instead of a stack per job.
+        this.log.debug({ jobId: id, reason: (err as Error).message }, "can't resume an unreadable job");
+        unreadable.push(id);
         continue;
       }
       if (!live || TERMINAL.includes(live.job.status)) continue;

@@ -62,7 +62,7 @@ beforeEach(() => {
     addInitScript: mocks.addInitScript,
     close: mocks.closeContext,
   });
-  mocks.newPage.mockResolvedValue({});
+  mocks.newPage.mockResolvedValue({ evaluate: vi.fn() });
 });
 
 afterEach(() => vi.unstubAllGlobals());
@@ -172,7 +172,10 @@ describe("recorder browser lifecycle", () => {
     expect(mocks.newContext).toHaveBeenCalledWith(
       expect.objectContaining({ storageState: { cookies: state.cookies, origins: state.origins } }),
     );
-    expect(mocks.addInitScript).not.toHaveBeenCalled();
+    // The only init script is the __name shim; saved state never goes through one.
+    expect(mocks.addInitScript.mock.calls).toEqual([
+      [{ content: expect.not.stringMatching(/localStorage|cookie/) }],
+    ]);
     expect(mocks.newContext.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.newPage.mock.invocationCallOrder[0]!,
     );

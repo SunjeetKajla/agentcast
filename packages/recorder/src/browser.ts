@@ -48,6 +48,8 @@ export interface RecorderBrowser {
   close(): Promise<void>;
 }
 
+const KEEP_NAMES = "globalThis.__name ??= (target) => target;";
+
 /** Each call owns a separate headless browser, context and page. */
 export async function launchRecorderBrowser(
   options: RecorderBrowserOptions = {},
@@ -124,8 +126,20 @@ export async function launchRecorderBrowser(
         : undefined,
     });
 
+    // tsx (the worker's runtime) wraps named functions in __name(), which then breaks every
+    // page.evaluate that defines one. Give pages a no-op __name; a string is never rewritten.
+    await context.addInitScript({ content: KEEP_NAMES });
     const page = await context.newPage();
-    return { formFactor, browser, context, page, deviceScaleFactor, gpu, close };
+    await page.evaluate(KEEP_NAMES);
+    return {
+      formFactor,
+      browser,
+      context,
+      page,
+      deviceScaleFactor,
+      gpu,
+      close,
+    };
   } catch (error) {
     // Preserve the setup error, including when a disconnected browser cannot close.
     await close().catch(() => {});
