@@ -8,6 +8,7 @@ import {
   type StageName,
 } from "@agentcast/shared";
 import { ArtifactError, readArtifact, writeArtifact } from "@agentcast/shared/node";
+import { sharedLlm, type Llm, type OnEvent } from "@agentcast/llm";
 import type { z } from "zod";
 import type { EventBus } from "./bus.ts";
 
@@ -37,6 +38,10 @@ export type StageContext = {
   emit(event: JobEventInput): void;
   /** The decision made at a gate, once it has been made. */
   decision<G extends GateName>(gate: G): Promise<GateDecision<G> | undefined>;
+  /** The coding agent (Claude Code or Codex, whichever AGENTCAST_LLM picks). Pass llmProgress as onEvent. */
+  llm: Llm;
+  /** Forwards LLM progress to the job page as "llm" events. */
+  llmProgress: OnEvent;
 };
 
 /** Gate decisions are kept at gates/<gate>.json so later stages can read them. */
@@ -72,6 +77,8 @@ export function createContext(opts: {
     progress: (progress, message) =>
       bus.emit({ type: "progress", stage, progress: Math.min(1, Math.max(0, progress)), message }),
     emit: (event) => bus.emit(event),
+    llm: sharedLlm(),
+    llmProgress: (e) => bus.emit({ type: "llm", stage, kind: e.kind, text: e.text }),
     async decision(gate) {
       try {
         return (await readArtifact(path(decisionPath(gate)), GATE_DECISIONS[gate])) as GateDecision<typeof gate>;
