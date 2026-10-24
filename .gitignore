@@ -8,26 +8,49 @@ node_modules/
 out/
 build/
 dist/
+.vercel/
+
+# Monorepo & testing
+coverage/
+spikes/output/
 
 # Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-*.log
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.env
+.env.*
+!.env.example
 
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Job data, recordings and renders (AGENTS.md rule 10)
+.agentcast/
+*.mp4
+*.webm
+*.mov
+*.mp3
+*.wav
+!packages/shared/fixtures/**
+
+# Music library: tags.json is committed, audio isn't
+assets/music/*
+!assets/music/tags.json
+!assets/music/README.md
+!assets/music/LICENSES.md
+
+# Generated outputs
+outputs/*
+!outputs/.gitkeep
+backend/outputs/*
+!backend/outputs/.gitkeep
 
 # Python / Backend
 __pycache__/
@@ -55,15 +78,6 @@ wheels/
 .installed.cfg
 *.egg
 .pytest_cache/
-
-# Generated video outputs & media assets
-outputs/*
-!outputs/.gitkeep
-backend/outputs/*
-!backend/outputs/.gitkeep
-*.mp4
-*.mp3
-*.wav
 
 # OS and Editor files
 .DS_Store

@@ -1,0 +1,17 @@
+{
+  "name": "@agentcast/tinyfish",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed TinyFish client: Fetch, Agent, Vault, Browser, Profiles. Worker-side only.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentcast/shared": "workspace:*",
+    "eventsource-parser": "^4.1.2"
+  }
+}

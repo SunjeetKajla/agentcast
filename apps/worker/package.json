@@ -1,0 +1,27 @@
+{
+  "name": "@agentcast/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Fastify worker and orchestrator; stages in src/stages/, one file each.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentcast/director": "workspace:*",
+    "@agentcast/explore": "workspace:*",
+    "@agentcast/llm": "workspace:*",
+    "@agentcast/recorder": "workspace:*",
+    "@agentcast/shared": "workspace:*",
+    "@agentcast/story": "workspace:*",
+    "@agentcast/tinyfish": "workspace:*",
+    "@agentcast/video": "workspace:*",
+    "@agentcast/voice": "workspace:*",
+    "fastify": "^5.12.7",
+    "p-limit": "^7.3.3",
+    "pino": "^10.4.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@agentcast/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "zod schemas for every artifact, fixtures, and pure helpers shared by web, worker and video.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

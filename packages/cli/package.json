@@ -1,0 +1,20 @@
+{
+  "name": "@agentcast/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "`agentcast` CLI: doctor, record, rerun, music.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentcast/shared": "workspace:*",
+    "@agentcast/llm": "workspace:*",
+    "@agentcast/tinyfish": "workspace:*",
+    "@agentcast/recorder": "workspace:*",
+    "@agentcast/worker": "workspace:*"
+  }
+}

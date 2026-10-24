@@ -1,0 +1,16 @@
+{
+  "name": "@agentcast/voice",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ElevenLabs client, voice picker, alignment to word timings.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentcast/shared": "workspace:*"
+  }
+}
