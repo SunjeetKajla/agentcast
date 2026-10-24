@@ -162,8 +162,8 @@ still validated separately.
 that own their browser and temporary directory. Always stop capture in `finally`
 and retain its JPEGs until encoding finishes. Same-target navigations continue
 recording; opening a new page during `recordLive()` fails explicitly. Automatic
-popup retargeting, flow resolution, timeline/event artifacts, and worker/CLI
-wiring remain separate tasks. Studio mode is not implemented here.
+popup retargeting and worker/CLI wiring remain separate tasks. Studio mode is
+not implemented here. `recordFlow()` below adds compilation and timeline artifacts.
 
 Run all recorder checks, including strict hardware checks on this NVIDIA/Intel
 machine, with the GPU suites serialized because they share physical devices:
@@ -175,3 +175,168 @@ pnpm typecheck
 
 The referenced `spikes/s1-record/record.ts` is absent; the implementation lives
 in `src/screencast.ts`, `src/timing.ts`, `src/encode.ts`, and `src/live.ts`.
+
+## Flow target resolution
+
+`resolveTarget(page, step, options)` implements cache → role → label → placeholder
+→ exact text → fuzzy name → LLM heal. It accepts the shared `Step` contract and
+returns `{ locator, bbox, method, strategy, entry?, elapsedMs }`. The bbox uses CSS
+pixels. Resolution never clicks, types, or executes cached JavaScript.
+
+```ts
+import { resolveTarget } from "@agentcast/recorder";
+import { jobPaths } from "@agentcast/shared";
+
+const target = await resolveTarget(page, step, {
+  replayPlanPath: ctx.path(jobPaths.replayPlan),
+  flowId: flow.id,
+  formFactor: "desktop",
+  signal: ctx.signal,
+  heal: true,
+  llm: ctx.llm,
+  onLlmEvent: ctx.llmProgress,
+  secretValues: flow.steps.filter((s) => s.secret).map((s) => s.value ?? ""),
+});
+
+// For a click step, the actuator can now use the verified target:
+await target.locator.click();
+if (target.entry) ctx.artifact(jobPaths.replayPlan);
+```
+
+Use the same resolver inside `recordLive()`'s callback, passing its `page` and
+`signal`. The integration test records a three-step create-project flow at DPR 2
+and validates both its MP4 and replay-plan artifact. For paced actions with
+outcome verification and complete-take learning, use `recordFlow()` below.
+
+The first lookup waits for DOM quiet (300 ms, capped at 1 s) and the chain shares
+one `timeoutMs` budget (default 4000 ms). `pollIntervalMs` defaults to 100 ms and
+`maxCandidates` to 100. A page navigation invalidates the initial settle state.
+Use `settle: false` when your caller has already settled the page. Missing,
+disabled, hidden, readonly typing, and incompatible select targets fall through.
+
+An explicit `target.near` hint picks an unambiguous nearest visible target.
+If its text is absent, normal viewport/link disambiguation still applies. A
+role-only target (for example an unnamed checkbox) uses these same checks.
+Without an available hint, prefer the sole on-screen match; duplicate links can
+prefer the unique main-content copy only if they all point at the same URL.
+Scroll targets prefer the first below-fold match even when a copy is on screen.
+Remaining ambiguity fails explicitly.
+Fuzzy matching normalizes Unicode, case, whitespace, punctuation and symbols,
+and conservatively allows short edit/transposition distances on longer names.
+It refuses differing numeric IDs and tied best scores.
+
+LLM healing is opt-in (`heal: true`), with `healTimeoutMs` defaulting to 45 s.
+Without an injected runner it uses `sharedLlm()` from `@agentcast/llm`; the worker
+should supply `ctx.llm` and `ctx.llmProgress`. No vendor SDK or CLI is invoked
+by the recorder. Intent and accessibility data are delimited as untrusted,
+typed values are omitted, inputs/known secrets are masked, and private scratch
+files are removed after the call. The model can decline with null role/name.
+Its answer is schema-checked and must resolve to a verified live target.
+
+`replayPlanPath` enables validated atomic cache reads/writes. Entries preserve
+`learnedExpect`, use existing schema-version-1 strategies, and contain exact
+semantic queries rather than `.nth()` ordinals. `method: "fuzzy"` distinguishes
+a fuzzy resolution in memory; its cache strategy is the resulting role/text
+query. Cache hits are revalidated before use. Supply `flowId` to avoid collisions
+between steps such as `s1` in different flows; `replayKey(step.id, flow.id)` gives
+the cache key. Omit `flowId` to retain legacy bare step keys. Invalidate an entry
+when the caller edits a step's intent. Sensitive locator names omit `entry` and
+are never persisted. Re-resolve after intervening DOM changes.
+
+Run just the locator tests with local Chrome (LLM tests use fake CLIs, no quota):
+
+```sh
+AGENTCAST_TEST_CHROMIUM=/usr/bin/google-chrome pnpm test packages/recorder/src/flow --no-file-parallelism
+```
+
+## Verified flow recording
+
+`recordFlow(flow, options)` (also exported as `compileFlow`) accepts a shared
+`Flow` and records one verified Live subclip. It writes `recording.mp4`,
+`timeline.json` and `replay-plan.json`; timeline/replay paths default beside
+`outputPath`. All JSON reads/writes use the shared version-1 schemas.
+
+```ts
+import { recordFlow } from "@agentcast/recorder";
+
+const result = await recordFlow(flow, {
+  outputPath: "./record/create-project/recording.mp4",
+  browser: { formFactor: "desktop", gpu: "auto", storageState },
+  signal,
+  locate: { heal: true, llm, onLlmEvent },
+  // Optional: reset server data and navigate before EVERY take, outside capture.
+  prepare: async ({ page }, attempt, signal) => {
+    signal.throwIfAborted();
+    await resetDemoData();
+    await page.goto(flow.startUrl, { waitUntil: "domcontentloaded" });
+  },
+  hygiene: { redactSelectors: [".private-balance"], secretValues: [] },
+});
+```
+
+Without `prepare`, the recorder navigates to `flow.startUrl` on each fresh
+browser. Saved storage is restored by the launcher. Resetting mutations to a
+server remains the caller's responsibility. A flow must contain an interaction;
+navigation/wait-only flows and duplicate step IDs are rejected before launch.
+When the initial step has a target, it resolves/heals before capture starts,
+then revalidates during capture. Delayed hydration does not consume video time.
+
+Actions use a cubic Bézier mouse path with slight overshoot, distance-scaled
+300–700 ms movement at roughly 60 Hz, a 150 ms hover pause, 35–70 ms typing
+jitter and eased wheel increments. Typing replaces the current value; native
+single selects accept an option value or exact visible label. Scroll values are
+pixels; wait values accept milliseconds or `s`, capped at 10 seconds. Cursor
+segments/bboxes are saved in the timeline; detailed samples are returned as
+`cursorSamples` for post-production. Chromium screencasts do not include the
+system cursor. A visible cursor overlay and native mobile touch gestures are
+separate renderer/mobile work.
+
+After acting, settle races DOM quiet (300 ms) against request inactivity
+(500 ms), with a 4-second cap. Finite running animations delay settle and supply
+measured motion windows to Live's existing stall check; continuous scroll is
+marked by the actuator. Static mouse moves/typing are not classified as
+continuous visual animation. The verifier then polls for up to 5 seconds.
+`settleTimeoutMs` and `outcomeTimeoutMs` adjust these budgets. Resolution waits
+and conservatively identified static outcome waits beyond 600 ms become timeline
+dead intervals, preserving animation and the arrival of results.
+
+Checks prefer cached `learnedExpect`, then `step.expect`, then action-implied
+values, then meaningful change. Input/select values are checked even alongside
+stronger checks. All checks must pass; URL patterns use `*` for one path segment
+and `**` across segments, including hash-router paths. Loose text is
+case/whitespace insensitive, text/elements must intersect the viewport, and
+spinner/timestamp-only changes do not satisfy `changed`. `expected` remains a
+description for labels/healing, not an executable assertion. Hover/wait can be
+intentional holds; add explicit expectations when they should reveal content.
+Learned checks include generalized URL paths, new exact headings/dialogs/toasts
+and safe input values. Non-locator steps use an empty, non-executable locator
+entry to store their checks. Secrets are excluded from learning.
+
+Locator, action, outcome and stall failures share **one limit of three takes**
+(`maxTakes` accepts 1–3). Each retake uses a new browser. With `locate.heal`, a
+failed target is re-picked using the failed expectation, sanitized before/after
+ARIA and masked screenshots, even when the old target still resolves. Healing
+only picks a target; automatic prerequisite clicks are not implemented. Strong
+failed checks are never weakened or silently relearned. Cancellation and
+infrastructure errors stop immediately. `FlowRecordingError.takes`, `flowTakes`
+and `onTake` expose sanitized failure/progress details.
+
+Only a complete take that passes outcomes, stalls and video validation commits
+the replay plan. Failed takes remove all scratch frames and footage. Video and
+timeline are published exclusively without overwriting existing files; a
+publication/learning error removes files published by this call. Replay updates
+are atomic and preserve unrelated flows/form factors. Outputs on different
+filesystems are not supported because publication uses hard links.
+
+Hygiene is installed before navigation and reinstalls on new documents. It hides
+scrollbars/carets, waits for fonts, dismisses an unambiguous cookie consent button,
+and blurs password/email fields, known secrets, email/token text and custom
+selectors, including dynamic content. Secret targets are masked before typing.
+Their timeline values are `{ "redacted": true }`; raw typed secrets never enter
+repair prompts or learned checks. Use custom selectors for other private data.
+
+The worker's record stage and CLI are still stubs; this API records individual
+flows and does not concatenate multiple flow subclips or publish worker events.
+
+See [FLOW_COMPARISON.md](FLOW_COMPARISON.md) for the reference-project comparison,
+the complete reference test inventory, adapted coverage and remaining differences.
