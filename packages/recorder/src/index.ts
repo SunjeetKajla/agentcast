@@ -33,3 +33,43 @@ export {
   type VideoEncoder,
 } from "./encode.ts";
 export { checkStalls, type StallReport, type MotionWindow } from "./timing.ts";
+export {
+  resolveTarget,
+  LocatorResolutionError,
+  type LocateOptions,
+  type ResolvedTarget,
+} from "./flow/locate.ts";
+export { replayKey } from "./flow/replay.ts";
+export {
+  recordFlow,
+  compileFlow,
+  FlowRecordingError,
+  type FlowOptions,
+  type FlowRecording,
+  type FlowTake,
+} from "./flow/compile.ts";
+export {
+  createActuator,
+  cursorDuration,
+  cubicPoint,
+  type CursorSample,
+  type ActuatorOptions,
+  type ActionResult,
+} from "./flow/act.ts";
+export {
+  trackSettle,
+  waitForSettle,
+  type SettleOptions,
+  type SettleReport,
+} from "./flow/settle.ts";
+export {
+  snapshotOutcome,
+  verifyOutcome,
+  OutcomeError,
+  type OutcomeOptions,
+  type OutcomeState,
+} from "./flow/outcome.ts";
+export {
+  installRecordingHygiene,
+  type HygieneOptions,
+} from "./flow/hygiene.ts";

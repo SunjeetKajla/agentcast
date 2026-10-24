@@ -30,6 +30,8 @@ export interface LiveControls extends RecorderBrowser {
   now(): number;
   /** Mark scrolling/animation phases; exclude static holds, resolution and loading waits. */
   motion<T>(run: () => Promise<T>): Promise<T>;
+  /** Register measured animation windows without including their static settle tail. */
+  markMotion(startMs: number, endMs: number): void;
 }
 
 export interface LiveOptions {
@@ -183,6 +185,17 @@ export async function recordLive(
                   attempt,
                   signal,
                   now,
+                  markMotion: (startMs, endMs) => {
+                    if (
+                      !Number.isFinite(startMs) ||
+                      !Number.isFinite(endMs) ||
+                      startMs < 0 ||
+                      endMs < startMs ||
+                      endMs > now() + 1
+                    )
+                      throw new Error("Invalid measured motion window");
+                    windows.push({ startMs, endMs });
+                  },
                   motion: async (work) => {
                     const startMs = now();
                     try {
