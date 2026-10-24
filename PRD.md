@@ -1,7 +1,7 @@
 # AgentCast — Product Requirements Document
 
 > **Paste a URL, get a polished launch video of your real product.**
-> TinyFish is the camera crew · Claude Code is the director · Remotion is the editing suite.
+> TinyFish is the camera crew · Claude Code is the director · HyperFrames is the editing suite.
 
 |                   |                                                          |
 | ----------------- | -------------------------------------------------------- |
@@ -19,11 +19,11 @@ AgentCast turns a product URL (plus optional test credentials and a prompt for t
 
 1. **Explore:** TinyFish **Agent API** web agents sign in, work through onboarding, and propose the 3–4 flows that best show the product's value. Several run in parallel, one per candidate flow. TinyFish **Fetch API** pulls page copy and brand assets.
 2. **Review gate:** a human approves, reorders or edits the flows.
-3. **Record:** each approved flow is replayed **deterministically** by our Playwright recorder in a **local Chromium** on the worker machine, one browser per form factor, in parallel. CDP screencast frames (60 fps target, checked in spike S1) and a millisecond-accurate action log (`timeline.json`) are captured. TinyFish **Browser API** sessions are the fallback recorder for sites that block a local browser or need a proxy country (§9.3.2).
-4. **Script:** Claude writes narration per segment from the action log and page copy, natively in each target language. A second review gate follows.
-5. **Voice:** ElevenLabs produces one clip per segment per language, with word-level timestamps.
-6. **Direct:** Claude Code (headless, sandboxed) writes an **Edit Decision List** (EDL) against our Remotion primitives library. It can also write bespoke components such as intros, callouts and transitions, which are type-checked and test-rendered before use.
-7. **Render and fan out:** Remotion renders a fast preview first, then every variant in parallel (16:9 / 9:16 × EN / HI × desktop / mobile), with smart zoom, a synthetic smooth cursor, captions, voiceover, ducked music and a branded intro/outro.
+3. **Record:** each approved flow is replayed **deterministically** by our Playwright recorder in a **local Chromium** on the worker machine, one browser per form factor, in parallel. CDP screencast frames (60 fps target, checked in spike S1) and a millisecond-accurate action log (`timeline.json`) are captured. At every settled step the recorder also keeps the product's own **DOM**: the page and each element acted on, as self-contained HTML plus a high-DPR image (§9.3.4), so the edit can lift real components out of the page and zoom on them without blur. TinyFish **Browser API** sessions are the fallback recorder for sites that block a local browser or need a proxy country (§9.3.2).
+4. **Script:** Claude plans the video as a storyboard and writes it natively in each target language. Launch and sales videos (trailers) are **text-led**: short kinetic type lines carry the story over music, and narration is optional. Tutorials (guides) are narrated per segment. A second review gate follows.
+5. **Voice:** ElevenLabs produces one clip per segment per language, with word-level timestamps, whenever the video has narration (always for guides, opt-in for trailers).
+6. **Direct:** Claude Code (headless, sandboxed) writes an **Edit Decision List** (EDL) against our scene catalogue (kinetic type, lifted components, tilted footage, 3D staging, morphs). It can also write a bespoke scene as plain HTML + GSAP, which is linted and test-rendered before use.
+7. **Render and fan out:** HyperFrames renders a fast preview first, then every variant in parallel (16:9 / 9:16 × EN / HI × desktop / mobile), with smart zoom, a synthetic smooth cursor, music cut to its sections, captions and voiceover where there is narration, and a branded intro/outro.
 8. **Re-run on update:** cached flows and locators let you regenerate in minutes from the UI, CLI or a GitHub Action.
 
 ---
@@ -54,8 +54,8 @@ Every product needs a demo video for launches, landing pages, investor pitches, 
 ### 2.1 Goals (hackathon scope)
 
 - **G1. URL → video, unattended.** From a URL alone (public product) or a URL plus sign-in (gated product), produce a ≥45 s narrated video with no manual recording or editing.
-- **G2. Real footage only.** Every on-screen product pixel comes from a real browser session on the live product. Generated graphics are limited to overlays (titles, captions, callouts, cursor).
-- **G3. Broadcast-quality edit.** Smart zoom on interactions, smooth cursor, word-synced captions, VO, ducked music, branded intro/outro. A viewer shouldn't be able to tell it was automated.
+- **G2. Real product only.** Every on-screen piece of product UI comes from a real browser session on the live product: recorded footage, or the product's own DOM captured during that session and rendered by the same browser engine. Generated graphics are limited to type, overlays (titles, captions, callouts, cursor), backdrops and staging (frames, tilt, depth).
+- **G3. Broadcast-quality edit.** Launch and sales videos look like a motion designer's launch film (the bar is set by the reference films in §9.7.4: text-led, music-led, continuous motion, lifted UI components). Tutorials get smart zoom on interactions, a smooth cursor, word-synced captions, VO and ducked music. Both get a branded intro/outro. A viewer shouldn't be able to tell it was automated.
 - **G4. Parallel variants from one run.** At least 16:9 + 9:16 and EN + HI from a single job.
 - **G5. Human in the loop.** Review gates for flows and script, plus a revise-by-prompt loop on the preview.
 - **G6. Re-run on update.** Regenerating a previously produced video, with the UI changed, takes ≤ 5 min and no human input.
@@ -100,9 +100,9 @@ Every product needs a demo video for launches, landing pages, investor pitches, 
 
 ## 4. Product principles
 
-1. **Footage is proof.** Never synthesize product UI. Overlays may annotate, never fabricate.
+1. **The product is the proof.** Never synthesize product UI. What's on screen comes from the real product, as footage or as its own captured DOM. A lifted component shows only states the product actually showed during the take; animating between two captured states is fine, inventing a state (a value, a message, a screen) is not. Overlays may annotate, never fabricate.
 2. **Explore with an agent, record with a script.** Agents are great at discovery and bad at clean takes. Discovery is non-deterministic; recording must be deterministic and replayable.
-3. **Voice leads, picture follows.** Narration duration drives segment timing. Video is retimed (dead time compressed, holds extended) to fit each language's voice, so we record once and narrate many times.
+3. **The right clock leads, picture follows.** In guides, narration duration drives segment timing: video is retimed (dead time compressed, holds extended) to fit each language's voice, so we record once and narrate many times. In trailers, the music's sections drive timing and the picture never stops moving (§9.6, §9.7.2).
 4. **Data contracts over prompts.** Every stage emits a versioned, schema-validated JSON artifact. LLMs write _data and small components_, and deterministic code turns data into pixels.
 5. **Every stage is resumable and cacheable.** Artifacts are content-addressed, so a re-run skips everything whose inputs didn't change.
 6. **Secrets never reach an LLM.** Credentials go from Vault or the local encrypted store straight into the browser. Not into prompts, logs, captions or footage.
@@ -142,6 +142,10 @@ The agreed visual design for these screens (tokens, components, layouts) is in [
 [4] Recording…  desktop + mobile browsers on the worker, live thumbnails, per-step ticks ✓
 
 [5] GATE 2 — Review storyboard (per beat: frame, both languages, motion note)
+    Trailer (launch/sales): each beat's type line and its scene
+    beat 2 · core · component   type (EN) "One click. Ready."   (HI) "एक क्लिक। तैयार।"
+                       scene: the "Use template" button lifted out, cursor clicks, the grid flies in
+    Guide (tutorial): each beat's narration
     beat 2 · core · reveal (EN, ≤6.0s) "Start from a template. One click and your workspace is ready."
                        (HI, ≤6.0s) "टेम्पलेट से शुरू करें — एक क्लिक में आपका वर्कस्पेस तैयार।"
                        motion: slow push-in on the template grid, callout "1 click"
@@ -243,6 +247,7 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | FR-44a | **Stall check:** measure source-frame gaps during declared expected-motion windows, including their leading/trailing boundaries. A maximum gap over 250 ms or p95 gap over 60 ms retakes the complete flow (up to three takes). Paint-driven static holds are preserved; a take with no expected motion reports `not-applicable`. | P0 |
 | FR-44b | **Studio mode (opt-in):** for heavy or mostly scrolling pages, or when "cinematic" quality is chosen. A real-time rehearsal saves every response to a HAR file; then N parallel browsers render frame-perfect 60 fps from it on a virtual clock (§9.3.3).                                                                 | P1                     |
 | FR-45  | Emit `timeline.json`: for every action, `t`, kind, label, bbox, cursor path, URL, settle time, and **dead intervals** (locator resolution, slow loads) safe to cut                                                                                                                                                        | P0                     |
+| FR-45a | **Component capture** (§9.3.4): at each settled step, save the page and every element acted on as self-contained HTML (computed styles and fonts inlined, images as data, scripts and event handlers stripped, typed secrets redacted, FR-48 blur applied) plus a DPR 3 element PNG on a transparent background, the element's box, and its captured states (before, hover, after the action). Written to `record/<formFactor>/snapshots/` and indexed in `components.json`. | P0 |
 | FR-46  | "Takes": if a step fails, the take is discarded and retried (max 3), self-healing the failing locator. Only clean takes are kept.                                                                                                                                                                                         | P0                     |
 | FR-46a | **Outcome verification:** after each step settles, check the step's expectations (URL, visible text/element, input value, or "something changed"). A step that ran without error but didn't produce its expected result fails the take. Expectations learned from the first clean take are reused on re-runs. See §9.3.1. | P0                     |
 | FR-47  | Desktop (1440×900 @2x) and mobile (390×844 @3x, touch, mobile UA) form factors                                                                                                                                                                                                                                            | P0 desktop / P1 mobile |
@@ -258,6 +263,7 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | FR-52 | Title card text, hook line (first 3 s), CTA line, video title + description for posting                                                                                                                                                                                                                                                                | P0  |
 | FR-53 | Gate 2: per beat, its frame, both languages and its motion note; edit a line, or re-prompt one beat ("make the hook sharper")                                                                                                                                                                                                                          | P0  |
 | FR-54 | Tutorial mode: imperative step-by-step voice ("Step 2: click **New project**")                                                                                                                                                                                                                                                                         | P1  |
+| FR-55 | **Type lines** (trailers, §9.4): each beat carries a kinetic type line of 2–5 words (about one word a second over the video), with one accent word, written natively per language. The lines alone must tell the story with the sound off. `voice` is `none` by default for trailers and `narration` for guides; the prompt can turn narration on. | P0  |
 
 ### 6.7 Voice (ElevenLabs)
 
@@ -266,14 +272,15 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | FR-60 | One TTS clip per segment per language using the `with-timestamps` endpoint. Store audio + character alignment.     | P0  |
 | FR-61 | Voice presets per language and tone, selected from the creative brief                                              | P1  |
 | FR-62 | Auto-tighten: if a clip exceeds its segment budget by >25%, ask Claude to shorten that line and re-synthesize once | P1  |
+| FR-63 | The voice stage is skipped (no characters spent) when the storyboard says `voice: none`, the default for trailers | P0  |
 
 ### 6.8 Direct (Claude Code, headless)
 
 | ID    | Requirement                                                                                                                                                                                                                                                                         | Pri |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
-| FR-70 | Claude Code runs in a per-job sandboxed workspace containing the Remotion project, primitives library, all artifacts and a `DIRECTOR.md` brief                                                                                                                                      | P0  |
+| FR-70 | Claude Code runs in a per-job sandboxed workspace containing the HyperFrames composition, the scene catalogue, the captured components, all artifacts and a `DIRECTOR.md` brief                                                                                                     | P0  |
 | FR-71 | Output: `edl.json` (validated against the zod schema). It covers segment order, in/out points, speed ramps, camera keyframes (zoom targets), callouts, transitions, music mood, intro/outro design.                                                                                 | P0  |
-| FR-72 | Optional bespoke components in `custom/` (intro, outro, callout styles). Each must pass `tsc --noEmit` and a `remotion still` test render, or the director falls back to the default primitive.                                                                                     | P1  |
+| FR-72 | Optional bespoke scenes in `custom/` (intro, outro, a component's staging, a transition), written as plain HTML + CSS + a paused GSAP timeline. Each must pass the HyperFrames lint, the motion lint and a test render of its key frames, or the director falls back to the catalogue scene. | P1  |
 | FR-73 | Revise loop: free-text feedback on the preview → Claude edits EDL/components → re-preview                                                                                                                                                                                           | P0  |
 | FR-74 | Different video prompts produce visibly different edits (pacing, palette, transitions, typography, motion personality). Running twice with the same inputs shouldn't produce a bland template look.                                                                                 | P1  |
 | FR-75 | **Motion design rules** (§9.7.1): the director plans the edit with the motion design skill (`.agents/skills/motion-design`, LottieFiles, MIT): one motion personality per video, four-act beats, three motion layers, emotion-matched easing and duration                           | P0  |
@@ -281,18 +288,20 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | FR-77 | **Motion lint**: the worker checks the EDL against the skill's critical rules before preview and sends failures back to the director (§9.7.1). After 2 failed repair rounds the job falls back to the baseline edit.                                                                | P0  |
 | FR-78 | The director reviews rendered stills of key moments (start of each beat, each click, the title and outro) and fixes what it sees before finishing                                                                                                                                   | P1  |
 
-### 6.9 Render and fan-out (Remotion + FFmpeg)
+### 6.9 Render and fan-out (HyperFrames + FFmpeg)
 
 | ID    | Requirement                                                                                                                                                                                                                                                                                                                                    | Pri |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
 | FR-80 | Preview render: 960×540 (or 540×960), 30 fps, fast encoding, target ≤ 60 s wall time for a 60 s video                                                                                                                                                                                                                                          | P0  |
 | FR-81 | Final renders: 1920×1080 and 1080×1920 H.264 MP4, AAC, -14 LUFS loudness, all approved variants in parallel. Loudness normalisation applies to previews too.                                                                                                                                                                                   | P0  |
-| FR-82 | **Virtual camera**: smart zoom and 9:16 reframing are the same primitive, a smoothed crop window following camera keyframes, clamped to frame                                                                                                                                                                                                  | P0  |
+| FR-82 | **Virtual camera**: smart zoom and 9:16 reframing are the same primitive, a smoothed crop window following camera keyframes, clamped to frame. On footage it stays at or under 2× (the capture's DPR). A closer shot cuts or morphs to the captured component (FR-45a), which stays sharp at any scale. | P0  |
 | FR-83 | Synthetic cursor rendered from `timeline.json` cursor paths (headless screencast has no cursor), with click ripple, eased motion and a hide-when-idle option                                                                                                                                                                                   | P0  |
-| FR-84 | Word-level captions from TTS alignment, styled per EDL. Noto Sans Devanagari for Hindi.                                                                                                                                                                                                                                                        | P0  |
-| FR-85 | Music from a local royalty-free library tagged by mood/BPM, ducked under VO (−18 dB, 200 ms attack/release), fade in/out. See §9.7.2: `assets/music/` with `agentcast music add`, picked by personality and grammar, ducked under the voice, cuts on the beat in trailers; plus generated sound effects. | P0  |
+| FR-84 | Word-level captions from TTS alignment, styled per EDL, whenever there is narration. Trailers without narration have no captions: the type lines are the text. Noto Sans Devanagari for Hindi.                                                                                                                                                 | P0  |
+| FR-85 | Music from a local royalty-free library tagged by mood, BPM, **sections and drops**, ducked under VO (−18 dB, 200 ms attack/release), fade in/out. See §9.7.2: `assets/music/` with `agentcast music add`, picked by personality and grammar, ducked under the voice; in trailers scene boundaries snap to the track's sections and drops (beats are a soft preference); plus generated sound effects. **Trailers need music**: the repo ships 3–5 licensed tracks so a fresh clone can make one. | P0  |
 | FR-86 | Sidecar exports: SRT/VTT per language, poster thumbnail, 6 s GIF teaser, chapters (tutorial mode)                                                                                                                                                                                                                                              | P1  |
-| FR-87 | **Editing grammar** (§9.7.2): launch and sales videos are cut as trailers (headline scenes between proof shots, outcome-led narration, montage, speed ramps, tilt, lifted callouts, music up front with cuts on the beat, sound effects, minimal captions); tutorials as guides.                                                    | P0  |
+| FR-87 | **Editing grammar** (§9.7.2): launch and sales videos are cut as trailers (kinetic type lines alternating with product proof, lifted components, tilted and 3D-staged footage, morphs, music-led timing, continuous motion, sound effects, no captions unless narrated); tutorials as guides.                                                    | P0  |
+| FR-88 | **Scene catalogue** (§9.7.2): `kinetic` (a type line word by word), `typing` (text typed into a lifted input with a caret), `component` (a captured element lifted out with its states and a cursor click), `shot` (footage in a window, tilted or full bleed), `stage3d` (captured screens or cards in perspective: tunnel, floating cards), `stat`, `montage`/showcase grid, intro and outro; transitions `cut`, `fade`, `slide`, `zoom-through`, `morph` (one element's box becomes the next scene's) and `blur-zoom`. | P0  |
+| FR-89 | **Continuous motion** in trailers: no frame holds still for more than 0.4 s outside the outro. Footage keeps a slow push-in; components idle (float, glow, cursor drift); type drifts. Checked by the motion lint. | P0  |
 
 ### 6.10 Re-run on update
 
@@ -326,14 +335,17 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | 1   | TinyAgent emits `flow.json` with **selectors**                        | Agent emits **semantic targets** (text/role/label). Our recorder resolves them to locators at record time and caches them.                                                                                                                                                                                             | TinyFish Agent run steps are natural-language action descriptions + screenshots, with no selectors in the documented step schema. Semantic targets also survive UI changes better than CSS selectors, which is what makes "re-run on update" work.                                                                                                                                                |
 | 2   | TinyProfiles feed both explore and record                             | Profile feeds **explore**. A locally captured `storageState` (taken during the same sign-in session) feeds **record**.                                                                                                                                                                                                 | Browser Context Profiles attach to Agent API runs. Direct Browser API sessions are documented as isolated with no profile parameter. One human sign-in should serve both.                                                                                                                                                                                                                         |
 | 3   | Record × N: one browser per (form factor × language)                  | One browser per **form factor**. Language is a narration concern.                                                                                                                                                                                                                                                      | The product UI doesn't change with narration language. Recording per language doubles cost and creates inconsistent takes. We retime footage per language instead (§9.6).                                                                                                                                                                                                                         |
-| 4   | Claude writes a **fresh Remotion composition every run, no template** | Claude writes an **EDL** against a tested **primitives library**, plus optional bespoke components that are compiled and test-rendered with fallback                                                                                                                                                                   | Freeform TSX per run is the biggest reliability risk: compile errors, render crashes, multi-minute fix loops. The EDL keeps Claude creative (pacing, camera, typography, custom intros) and makes variant fan-out, revisions and re-runs cheap.                                                                                                                                                   |
+| 4   | Claude writes a **fresh Remotion composition every run, no template** | Claude writes an **EDL** against a tested **scene catalogue**, plus optional bespoke scenes that are linted and test-rendered with fallback                                                                                                                                                                   | Freeform TSX per run is the biggest reliability risk: compile errors, render crashes, multi-minute fix loops. The EDL keeps Claude creative (pacing, camera, typography, custom intros) and makes variant fan-out, revisions and re-runs cheap.                                                                                                                                                   |
 | 5   | Single approval gate before render                                    | Three gates: flows → script → preview with revise loop. Autopilot skips all three.                                                                                                                                                                                                                                     | Cheapest to fix mistakes early. Recording a wrong flow wastes the most time.                                                                                                                                                                                                                                                                                                                      |
-| 6   | Cursor smoothing implied                                              | **Synthetic cursor** composited in Remotion from logged mouse paths                                                                                                                                                                                                                                                    | Headless CDP screencast doesn't render the OS cursor at all.                                                                                                                                                                                                                                                                                                                                      |
+| 6   | Cursor smoothing implied                                              | **Synthetic cursor** composited at render time from logged mouse paths                                                                                                                                                                                                                                                    | Headless CDP screencast doesn't render the OS cursor at all.                                                                                                                                                                                                                                                                                                                                      |
 | 7   | Orchestrator is a job pipeline                                        | **Resumable stage graph** with content-addressed artifacts                                                                                                                                                                                                                                                             | Enables crash recovery, re-run on update and CI with minimal recompute.                                                                                                                                                                                                                                                                                                                           |
 | 8   | —                                                                     | **Fetch-based brand kit + product brief**                                                                                                                                                                                                                                                                              | Free under TinyFish Fetch's daily allowance, and makes the intro/outro look on-brand automatically.                                                                                                                                                                                                                                                                                               |
 | 9   | Record in TinyFish Browser API cloud browsers                         | Record in a **local Chromium** on the worker. TinyFish Browser API sessions become the **fallback recorder**, captured state by state.                                                                                                                                                                                 | TinyFish browsers run in AWS San Jose, about 305 ms round trip from Delhi. The screencast waits for an acknowledgement per frame, so we expect only 4–6 fps and much slower typing; local Chromium should reach 60 fps. There's no region setting, the proxy country doesn't move the browser, and TinyFish has no local or self-hosted mode. Spike S1 confirms the numbers. |
 | 10  | One discovery run performs every flow                                 | **Short entrance scout, then up to three focused flow runs**, two at a time, each rehearsed in fresh local Chrome. Save run IDs and results incrementally.                                                                                                                                                             | Broad exploration loops, mismatched browser access and lost completion responses cost more than the extra agent startup. Focused tasks bound wasted work; durable polling avoids duplicate paid starts.                                                                                                                                     |
 | 11  | A style prompt shapes the director's edit                             | An optional **video prompt** becomes a **creative brief**, then a **storyboard** (beats with narration and motion intent). The director plans motion with the **motion design skill** as its rulebook, writes **motion tokens** every primitive obeys, and is held to the skill's critical rules by a **motion lint**. | A free-text style prompt gives the director taste but no discipline, so edit quality varies. The skill turns taste into checkable rules (one personality, directional easing, the 1/3 rules, three layers), and the brief lets the user's intent reach every stage, not just the edit.                                                                                                         |
+| 12  | The recorder keeps pixels only (`recording.mp4`)                      | The recorder also keeps the product's **DOM** at every settled step: page and element HTML, high-DPR element images and states (§9.3.4) | Frame-by-frame analysis of two reference launch films (§9.7.4): about 20–40% of their screen time is single UI components lifted out of the page, sharp at what would be 5–6× on a 1080p capture, in layers with depth of field. A crop of a screen recording goes soft past 2×; the DOM doesn't. |
+| 13  | Narration leads every video; shots freeze until a line ends           | **Trailers are text-led and music-led**: kinetic type lines carry the story, narration is optional, scene boundaries follow the music's sections and drops, and nothing holds still. Guides keep the voice clock. | Neither reference film has a voice-over: about 0.9 on-screen words a second, 80–94% of frames in motion, the only hold the end card. Narration at 2.8 words a second with freeze holds reads as a screen recording with captions. |
+| 14  | Remotion renders the edit                                             | **HyperFrames** renders it (plain HTML + CSS + a seekable GSAP timeline, Apache 2.0). Remotion stays the fallback if spike S4 fails. | The trailer style is GSAP-on-DOM, which the web app already uses and which is HyperFrames' default runtime. Captured product HTML drops into an HTML composition as it is; in React it needs wrapping and CSS isolation. It's built for coding agents to author (skills, lint, ~450 catalogue blocks). Apache 2.0 needs no seat count (Remotion is free up to 3 people; we are 4). `packages/video` had no code yet, so switching cost nothing. |
 
 ### 7.2 Component diagram
 
@@ -349,10 +361,10 @@ flowchart LR
 
   subgraph W["Worker — Node.js / TypeScript (local)"]
     ORC[Orchestrator<br/>stage graph · SQLite · WS events]
-    REC[Recorder<br/>Playwright over CDP]
+    REC[Recorder<br/>Playwright over CDP<br/>footage + DOM snapshots]
     DIR[Director + script writer]
     LLM[LLM runner<br/>claude -p · opencode run · codex exec]
-    RND[Renderer<br/>Remotion + FFmpeg]
+    RND[Renderer<br/>HyperFrames + FFmpeg]
     VOX[Voice client]
     CHR[Local Chromium × form factors<br/>screencast · 60 fps]
   end
@@ -396,12 +408,13 @@ flowchart TD
   CB --> D
   D --> FR[flow runs ×K<br/>Agent, parallel]
   FR --> G1{{Gate 1: flows}}
-  G1 --> R[record ×form factors<br/>local Chromium, parallel]
+  G1 --> R[record ×form factors<br/>local Chromium, parallel<br/>footage + DOM snapshots]
   G1 -.draft in parallel.-> S
   R --> S[storyboard + script ×languages<br/>Claude]
   S --> G2{{Gate 2: script}}
-  G2 --> V[voice ×segments×languages<br/>ElevenLabs, parallel]
-  V --> DR[direct<br/>Claude Code → edl.json + custom/]
+  G2 --> V[voice ×segments×languages<br/>ElevenLabs, parallel<br/>skipped when voice: none]
+  V --> DR[direct<br/>Claude Code → edl.json + custom/ scenes]
+  M[(music library<br/>sections + drops)] --> DR
   DR --> P[preview render]
   P --> G3{{Gate 3: preview}}
   G3 -->|revise prompt| DR
@@ -417,7 +430,7 @@ Each node is a **stage** with declared inputs and outputs. Its cache key is `sha
 - **`apps/worker`**: a long-lived Node process (Fastify), fully asynchronous. `POST /jobs` answers 202 at once and the job runs in the background. It owns:
   - the orchestrator
   - an async, file-backed job store (`~/.agentcast/jobs/<jobId>/state.json`, written atomically, plus `events.ndjson`), chosen over SQLite because Node's built-in SQLite is synchronous and `better-sqlite3` needs a native build
-  - Playwright, Remotion bundling and rendering, and Claude invocations
+  - Playwright, HyperFrames rendering (`@hyperframes/producer`), and Claude invocations
 
   Rendering never runs inside Next.js route handlers. Live progress uses server-sent events rather than WebSocket: the stream is one-way, and browsers reconnect to it on their own.
 
@@ -623,6 +636,7 @@ Per form factor:
    - Hover dwell 150 ms, then act.
    - Wait for settle (network idle ≤ 2 s or DOM-stable 300 ms). Mark slow-load portions as dead.
    - **Verify the outcome** against the step's expectations (§9.3.1). A failed check fails the take.
+   - **Capture components** (§9.3.4): the page and the acted-on element as HTML + DPR 3 PNG, with the before and hover states taken just before the action. Capture time is marked dead, so it never reaches the footage.
    - Log the event.
 6. Stop the screencast and drain acknowledgements/writes. Evaluate original frame gaps within declared expected-motion windows, including leading/trailing silence; a failed stall check retakes the flow, at most three times. Static holds are preserved. Frames + timestamps go through ffmpeg (generated concat manifest with explicit per-image durations, 1 ms timebase and terminal hold) into CFR 30 fps H.264 `recording.mp4`, using a real NVENC → Quick Sync → x264 probe/fallback and full-range JPEG to limited-range `yuv420p` conversion. Use GOP 15 and fast-start metadata. Validate every decoded presentation timestamp, frame count, dimensions, duration and keyframe spacing with ffprobe before publishing atomically. The encoding may hold up to one extra output frame to round duration to the 30 fps grid. The flow timeline writer then writes `timeline.json` (a separate stage from capture).
 7. Close the browser (always, in `finally`).
@@ -724,6 +738,25 @@ Used when FR-40a applies: the local browser hits a bot wall, CAPTCHA or geo-bloc
 6. Emit the same `timeline.json`, with each event pointing at its still instead of a video time. The editor builds the motion: cursor, zoom, pans, and crossfades between states.
 7. `DELETE` the session in `finally`.
 
+#### 9.3.4 Component capture (DOM snapshots)
+
+The reference films (§9.7.4) build most of their product proof from single UI parts: a button pressed by a huge cursor, a dialog over a blurred page, a progress bar filling, an input with a prompt being typed. Those shots are sharp at scales a screen recording can't reach, and they are layered. So the recorder keeps the product's DOM as well as its pixels, during the same clean take.
+
+**What is captured, at each settled step** (only on the take that's kept):
+
+- **Page snapshot:** the visible page serialised to one self-contained HTML file. Every element gets its computed style inlined; `@font-face` fonts and images are inlined as data; `<canvas>` and `<video>` become PNG stills of their current frame; shadow roots are flattened; scripts, event-handler attributes, `<iframe>`s, forms' `action`s and external URLs are removed. It renders offline and can't run any of the site's code.
+- **Element snapshots:** the element the step acted on (and the result element the outcome check found, such as a new dialog or toast), as its own HTML fragment with the same treatment, plus a DPR 3 PNG with a transparent background as the fallback when the HTML doesn't render faithfully (canvas-heavy widgets, closed shadow DOM, cross-origin images).
+- **States:** `before` (settled, before the cursor arrives), `hover` (after the hover dwell), `after` (settled after the action, from the result element). A lifted component may animate between these; it may not show anything else (principle 1).
+- **Box and context:** the element's CSS-pixel box in the page, its role and accessible name, and the step and flow ids.
+
+**Safety.** The same rules as footage: typed values marked `secret` are replaced by `•••` in every snapshot, and FR-48's redaction selectors and patterns are applied to the DOM itself (text replaced, not blurred), so a snapshot can't leak what the footage hides. Snapshot HTML is untrusted website content: it is never put into a prompt unwrapped, and the director sees it only as files it may place in a scene, not as instructions.
+
+**Files:** `record/<formFactor>/snapshots/<stepId>/{page.html, el-<n>.html, el-<n>.png, el-<n>.hover.png, el-<n>.after.png}` and `record/<formFactor>/components.json` (one entry per captured element: ids, label, role, box, states, files). `timeline.json` v2 points each settled event at its snapshot.
+
+**Fidelity check.** After capture, each element's HTML is rendered once headless and compared with its PNG (mean absolute difference of a grey thumbnail). Above 0.04, `components.json` marks it `png-only` and scenes use the image.
+
+**Cost.** One page and one or two elements per step, about 150–400 ms each, outside the footage (dead time). A 3-flow DemoBoard job adds roughly 20 snapshots and a few MB.
+
 ### 9.4 Creative brief and storyboard (Claude)
 
 **Creative brief** (`brief/creative.json`, FR-5). One fast-tier `json` task right after understand, from the optional video prompt, `product-brief.json` and the video mode:
@@ -745,12 +778,15 @@ On autopilot it proceeds. The brief steers discovery (focus), flow selection (ta
 - **Beats.** Each beat has its footage span (flow and source in/out), narration with `maxSeconds` from the compressed visual duration × pacing, on-screen text (title, callout, lower third) and a **motion intent**: what to emphasize (a step's element), the emotion it carries, and its kind (reveal, emphasis, transition, hold).
 - **Languages.** One storyboard; each language's lines are written natively from it (FR-51), so every language shares one edit.
 - Also the hook, title card, CTA and posting copy.
+- **Trailers are text-led (FR-55).** In trailer modes each beat also gets a **type line**: 2–5 words that appear word by word, one accent word marked, about one word a second across the video (the reference films run at 0.9). Lines alternate with proof: a claim ("Any language. Instantly."), then the component or shot that proves it. The lines read as one sentence across beats ("Turn · Books · Audio · Any language · Instantly"), never as captions of what's on screen. Each beat also names its **scene** from the catalogue (FR-88) and, for a `component` scene, the captured element (`components.json` id) it lifts. `voice` is `none` unless the prompt asks for a voice-over; narration lines are then written as before, at 70% of their footage.
 
 Output: `storyboard.json` (beats, shared) and `script.<lang>.json` (lines per beat). Speech-rate budgets on `eleven_v4` (spike S5 confirms them): EN ≈ 2.8 words/s, HI ≈ 2.55 (launch); tutorial lines run about 15% slower. Brand names and tech terms stay in Latin script inside Hindi lines (FR-51), which should be spoken and transcribed exactly that way.
 
 **Gate 2** shows each beat's frame, both languages and its motion note. A line can be edited, or a single beat re-prompted ("make the hook sharper") without regenerating the rest.
 
 ### 9.5 Voice (ElevenLabs)
+
+The stage runs only when the storyboard has narration (`voice: narration`, always for guides; trailers when the prompt asks for a voice-over). With `voice: none` it's skipped and spends no characters (FR-63).
 
 `POST /v1/text-to-speech/{voice_id}/with-timestamps` with `eleven_v4` and `language_code` (fallback `eleven_multilingual_v2`; not `eleven_v3`, whose word timings can drift up to ~0.4 s). Each beat's line is sent with its neighbours as `previous_text`/`next_text` so separate clips sound continuous. Response audio → `voice/<lang>/<beatId>.mp3`, and alignment (character start/end times) → word timings (`packages/voice`) → `voice/<lang>.json` (`Voiceover`, §10). Captions aren't stored: each render pages the words onto its own timeline (§9.6), at most 7 words a page, breaking at sentence ends and pauses, and highlights each word as it's spoken (`captionStyle: 'karaoke'`). Spike S5 checks that v4's word starts land within ~30–45 ms of an independent transcriber's, so karaoke captions are frame-accurate. Clips run 2 at a time (`ELEVENLABS_CONCURRENCY`; the free plan's limit), the length comes from the mp3 (ffprobe), and a clip whose timings fail the checks is re-made once on the fallback model.
 
@@ -760,7 +796,9 @@ Output: `storyboard.json` (beats, shared) and `script.<lang>.json` (lines per be
 
 **Plan limits.** The free plan has 10,000 characters a month (about ten 60 s videos in English and Hindi; two scripts for a short demo are around 800) and can only use premade voices and the account's own through the API; library voices answer `402 paid_plan_required`. The voice stage checks the plan first (a free call): a configured voice the plan can't use is replaced by a premade one (Bella for English, Brian for Hindi) with a warning, and a job that needs more characters than are left stops before speaking. `agentcast doctor` shows both.
 
-### 9.6 Retiming ("fit video to voice")
+### 9.6 Retiming ("fit video to voice", "fit video to music")
+
+This section is the guide clock and narrated trailers. Trailers without narration use the music clock at the end of this section.
 
 For each segment and language:
 
@@ -772,32 +810,44 @@ if visual_raw > target: speed-ramp non-interaction spans (typing, loads) up to m
 if visual_raw < target: hold on the settled frame with a slow camera drift (Ken Burns) to fill
 ```
 
-Remotion's `calculateMetadata` computes total duration per (language × aspect) from this, so the same EDL renders correctly for every variant.
+`packages/video` computes the total duration per (language × aspect) from this when it compiles the EDL into a composition, so the same EDL renders correctly for every variant.
 
-**Holds first (`planParts` in `packages/video`).** Each part of the edit lasts at least `0.25 s + its lines (0.2 s apart) + 0.35 s`: the title card and outro stretch to fit the hook and CTA lines, and a shot shorter than its line freezes its last frame (camera and cursor at rest) until the line ends. Shots longer than their line play as cut.
+**Holds first (`planParts` in `packages/video`).** Each part of the edit lasts at least `0.25 s + its lines (0.2 s apart) + 0.35 s`: the title card and outro stretch to fit the hook and CTA lines, and a shot shorter than its line freezes its last frame (camera and cursor at rest) until the line ends. Shots longer than their line play as cut. Trailers never freeze (FR-89): a shot shorter than its line holds its last frame under a continuing camera drift, or the line moves onto the next scene.
 
-**Speed ramps (`retime.ts`):** a shot carries `ramps: [{ from, to, speed }]` (source seconds, 1.25–4×). Speed eases in and out over the first and last quarter of each ramp (at most 0.35 s), and output time is the integral of 1/speed, tabulated per shot; every frame shows the source second the map gives (Remotion `<Freeze>` on the footage), and camera, cursor and overlays follow the same clock. The baseline adds ramps only in trailer edits (§9.7.2): waits between actions (2.5×), typing (3×) and the recorder's dead time, biggest first, only while the footage stays at least as long as its narration (so a ramp never turns into a freeze) and never while text is up. The drifting hold comes after.
+**Speed ramps (`retime.ts`):** a shot carries `ramps: [{ from, to, speed }]` (source seconds, 1.25–4×). Speed eases in and out over the first and last quarter of each ramp (at most 0.35 s), and output time is the integral of 1/speed, tabulated per shot; every frame shows the source second the map gives (the footage frame is chosen per output frame, §9.8), and camera, cursor and overlays follow the same clock. The baseline adds ramps only in trailer edits (§9.7.2): waits between actions (2.5×), typing (3×) and the recorder's dead time, biggest first, only while the footage stays at least as long as its narration (so a ramp never turns into a freeze) and never while text is up. The drifting hold comes after.
+
+**The music clock (trailers without narration).** The track's tags carry its tempo, first downbeat, **sections** (where the energy changes, from a smoothed RMS envelope) and **drops** (silences or near-silences of 0.1 s or more, and the hit that follows). The baseline lays the storyboard's beats over the track in order:
+
+1. Each beat's natural length: a type line takes `0.6 s + 0.35 s per word`; a component scene its cursor approach, click and reaction (~1.6–2.4 s); a shot its retimed footage, ramped hard (up to 4×) because no voice needs the time.
+2. Scene boundaries snap to the nearest section start or drop within ±0.4 s, otherwise to the nearest beat or half-beat (soft: the reference films land 76–80% of their events within 100 ms of a beat or half-beat, but no better than chance on whole beats, §9.7.4).
+3. The product reveal and the CTA land on the two strongest hits after a drop. The outro takes the track's last phrase and the music fades over it.
+4. Total length is the brief's target, rounded to the end of a musical phrase. The track is cut (at a section boundary) or the montage stretched to fit; it never loops audibly.
+
+With no music in the library the music clock falls back to the plain beat lengths above, and the job warns that a trailer without music will look flat.
 
 ### 9.7 Direct (Claude Code)
 
-- The workspace is the job's `render/` dir: a Remotion project with `src/primitives/*` (VirtualCamera, Cursor, ClickRipple, Captions, Callout, TitleCard, LowerThird, Transition, MusicBed), `src/schema/edl.ts` (zod), artifacts in `data/` (creative brief, storyboard, scripts, voice timings, timelines, baseline EDL), `guides/motion/` (§9.7.1), and `DIRECTOR.md` (role, rules, the brief, budget).
+- The workspace is the job's `render/` dir, a HyperFrames project: `index.html` (the composition `packages/video` compiles from `edl.json`: one clip per scene, one paused GSAP timeline registered on `window.__timelines`), `scenes/` (read-only copies of the catalogue's scene templates), `custom/` (the director's own scenes, FR-72), `assets/` (footage clips, the captured components from §9.3.4, the brand's logo and fonts inlined so the render needs no network, music and sound effects), `data/` (creative brief, storyboard, scripts, voice timings, timelines, `components.json`, baseline EDL), `guides/motion/` (§9.7.1), `guides/trailer.md`, and `DIRECTOR.md` (role, rules, the brief, budget).
 - It's invoked as an `agent` task through the LLM runner (§9.9). By default that's headless Claude Code (`claude -p`) on the user's own login, with the smart tier (`opus` alias). opencode or Codex can be swapped in by config.
-- **Allowed tools:** `Read`, `Write`, `Edit`, `Glob`, `Grep`, and `Bash` restricted to `npx tsc --noEmit`, `npx remotion still …`, `node scripts/validate-edl.mjs`. No network tools, no MCP servers. Wall-clock timeout 6 min.
-- **Definition of done:** `edl.json` validates, `custom/*` type-checks, and three stills (0 s, middle, end) render without error. The worker re-verifies independently, so it doesn't trust the agent's claim.
+- **Allowed tools:** `Read`, `Write`, `Edit`, `Glob`, `Grep`, and `Bash` restricted to the HyperFrames CLI's lint and frame-render commands (exact commands pinned with the version in spike S4) and `node scripts/check.mjs` (schema, storyboard and motion lint). Codex has no shell (§9.9), so the worker runs the same checks and sends failures back with `resume`. No network tools, no MCP servers. Wall-clock timeout 6 min (8 for trailers).
+- **Definition of done:** `edl.json` validates, every `custom/*` scene lints, and three frames (0 s, middle, end) render without error. The worker re-verifies independently, so it doesn't trust the agent's claim.
 - **Revise loop:** user feedback is appended to the session, and Claude edits only what is needed. At gate 3 a revision is a gate decision `{ reopen: true, revise }`: the orchestrator re-runs `direct` (resuming the session) and `preview`, then asks again.
 - **First version (Phase 5b):** the director edits only `edl.json`; the worker re-checks it (schema, storyboard order and spans, callouts in every language, motion lint) with up to 2 repair rounds, then gives the director one look at rendered stills of key moments. If the edit never passes, or Claude Code isn't available, the baseline edit is used. `AGENTCAST_DIRECTOR=off` skips the director.
-- **Primitives (`packages/video/src/remotion/`)**, every one timed by the motion tokens:
-  - **Kinetic type** (`KineticText`): display lines arrive word by word, each word in its own mask, in the personality's pattern (premium and corporate rise from behind a line, playful bounces up, energetic snaps in at scale, in capitals), staggered within 450 ms; out together. Type style per personality (`typeStyle`): weight, tracking, case. League Spartan, falling back to Noto Sans Devanagari for Hindi.
-  - **Backdrop:** the brand background with two glows on slow orbits and a faint grid fading from the centre; it continues across parts (the ambient layer).
-  - **TitleCard:** the site address as a kicker, the product name in kinetic type, the script's title line, an accent rule drawing itself. **Outro:** the name, the CTA as the headline, the URL in a pill that lands last and sends out one ring.
-  - **Window stage** (`style.frame: 'window'`, 16:9): wide shots sit in a browser window (title bar, the page's address from the timeline, shadow) on the backdrop; it opens to full frame as the camera zooms past 1.25×, so close-ups fill the screen. 9:16 is always full frame.
-  - **Shot title** (`segment.title`): a chapter headline in kinetic type over a shot's opening, on a scrim, with an accent rule. **Lower third** (`segment.lowerThirds`): an accent bar grows, a panel wipes open, the words rise in.
-  - **Callout** with an optional **spotlight** (the rest of the frame dims); labels stay out of the captions' band.
-  - **Transitions** overlap the parts (up to a third of either): `fade` crossfades, `slide` pushes in from the right, `zoom-through` grows the outgoing shot toward the viewer as the next settles in. `cut` doesn't overlap. A part's narration waits for its transition.
-  - **Karaoke captions** from the voice's word timings.
-  - The baseline places the storyboard's `title`, `callout` and `lowerThird` texts (one at a time; callouts as the pointer heads for the element and gone just after the click; a dropdown choice without a box points at the element opened before it), and picks transitions per personality: premium `fade`, corporate and playful `slide`, energetic `zoom-through`, and `cut` between continuous footage.
-  - EDL v4 (§9.7.2) adds headline, montage and stat scenes, speed ramps, the tilted window, lifted callouts, the music bed and sound effects, minimal captions, light sweeps and motion blur on trailer transitions.
-  - Later: `DeviceFrame` for phones, custom components (FR-72).
+- **Scene catalogue (`packages/video/src/scenes/`, FR-88).** Each scene is an HTML template plus a function that builds its GSAP timeline from the EDL, timed by the motion tokens. The catalogue is small on purpose (about 8 scenes, each made well) and is what the baseline fills:
+  - **`kinetic`:** a type line arriving word by word, each word in its own mask, in the personality's pattern (premium and corporate rise from behind a line, playful bounces up, energetic snaps in at scale, in capitals), staggered within 450 ms. Two-tone like the reference films: ink plus the accent word in the accent colour or a brand-gradient fill. It drifts while held and leaves with a blur-scale exit. League Spartan or the brand's display font, falling back to Noto Sans Devanagari for Hindi.
+  - **`typing`:** a lifted input (the captured one, or a brand-styled pill) where text types on with a caret, then the cursor clicks send. Often morphs into the next shot (the pill opens into the app window).
+  - **`component`:** a captured element from `components.json`, lifted out at large scale (rendered from its HTML, so sharp at any zoom) with a soft shadow and a slow float. The synthetic cursor arrives, the hover state shows, the click lands with a ripple, and the after state follows. Optionally the page snapshot sits blurred behind it (depth of field). Only captured states are shown (principle 1).
+  - **`shot`:** footage in a browser window, a tilted window (perspective, drifting, flattening as it opens) or full bleed, with the virtual camera, cursor, callouts, shot titles and lower thirds. 9:16 is always full frame.
+  - **`stage3d`:** captured page snapshots or components staged in CSS perspective: a tunnel of tilted screens the camera pushes through, cards scattering in depth, a showcase grid. A type line can sit over it.
+  - **`stat`** (a counting number, only for real numbers), **`montage`** (the flows' payoffs as tilted cards), **`statement`** (a headline in big type, for narrated trailers).
+  - **Intro and outro:** TitleCard (the site address as a kicker, the product name in kinetic type, an accent rule drawing itself); Outro (logo lockup, the CTA, the URL typed on; the only hold in a trailer).
+  - **Backdrop:** the brand background with glows on slow orbits, or the brand's colours as a drifting gradient field (`mesh`); it continues across scenes (the ambient layer).
+  - **Transitions** overlap the parts (up to a third of either): `fade`, `slide`, `zoom-through`, plus `morph` (the outgoing scene's focus element animates its box, radius and fill into the incoming scene's focus element, Flip-style, e.g. a progress bar into a dot into a check) and `blur-zoom` (scale through the cut with directional blur). `cut` doesn't overlap. A part's narration waits for its transition.
+  - **Motion blur** on fast moves (directional blur in proportion to speed); the reference films blur 4–8% of their moving frames.
+  - **Karaoke captions** from the voice's word timings, when there is narration.
+  - The baseline places the storyboard's `title`, `callout` and `lowerThird` texts (one at a time; callouts as the pointer heads for the element and gone just after the click; a dropdown choice without a box points at the element opened before it), and picks transitions per personality: premium `fade`, corporate and playful `slide`, energetic `zoom-through`, and `cut` between continuous footage. Trailers alternate `kinetic` with `component` / `shot` / `stage3d` per the storyboard's scenes and join them with `morph` where the two focus elements are both captured, `blur-zoom` otherwise.
+  - EDL v4 (§9.7.2) added headline, montage and stat scenes, speed ramps, the tilted window, lifted callouts, the music bed and sound effects, minimal captions. EDL v6 (§10) adds the `kinetic`, `typing`, `component` and `stage3d` scenes, the `morph` and `blur-zoom` transitions and `custom` scenes.
+  - Later: `DeviceFrame` for phones.
 
 #### 9.7.1 Motion design (the skill as the director's rulebook)
 
@@ -817,7 +867,7 @@ The motion design skill (`.agents/skills/motion-design`, by LottieFiles, MIT lic
 1. **Anticipation:** the camera starts toward the target as the pointer heads for it.
 2. **Action:** the click and the UI change.
 3. **Reaction:** the ripple, then the callout, 50–150 ms apart.
-4. **Resolution:** a hold of at least the narration's tail before the next beat.
+4. **Resolution:** in guides, a hold of at least the narration's tail before the next beat. In trailers, no hold: the component idles or the camera keeps drifting until the next scene takes over on the music.
 
 **Three layers in every beat.** Primary: the footage and the camera. Secondary: cursor, ripple, callouts and captions. Ambient: a slow background drift on cards and held shots, the tilted window's drift, and the music bed.
 
@@ -833,6 +883,7 @@ The motion design skill (`.agents/skills/motion-design`, by LottieFiles, MIT lic
 - every caption and callout stays up long enough to read (≈ 180 ms per word, minimum 1.2 s)
 - one piece of on-screen text at a time per shot (title, callout, lower third), on the output clock (ramps); titles ≤ 6 words, lower thirds ≤ 8 (warnings); a non-cut transition into a shot shorter than three transitions is flagged
 - ramps inside their shot and apart; warnings for text during a ramp, headlines over 7 words, scenes too short to read, montage clips under 0.6 s
+- trailers (FR-89): no stretch over 0.4 s where nothing moves, outside the outro; type lines of 2–5 words, up at least 0.6 s + 0.35 s per word; footage zoom ≤ 2× (closer goes to a `component` scene); a `component` scene shows only the states its capture has; a `morph` needs a focus element on both sides; scene boundaries within 0.4 s of a music section, drop or (half-)beat when the track has tags (warning)
 
 Failures go back to the same director session (at most 2 repair rounds), then the job falls back to the baseline edit. The director also reviews rendered stills of key moments and fixes what it sees (FR-78).
 
@@ -847,26 +898,27 @@ video type: **launch and sales videos are cut as trailers, tutorials as guides**
 
 |           | Guide (tutorial)                                                       | Trailer (launch, sales)                                                                                                                                                                                                                  |
 | --------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Story     | the steps in order, every beat on footage                              | claims and proof: headline beats (no footage) between proof shots, at most 3, never two in a row                                                                                                                                         |
-| Narration | imperative steps; 85% of a shot's footage                              | outcomes, never clicks or field values; 70% of a shot, so music and cuts carry the rest                                                                                                                                                  |
-| Scenes    | shots only                                                             | `statement` (a headline in big kinetic type, its line voiced over it), a closing `montage` of the payoffs in tilted windows, `stat` (a counting number, only for real numbers)                                                           |
-| Picture   | browser window opening on zoom                                         | tilted window (perspective, drifting, flattening as it opens), harder zooms (≥ 1.65×), speed ramps, lifted callouts on emphasis shots (the element rises out of the screen as a card), light sweep and motion blur on moving transitions |
-| Pace      | as recorded                                                            | cuts on the beat: with a tempo, each part runs on (under a beat) so the next cut lands on one; music starts on a downbeat at frame 0                                                                                                     |
-| Sound     | voice; a quiet music bed if there is one (−18 dB, −10 under the voice) | music up front (−6 dB, −13 under the voice), sound effects (`style.sfx: 'auto'`)                                                                                                                                                         |
-| Captions  | karaoke box                                                            | minimal: no box, a soft shadow                                                                                                                                                                                                           |
+| Story     | the steps in order, every beat on footage                              | claims and proof, alternating: a type line, then the component or shot that proves it; product reveal after the hook; a closing tagline (often three words, "Translate. Dub. Distribute") before the outro                              |
+| Text      | captions of the narration                                              | kinetic type lines (FR-55), 2–5 words, about 0.9 words a second over the video, two-tone, one line at a time                                                                                                                              |
+| Narration | imperative steps; 85% of a shot's footage                              | none by default; when asked for, outcomes, never clicks or field values, 70% of a shot                                                                                                                                                    |
+| Scenes    | shots only                                                             | `kinetic`, `typing`, `component` (lifted, sharp, with a cursor), `shot` (tilted window), `stage3d`, `stat` (real numbers only), `montage`; outro with the URL                                                                             |
+| Picture   | browser window opening on zoom                                         | never still (FR-89): slow push-ins, components floating, harder zooms; footage ≤ 2×, closer shots from captured components; morphs between scenes; motion blur on fast moves; speed ramps up to 4×                                          |
+| Pace      | as recorded                                                            | music-led: scene boundaries on the track's sections and drops, otherwise near a beat or half-beat; the reveal and CTA on the strongest hits (§9.6)                                                                                       |
+| Sound     | voice; a quiet music bed if there is one (−18 dB, −10 under the voice) | music all the way through (−6 dB; −13 under a voice when there is one), sound effects (`style.sfx: 'auto'`); a trailer without music is flagged                                                                                          |
+| Captions  | karaoke box                                                            | none (the type lines are the text); minimal captions only when narrated                                                                                                                                                                  |
 
-**Headlines.** The storyboard writer adds them in trailer modes (its check enforces the title, the count
+**Headlines** (narrated trailers; text-led trailers use type lines instead). The storyboard writer adds them in trailer modes (its check enforces the title, the count
 and the spacing); without a coding agent, the plain storyboard takes up to two from the product's value
 props. Each script translates the title; the statement scene shows it while its line plays. A headline the
 edit leaves out falls back to a card for its narration (`beatParts`).
 
 **Music library** (`assets/music/`, FR-85). `tags.json` (`MusicLibrary`) lists each track: file, title,
-artist, source, licence (required), moods, energy 1–5, BPM, first downbeat, length. `agentcast music add`
+artist, source, licence (required), moods, energy 1–5, BPM, first downbeat, length, and (v2) **sections** and **drops**. `agentcast music add`
 copies a file in and measures tempo and first beat (onset envelope, autocorrelation over 70–180 BPM weighted
 toward 120, then a joint tempo-and-phase search; target accuracy 0.1 BPM and 10 ms on test tracks). Audio files aren't
 committed; `tags.json` is. The direct stage picks a track by personality moods and grammar energy, preferring
 tracks long enough not to loop (seeded by job id), and copies it into the job (`render/audio/`). With an empty
-library the video simply has no music. Ducking: the bed eases down 0.15 s before each line and back up 0.3 s
+library the video simply has no music, which makes a weak trailer, so the repo ships 3–5 licensed tracks (FR-85) and the job warns when none fits. **Sections** come from a smoothed RMS envelope (a change of more than 3 LU held for 2 s or more, snapped to the nearest downbeat); **drops** are silences or near-silences of 0.1 s or more (below −35 dB) and the hit after them. In the Lovable reference the music stops at 7.99–8.55 s and 49.4–50.1 s, and the product reveal and a hard cut land as it comes back. Ducking: the bed eases down 0.15 s before each line and back up 0.3 s
 after; fades in over 0.5 s and out over 1.6 s.
 
 **Sound effects** are synthesised with ffmpeg (`ensureSfx`: whoosh, click, pop, riser, hit), so there's no
@@ -876,8 +928,8 @@ stat lands, a soft click on each recorded click, a hit on the CTA. Shots may add
 
 **Loudness.** Previews and finals are normalised to −14 LUFS / −1.5 dBTP with `loudnorm`, the picture copied.
 
-**Director.** `DIRECTOR.md` documents EDL v4 and the grammar; trailers also get `guides/trailer.md` (how a
-launch trailer is cut: shape, pace, picture, sound). Its time limit is 8 minutes. The check requires the
+**Director.** `DIRECTOR.md` documents the EDL and the grammar; trailers also get `guides/trailer.md` (how a
+launch trailer is cut: shape, pace, picture, sound, with the reference films' shot lists from §9.7.4). Its time limit is 8 minutes. The check requires the
 storyboard's shots and headlines in order as shots and statements; montages and stats are the director's own.
 
 #### 9.7.3 The look follows the product
@@ -905,11 +957,42 @@ Every component is theme-aware: window bars and surfaces, pills and callout labe
 
 Try it on saucedemo, vengenceui.com, Stripe, Linear and Notion: they should come out with clearly different looks (light and mint, black-and-white with outlined headlines, white with Stripe purple, black editorial, white with a blue mesh).
 
+#### 9.7.4 Reference films (the bar for trailers)
+
+Two launch films set the bar for the trailer grammar: a LangEase promo (33 s) and "Lovable 2.0 is here" (80 s). Both were analysed frame by frame with ffmpeg and ffprobe: per-frame motion, zoom, sharpness and colour on a 192×108 grey copy of every frame, contact sheets read at 5 fps and 2 fps, full-resolution frames at the close-ups, spectrograms, silences and EBU R128 loudness. (The videos are local reference copies and aren't committed.)
+
+| Measure | LangEase | Lovable 2.0 |
+| --- | --- | --- |
+| Hard cuts | 0 (morphs and blur-zooms) | 15, median shot 3.7 s |
+| Frames with visible motion | 80% | 94% |
+| Holds of 0.5 s or more | the end card only (3.7 s) | the end card only (2.3 s) |
+| Voice-over | none | none |
+| On-screen words | ~30, ~0.9 a second | ~75, ~0.9 a second |
+| Screen time: type only | 36% | 48% |
+| Screen time: lifted UI components | 36% | ~18% |
+| Screen time: full UI (tilted, 3D, zoomed) | 21% | ~24% |
+| Device mockups, showcase grids | inside the 3D tunnel | ~10% |
+| Look | near-white, mean saturation 0.05, the product's blue | brand gradient fields, mean saturation 0.25, 18% dark frames |
+| Music | ~117 BPM, −13.8 LUFS, LRA 6.9 | ~112 BPM, −11.8 LUFS, LRA 6.1; stops at 7.99–8.55 s and 49.4–50.1 s |
+| Visual events within 100 ms of a beat or half-beat | 80% | 76% |
+| … of a whole beat (chance) | 20% (39%) | 40% (37%) |
+| Motion-blurred moving frames | 4% | 8% |
+
+**Shape.** Both alternate one kinetic line with one piece of product proof and end on the logo and URL. LangEase: "Turn · Books · Audio · Any language" → a folder icon set inside the sentence drops into an upload zone → a tunnel of tilted phone screens under "Books. Audio. Video / All In One Platform" → a ribbon morphs into a progress bar counting to 100/100 → bar to dot to check, "Done", confetti → video cards → the library screen tilted with a cursor → one card lifted out and clicked → "Multiple Languages" over floating cards → a "Distribute To Youtube" button clicked → "Translate. Dub. Distribute" → logo, URL typed on. Lovable: a typed hook in braces → "Meet Lovable" on a drop in the music → "apps · tools · ideas" → a real counter on a chart → a showcase grid and a laptop mockup → a glowing prompt pill typed into and opened into the app → the editor tilted with deep zooms → "Now with collaboration" with named cursors → huge Invite and Publish buttons and dialogs → a visual editor panel sharp over a blurred page → "/dev mode", a toggle, code → "What are you building?" → logo, URL.
+
+**What we take:** text-led, music-led pacing; lifted components with cursor clicks; morphs and blur-zooms instead of plain cuts; perspective staging; nothing ever still; close-ups rendered from the DOM (the Lovable "Edit" button at 43 s is about 100 px tall and crisp, which a 1080p recording can't give); the end card as the only hold.
+
+**What we don't:** staged data (Lovable's demo shop and the cursors named Lucy and Jonathan are made up; we show what the product actually showed during the take), stock photography of laptops on desks (P2 at most), and bespoke one-off morphs drawn for one product. **Beat sync is weaker than it looks**: events cluster near beats and half-beats, but on whole beats they are no better than chance, so the edit follows sections and drops and treats beats as a soft preference.
+
 ### 9.8 Render and fan-out
 
-- Bundle once per job (`@remotion/bundler`). `renderMedia` per variant with `inputProps = { lang, aspect, formFactor }`.
+- **Engine: HyperFrames** (`@hyperframes/producer`, one exact version pinned; decision in §7.1 row 14). `packages/video` compiles `edl.json` into one HyperFrames composition per variant (`index-<aspect>-<lang>.html`: `{ lang, aspect, formFactor }` decide the frame size, texts and timings) and renders it with `createRenderJob({ fps: 30, quality, format: "mp4" })` + `executeRenderJob(job, renderDir, out, onProgress, ctx.signal)`, so cancel works and progress becomes stage events. Preview: 960×540 standard quality. Final: 1080p high quality. Render pool of 2.
+- **How a frame is made:** the renderer never plays the page. It seeks the paused GSAP timeline to each frame time and captures it with Chrome's BeginFrame (`chrome-headless-shell` with deterministic flags), so every render of the same input gives the same frames. That deterministic path is Linux only; macOS falls back to screenshot capture with readiness checks (lower fidelity, fine for previews). Compositions follow its rules: no `Date.now()`, no unseeded randomness, no network (fonts and images are inlined in `assets/`).
+- **Footage:** HyperFrames pre-extracts each `<video>` clip to JPEG frames at 30 fps with FFmpeg and swaps the right frame in per capture, keeping the video element's transforms, so the virtual camera, tilt and morphs apply to footage as to any element. Speed ramps pick the source frame from the retime map. Footage-heavy compositions render on one worker (parallel workers can run out of decoders); guides are footage-heavy, trailers mostly aren't (about 20–25% of their time is footage).
+- **Captured components** render from their HTML inside the composition, scoped under their own root so the site's CSS can't touch our scenes (inlined styles, no global selectors kept); `png-only` components (§9.3.4) render as images.
+- **Fallback:** if spike S4 fails (a 30 s 1080p trailer with one 8 s clip renders more than 2× slower than real time, or captured HTML won't render without its scripts), the same EDL renders with Remotion (`@remotion/renderer` `renderMedia`, `OffthreadVideo` for footage) and captured components as DPR 3 PNGs.
 - **Virtual camera math:** camera keyframes are in _source_ coordinates (`{t, bbox, zoom}`). For each output aspect, the crop rect = the largest rect of that aspect containing `bbox × padding`, scaled by zoom, clamped to the frame, and spring-smoothed (critically damped). For 9:16 from desktop footage, this reframes like a camera operator. Mobile footage at 9:16 is native.
-- **Audio:** VO per segment as `<Audio>` in `<Sequence>`s. Music with a volume callback for ducking, sound effects as short `<Audio>`s at their cues (§9.7.2). Final loudness normalized in an FFmpeg pass.
+- **Audio:** VO per segment as `<audio>` clips with `data-start`; the music bed as one `<audio>` whose ducking envelope (§9.7.2) is pre-rendered into the bed with FFmpeg (a clip's `data-volume` is one level; spike S4 checks whether the producer can automate it); sound effects as short `<audio>` clips at their cues. Final loudness normalized in an FFmpeg pass (`loudnorm`, picture copied).
 - **Outputs:** `out/<variant>.mp4`, `.srt`, `.vtt`, `poster.jpg`, `teaser.gif`.
 
 ### 9.8.1 Re-run on update
@@ -958,7 +1041,7 @@ claude -p "<prompt>" \
   --restricted \
   --strict-mcp-config \
   --tools "Read,Write,Edit,Glob,Grep,Bash" \
-  --allowedTools "Bash(npx tsc --noEmit)" "Bash(npx remotion still:*)" "Bash(node scripts/validate-edl.mjs)" \
+  --allowedTools "Bash(npx hyperframes lint:*)" "Bash(node scripts/check.mjs)" \
   --permission-mode acceptEdits \
   --model opus \
   --output-format stream-json --verbose
