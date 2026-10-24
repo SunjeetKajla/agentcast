@@ -10,54 +10,48 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#09090B",
+        background: "#050505",
         foreground: "#FAFAFA",
         card: {
-          DEFAULT: "#18181B",
+          DEFAULT: "#121215",
           foreground: "#FAFAFA",
         },
         muted: {
-          DEFAULT: "#27272A",
+          DEFAULT: "#1E1E22",
           foreground: "#A1A1AA",
         },
         accent: {
           DEFAULT: "#8B5CF6",
           foreground: "#FAFAFA",
         },
-        border: "#27272A",
-        input: "#27272A",
+        border: "rgba(255, 255, 255, 0.08)",
+        input: "rgba(255, 255, 255, 0.08)",
         ring: "#8B5CF6",
-        destructive: {
-          DEFAULT: "#EF4444",
-          foreground: "#FAFAFA",
-        },
       },
       borderRadius: {
-        lg: "16px",
-        md: "12px",
-        sm: "8px",
+        xl: "14px",
+        "2xl": "18px",
+        "3xl": "24px",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+        serif: [
+          "Playfair Display",
+          "Newsreader",
+          "Charter",
+          "Iowan Old Style",
+          "Georgia",
+          "serif",
+        ],
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        pulse_glow: {
-          "0%, 100%": { opacity: "0.6" },
-          "50%": { opacity: "1" },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" },
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        pulse_glow: "pulse_glow 2s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite",
       },
     },
   },

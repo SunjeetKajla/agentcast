@@ -5,23 +5,23 @@ import { motion } from "framer-motion";
 const steps = [
   {
     icon: "🔗",
-    title: "1. Paste a link",
-    desc: "Paste any article, blog post, or doc URL.",
+    title: "1. Paste SaaS link",
+    desc: "Enter your web app or product URL.",
   },
   {
     icon: "🤖",
-    title: "2. AI writes script",
-    desc: "Extracts key thesis & crafts timed scenes.",
+    title: "2. AI explores product",
+    desc: "Autonomous agents discover key user flows.",
   },
   {
-    icon: "🎙️",
-    title: "3. Voice narrates",
-    desc: "Synthesizes expressive neural narration.",
+    icon: "🎥",
+    title: "3. Records demo flows",
+    desc: "Captures high-frame-rate browser screencasts.",
   },
   {
     icon: "🎬",
     title: "4. Video rendered",
-    desc: "Assembles MP4 with visuals & captions.",
+    desc: "Assembles MP4 with zooms, voiceover & music.",
   },
 ];
 
@@ -46,7 +46,7 @@ export default function HowItWorks() {
           How it works
         </h2>
         <p className="text-xs sm:text-sm text-muted-foreground">
-          Autonomous multi-step pipeline from URL to ready-to-share video
+          Autonomous multi-step pipeline from web SaaS to ready-to-share video
         </p>
       </div>
 

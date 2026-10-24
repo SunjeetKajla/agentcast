@@ -8,21 +8,6 @@ interface LinkInputProps {
   isLoading?: boolean;
 }
 
-const SAMPLE_LINKS = [
-  {
-    label: "⚡ Quantum Computing",
-    url: "https://nature.com/articles/quantum-computing-frontier",
-  },
-  {
-    label: "🦀 Why Rust Wins",
-    url: "https://blog.rust-lang.org/2026/future-of-memory-safety",
-  },
-  {
-    label: "🤖 AI Agents in 2026",
-    url: "https://techcrunch.com/2026/02/ai-agents-orchestration",
-  },
-];
-
 export default function LinkInput({ onSubmit, isLoading = false }: LinkInputProps) {
   const [url, setUrl] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -32,12 +17,8 @@ export default function LinkInput({ onSubmit, isLoading = false }: LinkInputProp
     if (url.trim()) onSubmit(url.trim());
   };
 
-  const handleSelectSample = (sampleUrl: string) => {
-    setUrl(sampleUrl);
-  };
-
   return (
-    <div className="w-full max-w-2xl space-y-3">
+    <div className="w-full max-w-2xl">
       <form onSubmit={handleSubmit} className="w-full">
         <motion.div
           className={`relative flex items-center rounded-2xl border-2 bg-card p-1.5 transition-all ${
@@ -57,7 +38,7 @@ export default function LinkInput({ onSubmit, isLoading = false }: LinkInputProp
             onChange={(e) => setUrl(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="Paste any article, blog, or documentation link..."
+            placeholder="Paste your web SaaS URL (e.g. https://your-saas.app)..."
             className="flex-1 bg-transparent px-3 py-3.5 text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             required
           />
@@ -112,21 +93,6 @@ export default function LinkInput({ onSubmit, isLoading = false }: LinkInputProp
           </motion.button>
         </motion.div>
       </form>
-
-      {/* Quick try samples */}
-      <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-xs text-muted-foreground">
-        <span className="font-medium">Try an example:</span>
-        {SAMPLE_LINKS.map((sample) => (
-          <button
-            key={sample.label}
-            type="button"
-            onClick={() => handleSelectSample(sample.url)}
-            className="rounded-full border border-border/80 bg-muted/40 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-accent hover:bg-accent/10 hover:text-foreground cursor-pointer"
-          >
-            {sample.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

@@ -3,12 +3,15 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BackgroundVideo from "@/components/BackgroundVideo";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "AgentCast — link in. video out.",
-  description: "Turn any article, blog, or doc into a short-form video in seconds.",
+  description: "Turn any web SaaS into a high-impact demo video in seconds.",
 };
 
 export default function RootLayout({
@@ -17,10 +20,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-accent/30 selection:text-white`}>
+    <html lang="en" className="dark scroll-smooth">
+      <body
+        className={`${inter.className} min-h-screen bg-[#050505] text-[#FAFAFA] flex flex-col antialiased selection:bg-white/20 selection:text-white relative overflow-x-hidden`}
+      >
+        <BackgroundVideo />
         <Navbar />
-        <main className="flex-1 flex flex-col items-center">
+        <main className="flex-1 flex flex-col items-center relative z-10">
           {children}
         </main>
         <Footer />
