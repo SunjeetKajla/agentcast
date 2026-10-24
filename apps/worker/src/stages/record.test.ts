@@ -137,7 +137,9 @@ describe("record stage", () => {
     expect(await seconds(video)).toBeCloseTo(12, 0);
     expect(ctx.artifact).toHaveBeenCalledWith(jobPaths.recording("desktop"));
     expect(ctx.artifact).toHaveBeenCalledWith(jobPaths.replayPlan);
-    expect(await readdir(dirname(video))).not.toContain("takes");
+    expect(await readdir(ctx.path("record/desktop/takes"))).toContain(
+      "take-1.checkpoint.json",
+    );
   });
 
   it("skips a flow whose takes all fail and keeps the rest", async () => {
@@ -151,6 +153,50 @@ describe("record stage", () => {
       expect.stringContaining("Skipped"),
       "warn",
     );
+  });
+
+  it("reuses successful takes after a later flow fails instead of filming them twice", async () => {
+    await approveBoth();
+    const film = fakeFilm(["flow-export"]);
+    const run = makeRecord({ recordFlow: film });
+    await run(ctx);
+    await run(ctx);
+    expect(
+      film.mock.calls.filter(([flow]) => flow.id === "flow-template"),
+    ).toHaveLength(1);
+    expect(
+      film.mock.calls.filter(([flow]) => flow.id === "flow-export"),
+    ).toHaveLength(2);
+    const timeline = await ctx.read(jobPaths.timeline("desktop"), Timeline);
+    expect(timeline.flows).toEqual([
+      { flowId: "flow-template", in: 0, out: 6 },
+    ]);
+  });
+
+  it("does not turn cancellation into a recoverable failed flow", async () => {
+    const controller = new AbortController();
+    const film = vi.fn(async () => {
+      controller.abort(new Error("User cancelled"));
+      throw controller.signal.reason;
+    });
+    await expect(
+      makeRecord({ recordFlow: film })({ ...ctx, signal: controller.signal }),
+    ).rejects.toThrow("User cancelled");
+    expect(film).toHaveBeenCalledTimes(1);
+    expect(ctx.artifact).not.toHaveBeenCalled();
+  });
+
+  it("skips known failed rehearsals even if an older review selected them", async () => {
+    await approveBoth();
+    const file = await ctx.read(jobPaths.flows, FlowsFile);
+    file.flows.find((flow) => flow.id === "flow-export")!.rehearsal = {
+      ok: false,
+      reason: "Blocked",
+    };
+    await ctx.write(jobPaths.flows, FlowsFile, file);
+    const film = fakeFilm();
+    await makeRecord({ recordFlow: film })(ctx);
+    expect(film.mock.calls.map(([flow]) => flow.id)).toEqual(["flow-template"]);
   });
 
   it("fails when no approved flow can be recorded", async () => {

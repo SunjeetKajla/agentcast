@@ -23,6 +23,7 @@ import { DESTRUCTIVE, hasSecretTarget } from "./normalize";
 import type { BrowserAdapter, BrowserOptions } from "./runtime";
 import { signInLocally } from "./sign-in";
 import { captureLogo } from "./logo";
+import { evaluateInPage } from "./evaluate";
 
 type Page = RecorderBrowser["page"];
 type Locator = ReturnType<Page["getByText"]>;
@@ -42,7 +43,7 @@ export const safeId = (id: string) => {
 };
 
 async function pageIssue(page: Page) {
-  const state = await page.evaluate(() => {
+  const state = await evaluateInPage(page, () => {
     const visible = (element: Element) => {
       for (
         let current: Element | null = element;
@@ -132,9 +133,9 @@ async function readyPage(page: Page, signal?: AbortSignal) {
       return;
     } catch (error) {
       if (
-        !(error instanceof PageAccessError) ||
-        error.kind !== "unavailable" ||
-        Date.now() >= until
+        Date.now() >= until ||
+        (!/AGENTCAST_PAGE_NOT_READY/.test((error as Error).message) &&
+          (!(error instanceof PageAccessError) || error.kind !== "unavailable"))
       )
         throw error;
       await delay(150, undefined, { signal });
@@ -206,33 +207,60 @@ export function localBrowserAdapter(
     run: (page: Page) => Promise<T>,
   ) => {
     options.signal?.throwIfAborted();
-    const session = await launchRecorderBrowser({
-      ...launch,
-      deviceScaleFactor: 1,
-      storageState: options.storageState,
+    const deadline = new AbortController();
+    const timeoutMs = options.timeoutMs ?? 60000;
+    const timer = setTimeout(
+      () =>
+        deadline.abort(
+          new PageAccessError(
+            "unavailable",
+            `Local page inspection or rehearsal exceeded its ${Math.round(timeoutMs / 1000)} s deadline.`,
+          ),
+        ),
+      timeoutMs,
+    );
+    const signal = options.signal
+      ? AbortSignal.any([options.signal, deadline.signal])
+      : deadline.signal;
+    let session: Awaited<ReturnType<typeof launchRecorderBrowser>> | undefined;
+    let rejectAbort!: (reason: unknown) => void;
+    const aborted = new Promise<never>((_, reject) => {
+      rejectAbort = reject;
     });
-    const abort = () => void session.close().catch(() => {});
-    options.signal?.addEventListener("abort", abort, { once: true });
-    try {
-      options.signal?.throwIfAborted();
+    const abort = () => {
+      rejectAbort(signal.reason);
+      void session?.close().catch(() => {});
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    const work = (async () => {
+      session = await launchRecorderBrowser({
+        ...launch,
+        signal,
+        deviceScaleFactor: 1,
+        storageState: options.storageState,
+      });
+      signal.throwIfAborted();
       session.page.setDefaultTimeout(6000);
-      await openProduct(
-        session.page,
-        url,
-        options.authorizedUrl,
-        options.signal,
-      );
-      return await run(session.page);
+      await openProduct(session.page, url, options.authorizedUrl, signal);
+      return run(session.page);
+    })();
+    try {
+      return await Promise.race([work, aborted]);
     } finally {
-      options.signal?.removeEventListener("abort", abort);
-      await session.close();
+      clearTimeout(timer);
+      signal.removeEventListener("abort", abort);
+      // A renderer can hang context.close as well as evaluate. Browser.close owns process cleanup.
+      if (session)
+        await session.close().catch((error) => {
+          if (!signal.aborted) throw error;
+        });
     }
   };
   return {
     signIn: signInLocally,
     readPage: (url, options) =>
       withPage(url, options, async (page) => {
-        const read = await page.evaluate(() => ({
+        const read = await evaluateInPage(page, () => ({
           title: document.title,
           description:
             document.querySelector<HTMLMetaElement>("meta[name=description]")
@@ -283,7 +311,7 @@ export function localBrowserAdapter(
       }),
     inspect: (url, options) =>
       withPage(url, options, async (page) => {
-        const data = await page.evaluate(() => {
+        const data = await evaluateInPage(page, () => {
           const shown = (element: Element) => {
             const rect = element.getBoundingClientRect();
             for (
@@ -389,7 +417,7 @@ export function localBrowserAdapter(
         data.facts.url = productEntry(data.facts.url, options.authorizedUrl);
         let hero: string | undefined;
         let logo: Awaited<ReturnType<typeof captureLogo>>;
-        if (!options.storageState) {
+        if (!options.storageState && options.captureAssets !== false) {
           await mkdir(join(options.dir, "brief"), { recursive: true });
           hero = "brief/hero.jpg";
           try {
@@ -456,6 +484,7 @@ export function localBrowserAdapter(
             options.signal?.throwIfAborted();
             const before = await page.locator("body").innerText();
             const beforeUrl = page.url();
+            const optional = isOptionalDismissal(step);
             let target: Awaited<ReturnType<typeof resolveSemantic>> | undefined;
             // The first step waits for the app to finish building (Linear's demo takes ~25 s);
             // later ones allow for a client-side navigation.
@@ -464,8 +493,9 @@ export function localBrowserAdapter(
                 page,
                 step.target,
                 options.signal,
-                step === flow.steps[0] ? 30_000 : 8000,
+                optional ? 1500 : step === flow.steps[0] ? 30_000 : 8000,
               );
+            if (optional && !target) continue;
             if (
               ["click", "type", "select", "hover"].includes(step.action) &&
               !target
@@ -495,7 +525,12 @@ export function localBrowserAdapter(
                 );
                 break;
               case "click":
-                await target!.locator.click();
+                await clickWithRecovery(
+                  page,
+                  target!.locator,
+                  step,
+                  options.signal,
+                );
                 break;
               case "type":
                 await target!.locator.fill(step.value ?? "");
@@ -696,15 +731,61 @@ async function resolveSemantic(
             ? page.getByPlaceholder(spec.name, { exact: true })
             : page.getByText(spec.name, { exact: true }),
   }));
-  const until = Date.now() + waitMs;
+  const started = Date.now();
+  const until = started + waitMs;
   for (;;) {
+    let ambiguous=false;
     signal?.throwIfAborted();
     for (const candidate of candidates) {
       const visible = candidate.locator.filter({ visible: true });
-      if ((await visible.count()) === 1)
-        return { ...candidate, locator: visible };
+      const count=await visible.count();
+      if(count===1) return {...candidate,locator:visible};
+      if(count>1) ambiguous=true;
     }
-    if (Date.now() >= until) return undefined;
+    if (Date.now() >= until || ambiguous && Date.now()-started>=2000) return undefined;
     await delay(250, undefined, { signal });
+  }
+}
+
+/** Popup dismissal can be absent in another fresh visit; it is not the product's payoff. */
+export function isOptionalDismissal(step: Flow["steps"][number]): boolean {
+  return (
+    step.action === "click" &&
+    /^(close|dismiss|skip|not now|no[, ]+thanks|got it|maybe later|[×✕✖])(?:\b|$)/i.test(
+      step.target?.text || step.target?.label || "",
+    )
+  );
+}
+
+/** Ported from the reference compiler: let the UI dismiss an overlay, then try a real click again. */
+async function clickWithRecovery(
+  page: Page,
+  locator: Locator,
+  step: Flow["steps"][number],
+  signal?: AbortSignal,
+) {
+  try {
+    await locator.click({ timeout: 4000 });
+  } catch (error) {
+    signal?.throwIfAborted();
+    // A timeout after a dispatched click could duplicate a state change; only retry hit-test failures.
+    if (
+      !/intercepts pointer events|not stable|not visible|outside of the viewport/i.test(
+        (error as Error).message,
+      )
+    )
+      throw error;
+    await page.keyboard.press("Escape");
+    const viewport = page.viewportSize();
+    await page.mouse.move(
+      viewport ? viewport.width - 2 : 0,
+      viewport ? viewport.height - 2 : 0,
+    );
+    await delay(300, undefined, { signal });
+    await locator.click({ timeout: 4000 }).catch(() => {
+      throw new Error(
+        `Step ${step.id}: the element "${step.target?.text || step.target?.label || "target"}" is still covered or unstable after dismissing the overlay.`,
+      );
+    });
   }
 }

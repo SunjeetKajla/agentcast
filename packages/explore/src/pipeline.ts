@@ -68,6 +68,7 @@ const browserOptions = (o: ExploreOptions): BrowserOptions => ({
   dir: o.dir,
   authorizedUrl: o.url,
   signal: o.signal,
+  captureAssets: false,
 });
 const missing = (error: unknown) =>
   (error as { cause?: NodeJS.ErrnoException }).cause?.code === "ENOENT" ||
@@ -156,8 +157,12 @@ export async function discoverProduct(
     } catch (error) {
       o.signal?.throwIfAborted();
       // A second POST after an ambiguous creation could charge twice; retain the first task instead.
+      const reason =
+        error instanceof Error
+          ? error.message.split("\n")[0]
+          : "Unknown provider failure";
       o.log?.(
-        `The remote scout did not produce usable candidates (${(error as Error).message.slice(0, 200)}). Its checkpoint is retained; local tour candidates will be rehearsed.`,
+        `The remote scout did not produce usable candidates (${reason?.slice(0, 200)}). Its checkpoint is retained; local tour candidates will be rehearsed.`,
       );
       break;
     }
@@ -244,7 +249,14 @@ export async function rehearseCandidate(
 export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
   const plan = await o.io.read("explore/plan.json", ExplorationPlan);
   // This also catches an authenticated session expiring between discovery and rehearsal.
+  o.progress?.(
+    0.02,
+    "Checking the product page locally before rehearsing flows",
+  );
   const page = await o.browser.inspect(plan.entryUrl, browserOptions(o));
+  o.log?.(
+    "Local page inspection finished; preparing the candidate rehearsals.",
+  );
   const results = new Map<string, Flow>();
   const replay = ReplayPlan.parse({
     schemaVersion: 1,
@@ -344,6 +356,11 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
         source: "tour" as const,
         requiresAuth: !o.publicMode,
       };
+      o.progress?.(
+        0.1 + results.size * 0.15,
+        `Rehearsing local tour: ${tour.title}`,
+      );
+      o.log?.(`Rehearsing local tour: ${tour.title}`);
       await remember(await rehearseCandidate(o, tour));
       if (
         [...results.values()].filter((flow) => flow.rehearsal?.ok).length >= 3

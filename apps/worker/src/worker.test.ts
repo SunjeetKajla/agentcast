@@ -2,13 +2,15 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FlowsFile, Job, JobConfig, JobEvent, Script, jobPaths, type JobConfigInput } from "@agentcast/shared";
-import { readArtifact } from "@agentcast/shared/node";
+import { readArtifact, writeArtifact } from "@agentcast/shared/node";
 import { pino } from "pino";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createWorker, type Worker } from "./index.ts";
 import { Orchestrator } from "./orchestrator.ts";
-import { gates, stages } from "./stages/index.ts";
+import { gates, stages, type StageRegistry } from "./stages/index.ts";
+import type { StageContext } from "./context";
+import { buildServer } from "./server";
 import { JobStore } from "./store.ts";
 
 const silent = pino({ level: "silent" });
@@ -26,6 +28,32 @@ afterEach(async () => {
 
 function start(): Worker {
   const worker = createWorker({ home, logger: silent });
+  workers.push(worker);
+  return worker;
+}
+
+function startWith(
+  override: Partial<StageRegistry>,
+  gateOverride: Partial<typeof gates> = {},
+): Worker {
+  const store = new JobStore(home);
+  const orchestrator = new Orchestrator(
+    store,
+    { ...stages, ...override },
+    { ...gates, ...gateOverride },
+    silent,
+  );
+  const app = buildServer(orchestrator, store, silent);
+  const worker: Worker = {
+    app,
+    orchestrator,
+    store,
+    log: silent,
+    close: async () => {
+      await app.close();
+      await orchestrator.shutdown();
+    },
+  };
   workers.push(worker);
   return worker;
 }
@@ -162,6 +190,21 @@ describe("a job through the stub pipeline", () => {
 });
 
 describe("gates", () => {
+  test("keeps review open when a client approves a failed rehearsal or no flows",async()=>{
+    const worker=start();
+    const {id}=await create(worker,config());
+    await until(worker,id,waitingAt("gate-flows"));
+    const path=join(home,"jobs",id,jobPaths.flows);
+    const file=await readArtifact(path,FlowsFile);
+    file.flows[0]!.rehearsal={ok:false,reason:"An overlay prevented the click"};
+    await writeArtifact(path,FlowsFile,file);
+    const response=await decide(worker,id,"gate-flows",{action:"approve",flows:[{id:file.flows[0]!.id,selected:true}]});
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toContain("rehearsal failed");
+    expect((await worker.orchestrator.get(id))?.stages["gate-flows"].status).toBe("waiting");
+    const empty=await decide(worker,id,"gate-flows",{action:"approve",flows:file.flows.map(flow=>({id:flow.id,selected:false}))});
+    expect(empty.statusCode).toBe(400);
+  });
   test("rejects unknown gates, early decisions, bad bodies and unknown flows", async () => {
     const worker = start();
     const { id } = await create(worker, config());
@@ -326,6 +369,104 @@ describe("API", () => {
 });
 
 describe("lifecycle", () => {
+  test("cancel aborts active work before replying, persists it, and suppresses late activity", async () => {
+    let stageContext!: StageContext;
+    let stopped = false;
+    const worker = startWith({
+      understand: async (ctx) => {
+        stageContext = ctx;
+        ctx.emit({
+          type: "agent",
+          stage: "understand",
+          agentId: "active-agent",
+          title: "Active work",
+          status: "started",
+        });
+        await new Promise<void>((resolve) =>
+          ctx.signal.addEventListener(
+            "abort",
+            () => {
+              stopped = true;
+              resolve();
+            },
+            { once: true },
+          ),
+        );
+      },
+    });
+    const { id } = await create(worker, config());
+    await until(
+      worker,
+      id,
+      (job) =>
+        job.stages.understand.status === "running" && Boolean(stageContext),
+    );
+    const started = performance.now();
+    const res = await worker.app.inject({
+      method: "POST",
+      url: `/jobs/${id}/cancel`,
+    });
+    expect(res.statusCode).toBe(202);
+    expect(performance.now() - started).toBeLessThan(500);
+    expect(stopped).toBe(true);
+    expect(
+      (await readArtifact(join(home, "jobs", id, jobPaths.state), Job)).status,
+    ).toBe("cancelled");
+    const bus = (await worker.orchestrator.events(id))!;
+    const before = bus.since(0).length;
+    stageContext.progress(0.9, "should not revive");
+    stageContext.llmProgress({ kind: "text", text: "should not revive" });
+    stageContext.emit({
+      type: "agent",
+      stage: "understand",
+      agentId: "active-agent",
+      title: "Active work",
+      status: "step",
+    });
+    expect(bus.since(0)).toHaveLength(before);
+    expect(
+      bus
+        .since(0)
+        .filter((event) => event.type === "agent")
+        .at(-1),
+    ).toMatchObject({ status: "cancelled" });
+    expect((await worker.orchestrator.get(id))?.stages.discover.status).toBe(
+      "cancelled",
+    );
+  });
+
+  test("a gate completion arriving after cancellation cannot reopen or finish the cancelled gate", async () => {
+    let entered!: () => void;
+    let release!: () => void;
+    const ready = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const work = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const worker = startWith(
+      {},
+      {
+        "gate-flows": async () => {
+          entered();
+          await work;
+        },
+      },
+    );
+    const { id } = await create(worker, config());
+    await until(worker, id, waitingAt("gate-flows"));
+    const pending = decide(worker, id, "gate-flows", { action: "approve" });
+    // Fastify inject is lazy until its promise is awaited/subscribed.
+    const deciding = pending.then((response) => response);
+    await ready;
+    await worker.app.inject({ method: "POST", url: `/jobs/${id}/cancel` });
+    release();
+    await deciding;
+    const job = await worker.orchestrator.get(id);
+    expect(job?.status).toBe("cancelled");
+    expect(job?.stages["gate-flows"].status).toBe("cancelled");
+    expect(job?.stages.record.status).toBe("cancelled");
+  });
   test("cancel stops the job", async () => {
     process.env.AGENTCAST_STUB_DELAY_MS = "10000";
     const worker = start();
@@ -338,7 +479,8 @@ describe("lifecycle", () => {
     const job = res.json() as Job;
     expect(job.status).toBe("cancelled");
     expect(job.stages.understand.status).toBe("cancelled");
-    expect((await worker.app.inject({ method: "POST", url: `/jobs/${id}/cancel` })).statusCode).toBe(409);
+    expect((await worker.app.inject({ method: "POST", url: `/jobs/${id}/cancel` })).statusCode).toBe(202);
+    expect((await readArtifact(join(home, "jobs", id, jobPaths.state), Job)).status).toBe("cancelled");
   });
 
   test("a restarted worker resumes running stages and waiting gates", async () => {

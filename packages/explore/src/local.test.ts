@@ -3,6 +3,7 @@ import type { AddressInfo } from "node:net";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { setTimeout as delay } from 'node:timers/promises';
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Flow } from "@agentcast/shared";
 import { localBrowserAdapter } from "./local";
@@ -15,12 +16,17 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
     let server: Server;
     let url: string;
     let dir: string;
+    let onHangingRequest: (() => void) | undefined;
     const browser = localBrowserAdapter({ gpu: "cpu", stealth: false });
     const options = () => ({ dir, authorizedUrl: url });
     beforeAll(async () => {
       dir = await mkdtemp(join(tmpdir(), "agentcast-local-"));
       server = createServer((req, res) => {
         res.setHeader("content-type", "text/html");
+        if (req.url === '/hanging') { res.write('<h1>Waiting for content</h1>'); onHangingRequest?.(); return; }
+        if(req.url==='/overlay' || req.url==='/fixed-overlay') return res.end(
+          `<h1>Product navigation</h1><a href="#fashion" onclick="document.querySelector('h2').textContent='Fashion collection'">Fashion</a><h2>Browse categories</h2><div id="cover" style="position:fixed;inset:0;background:white;z-index:100"></div><script>${req.url==='/overlay'?"document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('cover').remove()})":""}</script>`
+        );
         if (req.url === "/mark.svg") {
           res.setHeader("content-type", "image/svg+xml");
           return res.end(
@@ -88,6 +94,41 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
         steps,
       });
 
+    it('cancels an in-flight navigation and closes its real Chrome session promptly', async () => {
+      const abort = new AbortController();
+      const ready = new Promise<void>(resolve => { onHangingRequest = resolve; });
+      const result = browser.readPage(url + '/hanging', { ...options(), signal: abort.signal }).then(() => null, error => error);
+      try {
+        await Promise.race([ready, delay(8000, undefined, { ref: false }).then(() => { throw new Error('Browser did not request the fixture'); })]);
+        const started = performance.now();
+        abort.abort(new Error('fixture navigation cancelled'));
+        expect(await result).toMatchObject({ message: 'fixture navigation cancelled' });
+        expect(performance.now() - started).toBeLessThan(1000);
+      } finally { abort.abort(); onHangingRequest = undefined; await result; }
+    }, 15_000);
+
+    it('bounds a local operation even when the job itself has not been cancelled',async()=>{
+      const started=performance.now();
+      await expect(browser.readPage(url+'/hanging',{...options(),timeoutMs:2500})).rejects.toThrow('deadline');
+      expect(performance.now()-started).toBeLessThan(6000);
+    },10000);
+
+    it('dismisses an intercepting overlay using Escape before retrying the real click',async()=>{
+      const result=await browser.rehearse(flow([{id:'fashion',action:'click',target:{role:'link',text:'Fashion'},expect:[{type:'text',text:'Fashion collection',match:'exact'}]}],'/overlay'),options());
+      expect(result.flow.rehearsal?.ok).toBe(true);
+    },15000);
+
+    it('does not force a click through a persistent overlay',async()=>{
+      const result=await browser.rehearse(flow([{id:'fashion',action:'click',target:{role:'link',text:'Fashion'}}],'/fixed-overlay'),options());
+      expect(result.flow.rehearsal?.ok).toBe(false);
+    },15000);
+
+    it('skips a popup dismissal absent in a fresh visit and still checks the actual outcome',async()=>{
+      const result=await browser.rehearse(flow([{id:'close',action:'click',target:{role:'button',text:'Close'}},{id:'continue',action:'click',target:{role:'button',text:'Continue'}},{id:'show',action:'click',target:{role:'button',text:'Show result'},expect:[{type:'text',text:'Done',match:'exact'}]}]),options());
+      expect(result.flow.rehearsal?.ok).toBe(true);
+      expect(result.flow.steps.map(step=>step.id)).toEqual(['continue','show']);
+    },15000);
+
     it("waits for hydration and ignores hidden sign-in/challenge copy on public pages", async () => {
       expect(
         (await browser.readPage(url + "/hydrated", options())).text,
@@ -140,7 +181,7 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
       );
       expect(result.flow.rehearsal?.ok).toBe(true);
       expect(
-        result.replay?.byFormFactor.desktop?.["fixture.s1"]?.strategy,
+        result.replay?.byFormFactor.desktop?.["fixture/s1"]?.strategy,
       ).toBe("role");
       expect(
         (await stat(join(dir, result.flow.steps[1]!.frame!))).size,
@@ -156,7 +197,7 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
         options(),
       );
       expect(missing.flow.rehearsal?.ok).toBe(false);
-    }, 30_000);
+    }, 45_000);
     it("rejects ambiguous targets and checks the named field rather than the action target", async () => {
       const duplicate = await browser.rehearse(
         flow(

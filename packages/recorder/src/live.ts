@@ -135,7 +135,7 @@ export async function recordLive(
     let capture: Screencast | undefined;
     try {
       const result = await withRecorderBrowser(
-        browserOptions,
+        { ...browserOptions, signal },
         async (session) => {
           signal.throwIfAborted();
           if (options.prepare)

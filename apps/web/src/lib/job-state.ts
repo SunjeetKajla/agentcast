@@ -31,17 +31,29 @@ export function initialView(job: Job): JobView {
   return { job, events: [], lastSeq: 0, agents: [], artifacts: {} };
 }
 
+const stopAgents = (agents: AgentView[]) => agents.map(agent =>
+  agent.status === "started" || agent.status === "step"
+    ? { ...agent, status: "cancelled" as const, streamingUrl: undefined, screenshot: undefined }
+    : agent,
+);
+
 export function reduceJob(view: JobView, action: JobAction): JobView {
-  if (action.type === "snapshot") return { ...view, job: action.job };
+  if (action.type === "snapshot") {
+    if (view.job.status === "cancelled" && action.job.id === view.job.id && action.job.status !== "cancelled") return view;
+    return { ...view, job: action.job, agents: action.job.status === "cancelled" ? stopAgents(view.agents) : view.agents };
+  }
   const e = action.event;
   if (e.seq <= view.lastSeq || e.jobId !== view.job.id) return view;
   const next: JobView = { ...view, events: [...view.events, e], lastSeq: e.seq };
 
   switch (e.type) {
     case "job":
+      if (view.job.status === "cancelled") break;
       next.job = { ...view.job, status: e.status, updatedAt: e.at };
+      if (e.status === "cancelled") next.agents = stopAgents(view.agents);
       break;
     case "stage": {
+      if (view.job.status === "cancelled") break;
       const prev = view.job.stages[e.stage];
       const running = e.status === "running" && prev.status !== "running";
       next.job = {
@@ -64,6 +76,7 @@ export function reduceJob(view: JobView, action: JobAction): JobView {
       break;
     }
     case "progress":
+      if (view.job.status === "cancelled") break;
       next.job = {
         ...view.job,
         stages: { ...view.job.stages, [e.stage]: { ...view.job.stages[e.stage], progress: e.progress, message: e.message ?? view.job.stages[e.stage].message } },
@@ -84,6 +97,9 @@ export function reduceJob(view: JobView, action: JobAction): JobView {
         screenshot: e.screenshot ?? prev?.screenshot,
         steps: e.step ? [...(prev?.steps ?? []), e.step] : (prev?.steps ?? []),
       };
+      if (view.job.status === "cancelled" && (agent.status === "started" || agent.status === "step")) {
+        agent.status = "cancelled"; agent.streamingUrl = undefined; agent.screenshot = undefined;
+      }
       next.agents = i >= 0 ? view.agents.map((a, j) => (j === i ? agent : a)) : [...view.agents, agent];
       break;
     }

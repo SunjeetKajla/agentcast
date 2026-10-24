@@ -20,7 +20,7 @@ export type PageFacts = {
 
 /** Links a tour skips: accounts, legal, company, social and off-product pages. */
 const SKIP =
-  /\b(log ?in|sign ?(in|up)|register|account|privacy|terms|legal|cookies?|careers|jobs|contact|status|changelog|blog|press|github|twitter|discord|linkedin|youtube|download|pricing|faq|support|help)\b/i;
+  /\b(log ?in|sign ?(in|up)|register|account|cart|basket|wishlist|wish-list|checkout|privacy|terms|legal|cookies?|careers|jobs|contact|status|changelog|blog|press|github|twitter|discord|linkedin|youtube|download|pricing|faq|support|help)\b/i;
 
 /** Buttons a tour never presses: accounts, money, changes, popups and menus. */
 const UNSAFE =

@@ -421,6 +421,8 @@ Each node is a **stage** with declared inputs and outputs. Its cache key is `sha
 
   Rendering never runs inside Next.js route handlers. Live progress uses server-sent events rather than WebSocket: the stream is one-way, and browsers reconnect to it on their own.
 
+  **Cancellation:** the UI sends `POST /jobs/:id/cancel` on the first click, without a confirmation dialog, and shows a request failure instead of hiding it. Cancellation is idempotent for already-cancelled jobs and returns 202 after cancelled state and events are durable. It aborts the job signal, removes queued LLM work, immediately force-kills running job-owned CLI and sign-in process groups on POSIX, and requests TinyFish cancellation as soon as a known run is aborted. Remote acknowledgement may arrive later; the HTTP response does not wait for it. Live-agent views stop and delayed events or gate results cannot revive cancelled work.
+
 - Concurrency limits (configurable): Agent runs 4, local recorder browsers 2 (desktop + mobile), TinyFish fallback sessions 2, TTS 6, renders 2 (CPU-bound). Recording and rendering don't overlap within a job, so the CPU isn't shared between capture and encoding.
 
 ---
@@ -607,6 +609,8 @@ Agent-reported outcomes become checks conservatively: a reported URL change beco
 Weights live in config and are tuned against the benchmark set (implementation plan, Phase 8).
 
 ### 9.3 Record (local Chromium + Playwright)
+
+**Current desktop integration:** approved flows are replayed with the same outcome checks used in rehearsal, recorded into real local takes, concatenated with matching source intervals and flow IDs, and cut by the Remotion baseline. The current shared timeline/EDL contract and published CFR footage use 30 fps; the 60 fps capture goal remains a later upgrade. Direct/preview/render use real artifacts outside explicit fixture mode. The AI director, still review and resumed edit revisions are integrated from main. Each completed take has a validated v1 local checkpoint (`record/desktop/takes/take-<index>.checkpoint.json`: input/session digest and timeline; learned replay entries persist separately); matching takes are reused on retry. Later flow failures preserve usable recordings and are excluded from narration and rendering. Flow review rejects known failed rehearsals. Blocked clicks receive Escape and one bounded retry, with no forced click through persistent overlays.
 
 Per form factor:
 

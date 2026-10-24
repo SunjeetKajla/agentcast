@@ -9,8 +9,12 @@ import type { GateFn } from "./types.ts";
 
 /** Selection, order and titles from gate 1 → explore/flows.json. */
 const flows: GateFn<"gate-flows"> = async (ctx, decision) => {
-  if (!decision.flows) return;
   const file = await ctx.read(jobPaths.flows, FlowsFile);
+  const selections=decision.flows??file.flows;
+  const failed=selections.filter(item=>item.selected && file.flows.some(flow=>flow.id===item.id && flow.rehearsal?.ok===false));
+  if(failed.length) throw new Error(`Cannot approve flows whose rehearsal failed: ${failed.map(flow=>flow.id).join(", ")}. Rehearse them successfully or deselect them.`);
+  if(!selections.some(flow=>flow.selected)) throw new Error("Select at least one successfully rehearsed flow.");
+  if (!decision.flows) return;
   const byId = new Map(file.flows.map((f) => [f.id, f]));
   const unknown = decision.flows.filter((d) => !byId.has(d.id)).map((d) => d.id);
   if (unknown.length) throw new Error(`unknown flows: ${unknown.join(", ")}`);

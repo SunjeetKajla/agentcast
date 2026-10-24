@@ -21,3 +21,7 @@ export { sfxCues, type SfxCue, type SfxKind } from "./audio.ts";
 export { chooseLook, DEFAULT_LOOK, type Look } from "./look.ts";
 export { clockOf, speedAt, type Clock, type Ramp } from "./retime.ts";
 export { ensureSfx } from "./sound.ts";
+
+export { pickTrack } from "./music.ts";
+export { ink, readableOn, contrastOf, luminanceOf, mixHex } from "./ink.ts";
+export { timeMap, boxMap, remapEdl, remapStoryboard, type Retake } from "./remap.ts";

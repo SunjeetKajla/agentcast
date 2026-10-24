@@ -213,6 +213,21 @@ describe.skipIf(!available)("flow behavior in Chromium", () => {
     expect(result.learned).toEqual([]);
     expect(JSON.stringify(result)).not.toContain("fresh-private-value");
   });
+  it.each([true,false])("handles an intercepting overlay (Escape dismisses it: %s) without forced clicks",async(dismissable)=>{
+    await page.setContent(`<h1>Public product</h1><button onclick="document.querySelector('h1').textContent='Visible result'">Open</button><div id="cover" style="position:fixed;inset:0;background:white;z-index:100"></div><script>${dismissable?"document.addEventListener('keydown',event=>{if(event.key==='Escape')document.getElementById('cover')?.remove()})":""}</script>`);
+    const action:Step={id:"open",action:"click",target:{role:"button",text:"Open"}};
+    const target=await resolveTarget(page,action,{settle:false});
+    const started=performance.now();
+    const actuator=createActuator(page,{signal:signal(),now:()=>performance.now()-started,motion:async work=>work(),random:()=>0.5});
+    if(dismissable){
+      await actuator.run(action,target);
+      expect(await page.locator("h1").innerText()).toBe("Visible result");
+    }else{
+      await expect(actuator.run(action,target)).rejects.toThrow();
+      expect(await page.locator("h1").innerText()).toBe("Public product");
+    }
+  },15000);
+
   it("dispatches paced mouse and key events, then verifies selection by label", async () => {
     await page.setContent(
       '<label for="name">Project name</label><input id="name"><label for="kind">Template</label><select id="kind"><option value="old">Old</option><option value="launch">Product launch</option></select><script>window.keys=[];document.querySelector("input").addEventListener("input",()=>window.keys.push(performance.now()))</script>',

@@ -23,6 +23,34 @@ export interface ActionResult {
   selectedValue?: string;
 }
 
+/** A hover menu or modal may cover an otherwise valid target on a fresh take. */
+async function clickWithRecovery(
+  page: Page,
+  locator: NonNullable<ResolvedTarget["locator"]>,
+  signal: AbortSignal,
+  trial = false,
+) {
+  try {
+    await locator.click({ trial, timeout: 2000 });
+  } catch (error) {
+    signal.throwIfAborted();
+    if (
+      !/intercepts pointer events|not stable|not visible|outside of the viewport/i.test(
+        (error as Error).message,
+      )
+    )
+      throw error;
+    await page.keyboard.press("Escape");
+    const viewport = page.viewportSize();
+    await page.mouse.move(
+      viewport ? viewport.width - 2 : 0,
+      viewport ? viewport.height - 2 : 0,
+    );
+    await delay(300, undefined, { signal });
+    await locator.click({ trial, timeout: 2000 });
+  }
+}
+
 export function cursorDuration(distance: number): number {
   return Math.max(300, Math.min(700, 120 + Math.max(0, distance) * 0.5));
 }
@@ -139,7 +167,7 @@ export function createActuator(page: Page, options: ActuatorOptions) {
           step.action === "type" ||
           step.action === "select"
         )
-          await locator.click({ trial: true, timeout: 1500 });
+          await clickWithRecovery(page, locator, options.signal, true);
         box = await locator.boundingBox({ timeout: 1000 });
         if (!box) throw new Error("Action target disappeared");
         bbox = [box.x, box.y, box.width, box.height];
@@ -161,7 +189,7 @@ export function createActuator(page: Page, options: ActuatorOptions) {
       switch (step.action) {
         case "click":
           if (!locator) throw new Error("Click requires a target");
-          await locator.click({ timeout: 2000 });
+          await clickWithRecovery(page, locator, options.signal);
           break;
         case "hover":
           if (!locator) throw new Error("Hover requires a target");
@@ -170,7 +198,7 @@ export function createActuator(page: Page, options: ActuatorOptions) {
         case "type":
           if (!locator || step.value === undefined)
             throw new Error("Type requires a target and value");
-          await locator.click({ timeout: 2000 });
+          await clickWithRecovery(page, locator, options.signal);
           await page.keyboard.press("ControlOrMeta+A");
           await page.keyboard.press("Backspace");
           for (const character of step.value) {

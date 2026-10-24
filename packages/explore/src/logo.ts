@@ -5,13 +5,14 @@ import { join } from "node:path";
 import type { Brand } from "@agentcast/shared";
 import type { RecorderBrowser } from "@agentcast/recorder";
 import { pickLogo } from "./brand";
+import { evaluateInPage } from "./evaluate";
 
 /** Render the chosen mark as pixels, preserving computed SVG paints without saving active markup. */
 export async function captureLogo(
   page: RecorderBrowser["page"],
   dir: string,
 ): Promise<Brand["logo"]> {
-  const candidates = await page.evaluate(() => {
+  const candidates = await evaluateInPage(page, () => {
     const shown = (element: Element) =>
       element.checkVisibility({
         checkOpacity: true,

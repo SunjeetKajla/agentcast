@@ -87,11 +87,11 @@ export function createLlm(opts: LlmOptions = {}): Llm {
   return {
     async json(task, onEvent) {
       const { backend, model } = await resolve(task.tier);
-      return pool.run(() => backends[backend].json(task, model, onEvent));
+      return pool.run(() => backends[backend].json(task, model, onEvent), task.signal);
     },
     async agent(task, onEvent) {
       const { backend, model } = await resolve(task.tier);
-      return pool.run(() => backends[backend].agent(task, model, onEvent));
+      return pool.run(() => backends[backend].agent(task, model, onEvent), task.signal);
     },
     resolve,
     async detectAll() {

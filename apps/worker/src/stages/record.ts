@@ -1,11 +1,12 @@
+import { createHash } from "node:crypto";
+import { z } from "zod";
 import { execFile } from "node:child_process";
-import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { FlowsFile, Timeline, jobPaths } from "@agentcast/shared";
 import { fixtureStages } from "@agentcast/explore";
 import {
-  FlowRecordingError,
   recordFlow,
   type FlowOptions,
   type FlowRecording,
@@ -19,6 +20,13 @@ import { stub } from "./stub.ts";
 // one timeline.json, with every flow's in/out marked so the script and the edit can find it.
 
 const exec = promisify(execFile);
+const RecordedTake = z.object({
+  schemaVersion: z.literal(1),
+  key: z.string(),
+  timeline: Timeline,
+});
+const takeKey = (flow: unknown, session: unknown) =>
+  createHash("sha256").update(JSON.stringify({ flow, session })).digest("hex");
 
 export function makeRecord(
   deps: { recordFlow?: typeof recordFlow; ffmpeg?: string } = {},
@@ -37,7 +45,7 @@ export function makeRecord(
     }
     const { flows } = await ctx.read(jobPaths.flows, FlowsFile);
     const approved = flows
-      .filter((flow) => flow.selected)
+      .filter((flow) => flow.selected && flow.rehearsal?.ok !== false)
       .sort((a, b) => a.rank - b.rank);
     if (!approved.length) throw new Error("No approved flows to record.");
     const storageState = await sessionFor(ctx);
@@ -46,11 +54,13 @@ export function makeRecord(
         "The signed-in session is missing. Sign in before recording.",
       );
 
-    // recordFlow refuses to overwrite, so a retried or resumed stage starts from a clean folder.
+    // Keep complete takes across retries; only an individual unmatched/partial take is replaced.
     const takes = ctx.path("record/desktop/takes");
-    await rm(takes, { recursive: true, force: true });
     await mkdir(takes, { recursive: true });
-    const recorded: { flowId: string; take: FlowRecording }[] = [];
+    const recorded: {
+      flowId: string;
+      take: Pick<FlowRecording, "path" | "timeline">;
+    }[] = [];
     try {
       for (const [i, flow] of approved.entries()) {
         ctx.progress(i / approved.length, `Recording "${flow.title}"`);
@@ -72,11 +82,54 @@ export function makeRecord(
               );
           },
         };
+        const checkpoint = `record/desktop/takes/take-${i + 1}.checkpoint.json`;
+        const key = takeKey(flow, storageState);
+        let saved: z.infer<typeof RecordedTake> | undefined;
         try {
-          recorded.push({ flowId: flow.id, take: await film(flow, options) });
+          const candidate = await ctx.read(checkpoint, RecordedTake);
+          if (
+            candidate.key === key &&
+            candidate.timeline.flows.length === 1 &&
+            candidate.timeline.flows[0]?.flowId === flow.id &&
+            (await stat(options.outputPath)).size > 0
+          )
+            saved = candidate;
+        } catch {
+          ctx.signal.throwIfAborted();
+        }
+        try {
+          if (saved) {
+            recorded.push({
+              flowId: flow.id,
+              take: { path: options.outputPath, timeline: saved.timeline },
+            });
+            ctx.log(`Reusing the completed recording of "${flow.title}".`);
+          } else {
+            for (const path of [
+              options.outputPath,
+              options.timelinePath!,
+              ctx.path(checkpoint),
+            ])
+              await rm(path, { force: true });
+            const take = await film(flow, options);
+            ctx.signal.throwIfAborted();
+            await ctx.write(checkpoint, RecordedTake, {
+              schemaVersion: 1,
+              key,
+              timeline: take.timeline,
+            });
+            recorded.push({ flowId: flow.id, take });
+          }
         } catch (error) {
-          if (!(error instanceof FlowRecordingError)) throw error;
-          ctx.log(`Skipped "${flow.title}": ${error.message}`, "warn");
+          ctx.signal.throwIfAborted();
+          const reason =
+            error instanceof Error
+              ? error.message.split("\n")[0]
+              : "Recording failed";
+          ctx.log(
+            `Skipped "${flow.title}": ${reason}. Keeping completed takes.`,
+            "warn",
+          );
         }
       }
       if (!recorded.length)
@@ -87,7 +140,7 @@ export function makeRecord(
       ctx.progress(0.95, "Joining the takes");
       const output = ctx.path(jobPaths.recording("desktop"));
       const staged = join(takes, "joined.mp4");
-      if (recorded.length === 1) await rename(recorded[0]!.take.path, staged);
+      if (recorded.length === 1) await copyFile(recorded[0]!.take.path, staged);
       else {
         const list = join(takes, "takes.txt");
         await writeFile(
@@ -103,7 +156,7 @@ export function makeRecord(
             ...["-f", "concat", "-safe", "0", "-i", list],
             ...["-c", "copy", "-movflags", "+faststart", staged],
           ],
-          { signal: ctx.signal },
+          { signal: ctx.signal, timeout: 120000, killSignal: "SIGKILL" },
         );
       }
       await rename(staged, output);
@@ -120,7 +173,7 @@ export function makeRecord(
         `Recorded ${recorded.length} of ${approved.length} flow(s)`,
       );
     } finally {
-      await rm(takes, { recursive: true, force: true });
+      await rm(join(takes, "joined.mp4"), { force: true });
     }
   };
 }
@@ -129,7 +182,10 @@ export const record = makeRecord();
 /** One timeline for the joined recording: each take's times move by the length of the takes before it. */
 export function joinTimelines(
   recordingId: string,
-  recorded: { flowId: string; take: FlowRecording }[],
+  recorded: {
+    flowId: string;
+    take: Pick<FlowRecording, "path" | "timeline">;
+  }[],
 ): Timeline {
   let offset = 0;
   const flows: Timeline["flows"] = [],

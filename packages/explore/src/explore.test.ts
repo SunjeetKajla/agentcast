@@ -687,6 +687,17 @@ describe("guided tour (no agents)", () => {
     tabs: ["Preview", "Code", "Theme"],
   };
 
+  it("does not invent cart, basket or wishlist tours without a shopping scenario",()=>{
+    const flows=tourFlows({...facts,tabs:[],links:[
+      {text:"Cart",href:"https://ui.example.com/cart",inNav:true},
+      {text:"2 items in basket",href:"https://ui.example.com/basket",inNav:true},
+      {text:"Saved products",href:"https://ui.example.com/wishlist",inNav:true},
+      {text:"Categories",href:"https://ui.example.com/categories",inNav:true},
+    ]},"Store");
+    expect(flows.flatMap(flow=>flow.steps).some(step=>/cart|basket|wishlist/i.test(step.target?.text??""))).toBe(false);
+    expect(flows.some(flow=>flow.title==='Exploring Categories')).toBe(true);
+  });
+
   it("tours the front page, its tabs and two main pages, skipping accounts, legal and other sites", () => {
     const flows = tourFlows(facts, "Example UI");
     expect(flows.map((f) => f.id)).toEqual(["t1", "t2", "t3", "t4"]);

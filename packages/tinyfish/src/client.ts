@@ -255,7 +255,7 @@ export class TinyFish {
     await this.call(
       this.ep.agent,
       `/v1/runs/${encodeURIComponent(id)}/cancel`,
-      { method: "POST", timeoutMs: 15_000 },
+      { method: "POST", timeoutMs: 15_000, raw: true },
     );
   }
 

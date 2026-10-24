@@ -31,6 +31,7 @@ const STATUS_LABEL = {
 export default function JobView({ id }: { id: string }) {
   const { view, error, live, decide, cancel } = useJob(id);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string>();
   const panel = useRef<HTMLDivElement>(null);
   const page = useRef<HTMLDivElement>(null);
 
@@ -110,17 +111,20 @@ export default function JobView({ id }: { id: string }) {
           <button
             type="button"
             onClick={async () => {
-              if (!confirm("Stop this job? Work in progress is lost.")) return;
+              setCancelError(undefined);
               setCancelling(true);
-              await cancel().catch(() => setCancelling(false));
+              try { await cancel(); }
+              catch (error) { setCancelError(error instanceof Error ? error.message : "Could not cancel the job. Try again."); }
+              finally { setCancelling(false); }
             }}
             disabled={cancelling}
             className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
           >
-            {cancelling ? "Stopping…" : "Stop job"}
+            {cancelling ? "Cancelling…" : "Cancel job"}
           </button>
         )}
       </header>
+      {cancelError && <p role="alert" className="mb-6 text-sm text-red-400">{cancelError}</p>}
 
       <div className="grid gap-10 lg:grid-cols-[230px_minmax(0,1fr)]">
         <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">

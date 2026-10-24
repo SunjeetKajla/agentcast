@@ -50,6 +50,42 @@ const client = () => ({
 });
 
 describe("durable exploration tasks", () => {
+  it("sends cancellation immediately even while a polling callback is still running", async () => {
+    const tf = client();
+    tf.getRun.mockResolvedValue(run("RUNNING"));
+    let entered!: () => void;
+    let release!: () => void;
+    const ready = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const blocked = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const abort = new AbortController();
+    const pending = runTask({
+      id: "scout",
+      request,
+      schema,
+      io: io(),
+      tf: tf as unknown as TinyFish,
+      maxMs: 5000,
+      signal: abort.signal,
+      onUpdate: async () => {
+        entered();
+        await blocked;
+      },
+    });
+    const result = pending.catch((error) => error);
+    try {
+      await ready;
+      abort.abort(new Error("fixture cancelled"));
+      expect(tf.cancelRun).toHaveBeenCalledExactlyOnceWith("remote-1");
+    } finally {
+      release();
+    }
+    expect(await result).toMatchObject({ message: "fixture cancelled" });
+    expect(tf.cancelRun).toHaveBeenCalledTimes(1);
+  });
   it("writes the run id before polling and reuses the completed result without another POST", async () => {
     const tf = client();
     tf.getRun.mockImplementation(async () => {

@@ -110,6 +110,8 @@ export type RenderOptions = {
   root: string;
   /** Absolute output path (.mp4). */
   out: string;
+  /** Bound render tabs on worker machines; callers can lower this for previews/tests. */
+  concurrency?: number;
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
 };
@@ -132,6 +134,7 @@ export async function renderVideo(o: RenderOptions): Promise<{ frames: number; s
       inputProps,
       codec: "h264",
       crf: 20,
+      concurrency: o.concurrency ?? 4,
       outputLocation: o.out,
       cancelSignal: cancel.cancelSignal,
       onProgress: ({ progress }) => o.onProgress?.(progress),

@@ -84,7 +84,9 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
         onOpen: (window) => {
           opened();
           void seen.then(() =>
-            setTimeout(() => process.kill(window.pid!, "SIGTERM"), 1500),
+            // SIGTERM is a stand-in for closing the window in this headless test.
+            // Unlike an orderly UI close it may discard Chrome's current cookie batch.
+            setTimeout(() => process.kill(window.pid!, "SIGTERM"), 31_000),
           );
         },
       });

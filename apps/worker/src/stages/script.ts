@@ -37,7 +37,20 @@ export const script: StageFn = async (ctx) => {
     ctx.read(jobPaths.flows, FlowsFile),
     ctx.read(jobPaths.timeline("desktop"), Timeline),
   ]);
-  const approved = file.flows.filter((flow) => flow.selected);
+  const approved = file.flows.filter(
+    (flow) =>
+      flow.selected &&
+      timeline.flows.some((recorded) => recorded.flowId === flow.id),
+  );
+  const missing = file.flows.filter(
+    (flow) =>
+      flow.selected && !approved.some((recorded) => recorded.id === flow.id),
+  );
+  if (missing.length)
+    ctx.log(
+      `Omitting ${missing.length} approved flow(s) that did not record; narration will describe only completed footage.`,
+      "warn",
+    );
   const spans = candidateSpans(
     approved.map((flow) => ({ flowId: flow.id, title: flow.title, timeline })),
   );

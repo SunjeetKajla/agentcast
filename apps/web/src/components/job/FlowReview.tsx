@@ -39,7 +39,7 @@ function merge(rows: Row[] | undefined, flows: Flow[]): Row[] {
   const added = [...flows]
     .sort((a, b) => a.rank - b.rank)
     .filter((f) => !known.has(f.id))
-    .map((flow) => ({ flow, selected: flow.selected, title: flow.title }));
+    .map((flow) => ({ flow, selected: flow.selected && flow.rehearsal?.ok !== false, title: flow.title }));
   return [...kept, ...added];
 }
 
@@ -198,6 +198,7 @@ export default function FlowReview({
                 <input
                   type="checkbox"
                   checked={row.selected}
+                  disabled={!replayed || sending || working}
                   onChange={(e) => update(i, { selected: e.target.checked })}
                   aria-label={`Film "${row.title}"`}
                   className="mt-1.5 h-4 w-4 cursor-pointer accent-[#8B5CF6]"

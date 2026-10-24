@@ -31,12 +31,14 @@ export function run(opts: {
     let pending = "";
     let stopped: LlmError | undefined;
 
-    const kill = (reason: LlmError) => {
+    const kill = (reason: LlmError, immediate = false) => {
       stopped ??= reason;
       try {
-        if (child.pid && process.platform !== "win32") process.kill(-child.pid, "SIGTERM");
-        else child.kill("SIGTERM");
+        const signal = immediate ? "SIGKILL" : "SIGTERM";
+        if (child.pid && process.platform !== "win32") process.kill(-child.pid, signal);
+        else child.kill(signal);
       } catch {}
+      if (immediate) return;
       setTimeout(() => {
         try {
           if (child.pid && process.platform !== "win32") process.kill(-child.pid, "SIGKILL");
@@ -47,7 +49,7 @@ export function run(opts: {
       () => kill(new LlmError("llm.timeout", `${opts.label} timed out after ${Math.round(opts.timeoutMs / 1000)} s`)),
       opts.timeoutMs,
     );
-    const onAbort = () => kill(new LlmError("llm.cancelled", `${opts.label} cancelled`));
+    const onAbort = () => kill(new LlmError("llm.cancelled", `${opts.label} cancelled`), true);
     opts.signal?.addEventListener("abort", onAbort, { once: true });
 
     child.stdout.setEncoding("utf8");

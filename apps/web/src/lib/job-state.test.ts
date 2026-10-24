@@ -23,6 +23,42 @@ const fixture = async () => {
 const replay = (view: JobView, events: JobEvent[]) => events.reduce((v, e) => reduceJob(v, { type: "event", event: e }), view);
 
 describe("reduceJob", () => {
+  test("a delayed running event cannot revive a cancelled job after the cancel response", async () => {
+    const { fresh, events } = await fixture();
+    const running = events.find(
+      (event) => event.type === "job" && event.status === "running",
+    )!;
+    const view = reduceJob(initialView(fresh), {
+      type: "snapshot",
+      job: { ...fresh, status: "cancelled" },
+    });
+    expect(reduceJob(view, { type: "event", event: running }).job.status).toBe(
+      "cancelled",
+    );
+  });
+
+  test("cancelling immediately stops the live-agent views", async () => {
+    const { fresh } = await fixture();
+    const view: JobView = {
+      ...initialView(fresh),
+      agents: [
+        {
+          agentId: "active",
+          stage: "discover",
+          title: "Explore",
+          status: "step",
+          streamingUrl: "https://live.example/",
+          steps: [],
+        },
+      ],
+    };
+    const next = reduceJob(view, {
+      type: "snapshot",
+      job: { ...fresh, status: "cancelled" },
+    });
+    expect(next.agents[0]?.status).toBe("cancelled");
+    expect(next.agents[0]?.streamingUrl).toBeUndefined();
+  });
   test("replaying a full run ends where the worker ended", async () => {
     const { fresh, events } = await fixture();
     const view = replay(initialView(fresh), events);

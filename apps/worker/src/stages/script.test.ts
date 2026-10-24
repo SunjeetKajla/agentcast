@@ -67,7 +67,10 @@ afterEach(async () => {
 
 describe("recorded footage to bilingual scripts", () => {
   it("shows real footage frames to the storyboard writer and writes validated EN/HI artifacts", async () => {
-    const flow = (await ctx.read(jobPaths.flows, FlowsFile)).flows[0]!;
+    const file = await ctx.read(jobPaths.flows, FlowsFile);
+    const flow = file.flows[0]!;
+    file.flows.push({...flow,id:"unrecorded-fashion",title:"Unrecorded Fashion",selected:true});
+    await ctx.write(jobPaths.flows,FlowsFile,file);
     const timeline = await ctx.read(jobPaths.timeline("desktop"), Timeline);
     const spans = candidateSpans([
       { flowId: flow.id, title: flow.title, timeline },
@@ -119,6 +122,7 @@ describe("recorded footage to bilingual scripts", () => {
     const board = await ctx.read(jobPaths.storyboard, Storyboard);
     expect(board.beats[1]?.flowId).toBe(flow.id);
     expect(calls).toBe(3);
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining("1 approved flow(s) that did not record"),"warn");
     for (const lang of ["en", "hi"]) {
       const written = await ctx.read(jobPaths.script(lang), Script);
       expect(written.lang).toBe(lang);

@@ -6,6 +6,10 @@ import type { PageFacts } from "./tour";
 import type { SessionState } from "./artifacts";
 
 export type BrowserOptions = {
+  /** Overall local operation deadline, including page evaluation and cleanup. Default 60 s. */
+  timeoutMs?: number;
+  /** Discovery needs page facts, not another hero/logo capture. */
+  captureAssets?: boolean;
   signal?: AbortSignal;
   storageState?: SessionState;
   authorizedUrl: string;

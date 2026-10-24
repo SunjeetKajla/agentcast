@@ -58,6 +58,9 @@ export function createContext(opts: {
 }): StageContext {
   const { bus, stage, dir } = opts;
   const path = (rel: string) => join(dir, rel);
+  const emit = (event: JobEventInput) => {
+    if (!opts.signal.aborted || event.type === "agent" && event.status === "cancelled") bus.emit(event);
+  };
   return {
     jobId: opts.jobId,
     stage,
@@ -69,16 +72,16 @@ export function createContext(opts: {
     read: (rel, schema) => readArtifact(path(rel), schema),
     async write(rel, schema, data) {
       const written = await writeArtifact(path(rel), schema, data);
-      bus.emit({ type: "artifact", stage, path: rel });
+      emit({ type: "artifact", stage, path: rel });
       return written;
     },
-    artifact: (rel) => bus.emit({ type: "artifact", stage, path: rel }),
-    log: (message, level = "info") => bus.emit({ type: "log", stage, level, message }),
+    artifact: (rel) => { emit({ type: "artifact", stage, path: rel }); },
+    log: (message, level = "info") => { emit({ type: "log", stage, level, message }); },
     progress: (progress, message) =>
-      bus.emit({ type: "progress", stage, progress: Math.min(1, Math.max(0, progress)), message }),
-    emit: (event) => bus.emit(event),
+      emit({ type: "progress", stage, progress: Math.min(1, Math.max(0, progress)), message }),
+    emit,
     llm: sharedLlm(),
-    llmProgress: (e) => bus.emit({ type: "llm", stage, kind: e.kind, text: e.text }),
+    llmProgress: (e) => { emit({ type: "llm", stage, kind: e.kind, text: e.text }); },
     async decision(gate) {
       try {
         return (await readArtifact(path(decisionPath(gate)), GATE_DECISIONS[gate])) as GateDecision<typeof gate>;

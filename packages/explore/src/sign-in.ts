@@ -108,7 +108,7 @@ async function signIn(options: SignInOptions): Promise<SessionState> {
       ...(options.headless ? ["--headless=new"] : []),
       options.url,
     ],
-    { stdio: "ignore" },
+    { stdio: "ignore", detached: process.platform !== "win32" },
   );
   let gone = false;
   let failed = false;
@@ -123,8 +123,17 @@ async function signIn(options: SignInOptions): Promise<SessionState> {
       resolve();
     });
   });
-  const quit = async () => {
+  const quit = async (force = false) => {
     if (gone) return;
+    if (force) {
+      try {
+        if (child.pid && process.platform !== "win32")
+          process.kill(-child.pid, "SIGKILL");
+        else child.kill("SIGKILL");
+      } catch {}
+      await exited;
+      return;
+    }
     child.kill("SIGTERM");
     await Promise.race([exited, delay(10_000, undefined, { ref: false })]);
     if (!gone) child.kill("SIGKILL");
@@ -132,7 +141,10 @@ async function signIn(options: SignInOptions): Promise<SessionState> {
   };
   let timer: ReturnType<typeof setTimeout> | undefined;
   let stop: (reason: "done" | "cancelled" | "timeout") => void = () => {};
-  const abort = () => stop("cancelled");
+  const abort = () => {
+    stop("cancelled");
+    void quit(true);
+  };
   try {
     const stopped = new Promise<"done" | "cancelled" | "timeout">((resolve) => {
       stop = resolve;
@@ -176,7 +188,7 @@ async function signIn(options: SignInOptions): Promise<SessionState> {
         await delay(250, undefined, { signal: options.signal });
       }
     }
-    await quit();
+    await quit(why === "cancelled" || options.signal?.aborted);
     options.signal?.throwIfAborted();
     if (why === "timeout")
       throw new Error(
@@ -227,6 +239,6 @@ async function signIn(options: SignInOptions): Promise<SessionState> {
   } finally {
     if (timer) clearTimeout(timer);
     options.signal?.removeEventListener("abort", abort);
-    await quit();
+    await quit(options.signal?.aborted);
   }
 }

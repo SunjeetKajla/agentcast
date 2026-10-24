@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   closeContext: vi.fn(),
   closeBrowser: vi.fn(),
   use: vi.fn(),
+  setDependencyResolution: vi.fn(),
   stealth: vi.fn(),
   evasions: new Set<string>(),
 }));
@@ -18,7 +19,7 @@ vi.mock("playwright-core", () => ({
   devices: { "Pixel 7": { userAgent: "mobile-chromium" } },
 }));
 vi.mock("playwright-extra", () => ({
-  addExtra: () => ({ launch: mocks.launch, use: mocks.use }),
+  addExtra: () => ({ launch: mocks.launch, use: mocks.use, plugins: { setDependencyResolution: mocks.setDependencyResolution } }),
 }));
 vi.mock("puppeteer-extra-plugin-stealth", () => ({ default: mocks.stealth }));
 vi.mock("./gpu.ts", () => ({
@@ -68,6 +69,42 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("recorder browser lifecycle", () => {
+  it('does not start Chrome for a cancelled job', async () => {
+    const controller = new AbortController(); controller.abort(new Error('fixture cancelled'));
+    await expect(launchRecorderBrowser({ signal: controller.signal })).rejects.toThrow('fixture cancelled');
+    expect(mocks.launch).not.toHaveBeenCalled();
+  });
+
+  it('closes Chrome if cancellation arrives while launch is in progress, without creating a page', async () => {
+    const controller = new AbortController();
+    let release!: (browser: unknown) => void;
+    mocks.launch.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const pending = launchRecorderBrowser({ signal: controller.signal });
+    const result = pending.catch(error => error);
+    controller.abort(new Error('fixture cancelled'));
+    release({ close: mocks.closeBrowser, newContext: mocks.newContext });
+    expect(await result).toMatchObject({ message: 'fixture cancelled' });
+    expect(mocks.closeBrowser).toHaveBeenCalled();
+    expect(mocks.newContext).not.toHaveBeenCalled();
+  });
+
+  it('closes an active browser as soon as the job is aborted', async () => {
+    const controller = new AbortController();
+    const session = await launchRecorderBrowser({ signal: controller.signal });
+    controller.abort();
+    await session.close();
+    expect(mocks.closeBrowser).toHaveBeenCalledOnce();
+    expect(mocks.closeContext).toHaveBeenCalledOnce();
+  });
+  it('closes the browser immediately on cancellation even when the renderer never closes its context',async()=>{
+    const controller=new AbortController();
+    const session=await launchRecorderBrowser({signal:controller.signal});
+    mocks.closeContext.mockImplementationOnce(()=>new Promise(()=>{}));
+    controller.abort();
+    await session.close();
+    expect(mocks.closeBrowser).toHaveBeenCalledOnce();
+  });
+
   it("installs stealth while leaving the actual GPU identity visible", async () => {
     const session = await launchRecorderBrowser();
     expect(mocks.use).toHaveBeenCalledOnce();

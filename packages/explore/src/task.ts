@@ -208,10 +208,19 @@ export async function runTask<S extends z.ZodType>(
       });
       return { result, runId: run.run_id };
     };
+    let cancelling: Promise<void> | undefined;
+    const cancelRemote = () =>
+      (cancelling ??= tf.cancelRun(checkpoint!.runId!).catch(() => {}));
+    const onAbort = () => {
+      void cancelRemote();
+    };
+    options.signal?.addEventListener("abort", onAbort, { once: true });
+    if (options.signal?.aborted) onAbort();
     try {
       for (;;) {
         signal.throwIfAborted();
         const run = await tf.getRun(checkpoint!.runId!, signal);
+        signal.throwIfAborted();
         const complete = await accept(run);
         if (complete) {
           await options.onUpdate?.(run);
@@ -242,13 +251,15 @@ export async function runTask<S extends z.ZodType>(
           if (result) return result;
         }
       }
-      await tf.cancelRun(checkpoint!.runId!).catch(() => {});
+      await cancelRemote();
       if (options.signal?.aborted) throw options.signal.reason;
       if (signal.aborted)
         throw new Error(
           `${id} exceeded its ${Math.round(options.maxMs / 1000)} s deadline; its run ID was saved.`,
         );
       throw error;
+    } finally {
+      options.signal?.removeEventListener("abort", onAbort);
     }
   });
 }

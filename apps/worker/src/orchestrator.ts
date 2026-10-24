@@ -148,8 +148,15 @@ export class Orchestrator {
 
   async cancel(id: string): Promise<Job> {
     const live = await this.require(id);
+    if (live.job.status === "cancelled") {
+      await Promise.all([live.saving, live.bus.flush()]);
+      return structuredClone(live.job);
+    }
     if (TERMINAL.includes(live.job.status)) throw new WorkerError(409, `job is already ${live.job.status}`);
     live.abort.abort();
+    const activeAgents = new Map<string, Extract<ReturnType<EventBus["since"]>[number], { type: "agent" }>>();
+    for (const event of live.bus.since(0)) if (event.type === "agent") activeAgents.set(event.agentId, event);
+    for (const event of activeAgents.values()) if (event.status === "started" || event.status === "step") live.bus.emit({ type: "agent", stage: event.stage, agentId: event.agentId, title: event.title, status: "cancelled" });
     for (const { name } of STAGES) {
       const status = live.job.stages[name].status;
       if (status === "running" || status === "waiting" || status === "pending") {
@@ -160,6 +167,7 @@ export class Orchestrator {
       }
     }
     this.setJobStatus(live, "cancelled");
+    await Promise.all([live.saving, live.bus.flush()]);
     return structuredClone(live.job);
   }
 
@@ -325,8 +333,10 @@ export class Orchestrator {
     const ctx = this.context(live, gate, attempt);
     try {
       await writeArtifact(ctx.path(decisionPath(gate)), GATE_DECISIONS[gate], decision);
+      if (live.abort.signal.aborted) return;
       await this.gates[gate]?.(ctx, decision);
     } catch (err) {
+      if (live.abort.signal.aborted) return;
       if (manual) {
         // A decision that doesn't fit the job (e.g. an unknown flow id): keep waiting, tell the caller.
         this.setStage(live, gate, {
@@ -342,6 +352,7 @@ export class Orchestrator {
       this.advance(live);
       throw err;
     }
+    if (live.abort.signal.aborted) return;
     if (gate === "gate-preview" && decision.action === "revise") {
       this.setStage(live, "direct", {
         status: "pending",

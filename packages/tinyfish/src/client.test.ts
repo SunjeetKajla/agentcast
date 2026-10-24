@@ -56,6 +56,20 @@ const run = (status: string, extra = {}) => ({
 });
 
 describe("TinyFish client", () => {
+  it("accepts an empty successful cancellation response without retrying it", async () => {
+    let calls = 0;
+    const endpoints = await fake((req, res) => {
+      calls++;
+      expect(req.method).toBe("POST");
+      expect(req.url).toBe("/v1/runs/r1/cancel");
+      res.writeHead(204);
+      res.end();
+    });
+    await expect(
+      new TinyFish({ apiKey: "fixture-key", endpoints }).cancelRun("r1"),
+    ).resolves.toBeUndefined();
+    expect(calls).toBe(1);
+  });
   it("sends the key as a header and never logs it", async () => {
     const logs: RequestLog[] = [];
     const endpoints = await fake((req, res, body) => {

@@ -1,3 +1,4 @@
+import { setTimeout as delay } from "node:timers/promises";
 import {
   chromium,
   devices,
@@ -10,6 +11,7 @@ import {
 import { addExtra } from "playwright-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { launchGpuBrowser, type GpuInfo, type GpuPreference } from "./gpu.ts";
+import { safeUserAgentOverride } from './stealth';
 
 export type FormFactor = "desktop" | "mobile";
 
@@ -20,6 +22,7 @@ export type RecorderStorageState = Pick<
 >;
 
 export interface RecorderBrowserOptions {
+  signal?: AbortSignal;
   formFactor?: FormFactor;
   viewport?: { width: number; height: number };
   deviceScaleFactor?: number;
@@ -54,6 +57,7 @@ const KEEP_NAMES = "globalThis.__name ??= (target) => target;";
 export async function launchRecorderBrowser(
   options: RecorderBrowserOptions = {},
 ): Promise<RecorderBrowser> {
+  options.signal?.throwIfAborted();
   const formFactor = options.formFactor ?? "desktop";
   const mobile = formFactor === "mobile";
   const deviceScaleFactor = options.deviceScaleFactor ?? (mobile ? 3 : 2);
@@ -69,6 +73,7 @@ export async function launchRecorderBrowser(
     );
   const launcher = addExtra(chromium);
   if (options.stealth !== false) {
+    launcher.plugins.setDependencyResolution('stealth/evasions/user-agent-override', safeUserAgentOverride);
     const stealth = StealthPlugin();
     // Never let a spoofed GPU string turn a software fallback into a hardware success.
     stealth.enabledEvasions.delete("webgl.vendor");
@@ -77,34 +82,65 @@ export async function launchRecorderBrowser(
       stealth.enabledEvasions.delete("user-agent-override");
     launcher.use(stealth);
   }
-  const { browser, gpu } = await launchGpuBrowser(
-    (launchOptions) => launcher.launch(launchOptions),
-    {
-      ...options.launchOptions,
-      // Match the real compositor DSF to the emulated DPR. Changing emulation's
-      // view scale instead produces larger frames but breaks Playwright hit tests.
-      args: [
-        ...(options.launchOptions?.args ?? []),
-        `--force-device-scale-factor=${deviceScaleFactor}`,
-      ],
-    },
-    options.gpu,
-  );
+  let launchingBrowser: Browser | undefined;
+  let closeOnAbort: (() => Promise<void>) | undefined;
+  const onAbort = () => {
+    void (closeOnAbort?.() ?? launchingBrowser?.close())?.catch(() => {});
+  };
+  options.signal?.addEventListener("abort", onAbort, { once: true });
+  let launched: Awaited<ReturnType<typeof launchGpuBrowser>>;
+  try {
+    launched = await launchGpuBrowser(
+      async (launchOptions) => {
+        options.signal?.throwIfAborted();
+        const browser = await launcher.launch(launchOptions);
+        launchingBrowser = browser;
+        if (options.signal?.aborted) {
+          launchingBrowser = undefined;
+          await browser.close().catch(() => {});
+          options.signal.throwIfAborted();
+        }
+        return browser;
+      },
+      {
+        ...options.launchOptions,
+        // Match the real compositor DSF to the emulated DPR. Changing emulation's
+        // view scale instead produces larger frames but breaks Playwright hit tests.
+        args: [
+          ...(options.launchOptions?.args ?? []),
+          `--force-device-scale-factor=${deviceScaleFactor}`,
+        ],
+      },
+      options.gpu,
+    );
+  } catch (error) {
+    options.signal?.removeEventListener("abort", onAbort);
+    await launchingBrowser?.close().catch(() => {});
+    options.signal?.throwIfAborted();
+    throw error;
+  }
+  const { browser, gpu } = launched;
 
   let context: BrowserContext | undefined;
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
+    options.signal?.removeEventListener("abort", onAbort);
     closing ??= (async () => {
+      let contextError: unknown;
+      const contextClosed=Promise.resolve().then(()=>context?.close()).catch(error=>{contextError=error;});
+      // A frozen renderer may never acknowledge context.close. Do not let it prevent closing
+      // the browser process, and initiate browser shutdown immediately for cancellation.
       try {
-        await context?.close();
-      } finally {
-        await browser.close();
-      }
+        if(!options.signal?.aborted) await Promise.race([contextClosed,delay(1000,undefined,{ref:false})]);
+      } finally {await browser.close();}
+      if(contextError) throw contextError;
     })();
     return closing;
   };
+  closeOnAbort = close;
 
   try {
+    options.signal?.throwIfAborted();
     context = await browser.newContext({
       viewport:
         options.viewport ??
@@ -125,12 +161,14 @@ export async function launchRecorderBrowser(
           }
         : undefined,
     });
+    options.signal?.throwIfAborted();
 
     // tsx (the worker's runtime) wraps named functions in __name(), which then breaks every
     // page.evaluate that defines one. Give pages a no-op __name; a string is never rewritten.
     await context.addInitScript({ content: KEEP_NAMES });
     const page = await context.newPage();
     await page.evaluate(KEEP_NAMES);
+    options.signal?.throwIfAborted();
     return {
       formFactor,
       browser,
