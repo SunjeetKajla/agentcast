@@ -2,19 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 
 export default function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      className="sticky top-0 z-50 w-full border-b border-white/[0.05] bg-[#050505]/70 backdrop-blur-xl"
-    >
+    <nav className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#050505]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-8">
         {/* Left: Logo */}
         <div className="flex items-center gap-3">
@@ -72,6 +66,6 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-    </motion.nav>
+    </nav>
   );
 }

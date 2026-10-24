@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import CardboardInput from "@/components/CardboardInput";
 import FloatingPreviewCards from "@/components/FloatingPreviewCards";
 import TimelineRuler from "@/components/TimelineRuler";
@@ -44,20 +43,15 @@ export default function HomePage() {
         {/* Floating 3D Cards Framing the Hero */}
         <FloatingPreviewCards />
 
-        {/* Central Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-6"
-        >
+        {/* Central Content (Always 100% visible, high z-index) */}
+        <div className="relative z-30 mx-auto flex w-full max-w-3xl flex-col items-center gap-6">
           {/* Headline in Editorial Serif */}
-          <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl font-normal tracking-tight text-white leading-[1.08] drop-shadow-lg">
+          <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl font-normal tracking-tight text-white leading-[1.08] drop-shadow-2xl">
             link in. <span className="italic font-light">video out.</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="max-w-xl text-sm sm:text-base text-white/60 font-sans tracking-wide">
+          <p className="max-w-xl text-sm sm:text-base text-white/70 font-sans tracking-wide">
             Turn your web SaaS into a polished, high-impact demo video in seconds.
           </p>
 
@@ -65,16 +59,16 @@ export default function HomePage() {
           <div id="hero-input" className="w-full pt-4">
             <CardboardInput onSubmit={handleGenerate} isLoading={isLoading} />
           </div>
-        </motion.div>
+        </div>
 
         {/* Timeline tick ruler at bottom of hero */}
-        <div className="absolute inset-x-0 bottom-2">
+        <div className="absolute inset-x-0 bottom-2 z-20">
           <TimelineRuler />
         </div>
       </section>
 
       {/* ── Content Sections ── */}
-      <div className="w-full max-w-6xl space-y-28 px-6 py-20">
+      <div className="relative z-20 w-full max-w-6xl space-y-28 px-6 py-20">
         {/* How It Works */}
         <div id="how-it-works" className="w-full flex justify-center">
           <HowItWorks />
