@@ -4,7 +4,7 @@ import { pino, type Logger } from "pino";
 import { agentcastHome } from "./env.ts";
 import { Orchestrator } from "./orchestrator.ts";
 import { buildServer } from "./server.ts";
-import { gates, stages } from "./stages/index.ts";
+import { gateActions, gates, stages } from "./stages/index.ts";
 import { JobStore } from "./store.ts";
 
 export type Worker = {
@@ -18,7 +18,7 @@ export type Worker = {
 export function createWorker(opts: { home?: string; logger?: Logger } = {}): Worker {
   const log = opts.logger ?? pino({ level: process.env.LOG_LEVEL || "info" });
   const store = new JobStore(opts.home ?? agentcastHome());
-  const orchestrator = new Orchestrator(store, stages, gates, log);
+  const orchestrator = new Orchestrator(store, stages, gates, log, gateActions);
   const app = buildServer(orchestrator, store, log);
   return {
     app,

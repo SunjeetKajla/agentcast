@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { STAGES, jobPaths } from "@agentcast/shared";
+import { STAGES, jobPaths, type JobEvent } from "@agentcast/shared";
 import StageRail from "@/components/job/StageRail";
 import NowCard from "@/components/job/NowCard";
 import LiveAgents from "@/components/job/LiveAgents";
@@ -61,7 +61,9 @@ export default function JobView({ id }: { id: string }) {
   if (error) {
     return (
       <div className="flex min-h-[60vh] w-full max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="font-serif text-3xl text-white">{error.status === 404 ? "No such job" : "Can't load this job"}</h1>
+        <h1 className="font-serif text-3xl text-white">
+          {error.status === 404 ? "No such job" : "Can't load this job"}
+        </h1>
         <p className="text-sm text-white/60">{error.message}</p>
         <Link href="/" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black">
           Back home
@@ -88,12 +90,19 @@ export default function JobView({ id }: { id: string }) {
       <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
         <div className="space-y-2">
           <p className="flex items-center gap-2 text-xs text-white/50">
-            <span className={`h-2 w-2 rounded-full ${live && !finished ? "animate-pulse bg-accent" : finished ? "bg-white/30" : "bg-amber-400"}`} />
+            <span
+              className={`h-2 w-2 rounded-full ${live && !finished ? "animate-pulse bg-accent" : finished ? "bg-white/30" : "bg-amber-400"}`}
+            />
             {STATUS_LABEL[job.status]}
             {!finished && !live && " · reconnecting"}
           </p>
           <h1 className="font-serif text-4xl font-normal text-white sm:text-5xl">{host}</h1>
-          <a href={job.config.url} target="_blank" rel="noopener noreferrer" className="text-xs text-white/40 transition-colors hover:text-white/70">
+          <a
+            href={job.config.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-white/40 transition-colors hover:text-white/70"
+          >
             {job.config.url}
           </a>
         </div>
@@ -121,7 +130,15 @@ export default function JobView({ id }: { id: string }) {
         <div className="min-w-0 space-y-10">
           <div ref={panel} key={panelKey}>
             {gate === "gate-flows" ? (
-              <FlowReview jobId={job.id} version={view.artifacts[jobPaths.flows]} onApprove={(d) => decide("gate-flows", d)} />
+              <FlowReview
+                jobId={job.id}
+                version={view.artifacts[jobPaths.flows]}
+                action={
+                  view.events.findLast((e) => e.type === "action" && e.gate === "gate-flows") as
+                    Extract<JobEvent, { type: "action" }> | undefined
+                }
+                onApprove={(d) => decide("gate-flows", d)}
+              />
             ) : gate === "gate-script" ? (
               <StoryboardReview
                 jobId={job.id}
@@ -130,7 +147,11 @@ export default function JobView({ id }: { id: string }) {
                 onApprove={(d) => decide("gate-script", d)}
               />
             ) : gate === "gate-preview" ? (
-              <PreviewReview job={job} version={view.artifacts[jobPaths.preview]} onDecide={(d) => decide("gate-preview", d)} />
+              <PreviewReview
+                job={job}
+                version={view.artifacts[jobPaths.preview]}
+                onDecide={(d) => decide("gate-preview", d)}
+              />
             ) : job.status === "done" ? (
               <Outputs job={job} versions={view.artifacts} />
             ) : job.status === "failed" ? (

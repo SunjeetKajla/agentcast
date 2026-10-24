@@ -42,18 +42,51 @@ export async function explorationOptions(
     signal: ctx.signal,
     log: (message) => ctx.log(message),
     progress: (value, message) => ctx.progress(value, message),
-    onAgent: (id, title, status, run?: Run) =>
+    onAgent: agentEvents(ctx),
+  };
+}
+
+/**
+ * Turns TinyFish run polls (every ~1.5 s) into agent events for the live views. A poll only becomes an
+ * event when something changed: each new step once, with TinyFish's own words for it; a new live-view
+ * link; a new status. Signed-in runs never send their live view (AGENTS.md rule 5).
+ */
+export function agentEvents(
+  ctx: Pick<StageContext, "emit" | "stage" | "config">,
+) {
+  const seen = new Map<
+    string,
+    { steps: number; url?: string; status: string }
+  >();
+  return (
+    id: string,
+    title: string,
+    status: "started" | "step" | "done" | "failed" | "cancelled",
+    run?: Run,
+  ) => {
+    const prev = seen.get(id) ?? { steps: 0, status: "" };
+    const url =
+      ctx.config.auth.mode === "public"
+        ? (run?.streaming_url ?? prev.url)
+        : undefined;
+    const fresh = run?.steps.slice(prev.steps) ?? [];
+    seen.set(id, { steps: prev.steps + fresh.length, url, status });
+    if (!fresh.length && url === prev.url && status === prev.status) return;
+    const event = {
+      type: "agent",
+      stage: ctx.stage,
+      agentId: id,
+      title,
+      status,
+      ...(url ? { streamingUrl: url } : {}),
+    } as const;
+    if (!fresh.length) return ctx.emit(event);
+    fresh.forEach((step, i) =>
       ctx.emit({
-        type: "agent",
-        stage: ctx.stage,
-        agentId: id,
-        title,
-        status,
-        ...(ctx.config.auth.mode === "public" && run?.streaming_url
-          ? { streamingUrl: run.streaming_url }
-          : {}),
-        ...(run?.steps.length ? { step: `Step ${run.steps.length}` } : {}),
+        ...event,
+        step: step.action?.trim().slice(0, 200) || `Step ${prev.steps + i + 1}`,
       }),
+    );
   };
 }
 export function makeDiscover(

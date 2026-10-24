@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { Job, STAGES, jobPaths, type JobConfig, type StageName, type StageState } from "@agentcast/shared";
+import { Job, STAGES, StoredJob, jobPaths, type JobConfig, type StageName, type StageState } from "@agentcast/shared";
 import { ArtifactError, readArtifact, writeArtifact } from "@agentcast/shared/node";
 import { WorkerError } from "./errors.ts";
 
@@ -27,7 +27,15 @@ export class JobStore {
     const stages = Object.fromEntries(
       STAGES.map((s) => [s.name, { status: "pending", attempts: 0 } satisfies StageState]),
     ) as Record<StageName, StageState>;
-    const job: Job = { schemaVersion: 2, id, createdAt: now, updatedAt: now, status: "queued", config, stages };
+    const job: Job = {
+      schemaVersion: 3,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      status: "queued",
+      config,
+      stages,
+    };
     await mkdir(this.dir(id), { recursive: true });
     await this.save(job);
     return job;
@@ -35,7 +43,7 @@ export class JobStore {
 
   async load(id: string): Promise<Job | undefined> {
     try {
-      return await readArtifact(join(this.dir(id), jobPaths.state), Job);
+      return await readArtifact(join(this.dir(id), jobPaths.state), StoredJob);
     } catch (err) {
       if (err instanceof ArtifactError && (err.cause as NodeJS.ErrnoException)?.code === "ENOENT") return undefined;
       if (err instanceof WorkerError) return undefined;

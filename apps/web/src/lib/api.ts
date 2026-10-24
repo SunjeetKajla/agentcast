@@ -42,6 +42,10 @@ export const cancelJob = (id: string) => call<Job>(`/api/jobs/${id}/cancel`, { m
 export const decide = <G extends GateName>(id: string, gate: G, decision: GateDecision<G>) =>
   call<Job>(`/api/jobs/${id}/gates/${gate}`, json(decision));
 
+/** Work a waiting gate does without releasing it: "edit-step" or "add-flow" at gate-flows. Progress arrives as "action" events. */
+export const gateAction = (id: string, gate: GateName, action: string, body: unknown) =>
+  call<{ accepted: true }>(`/api/jobs/${id}/gates/${gate}/actions/${action}`, json(body));
+
 /** A job file's URL. `version` (an artifact event's seq) busts the cache when the file is rewritten. */
 export function fileUrl(id: string, rel: string, version?: number): string {
   const path = rel.split("/").map(encodeURIComponent).join("/");
@@ -49,7 +53,12 @@ export function fileUrl(id: string, rel: string, version?: number): string {
 }
 
 /** Read and validate a JSON artifact (AGENTS.md rule 3: validated on read). */
-export async function readArtifact<S extends z.ZodType>(id: string, rel: string, schema: S, version?: number): Promise<z.output<S>> {
+export async function readArtifact<S extends z.ZodType>(
+  id: string,
+  rel: string,
+  schema: S,
+  version?: number,
+): Promise<z.output<S>> {
   const data = await call<unknown>(fileUrl(id, rel, version));
   return schema.parse(data);
 }

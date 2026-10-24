@@ -1,5 +1,19 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { Beat, GATE_DECISIONS, GateName, JobConfig, MOTION_PRESETS, MotionTokens, Personality, STAGES, StageName, variantMatrix } from "./index.ts";
+import {
+  Beat,
+  GATE_DECISIONS,
+  GateName,
+  Job,
+  JobConfig,
+  MOTION_PRESETS,
+  MotionTokens,
+  Personality,
+  STAGES,
+  StageName,
+  StoredJob,
+  variantMatrix,
+} from "./index.ts";
 
 describe("stages", () => {
   test("STAGES lists every stage once, each after the ones it waits for", () => {
@@ -26,6 +40,7 @@ describe("JobConfig", () => {
       mode: "launch",
       variants: { aspects: ["16x9"], langs: ["en"], formFactors: ["desktop"] },
       autopilot: false,
+      voiceover: true,
     });
   });
 
@@ -36,7 +51,14 @@ describe("JobConfig", () => {
 });
 
 test("a beat's footage span is all or nothing", () => {
-  const beat = { id: "b", role: "core", onScreen: [], motion: { kind: "hold", emotion: "calm" }, intent: "x", maxSeconds: 2 };
+  const beat = {
+    id: "b",
+    role: "core",
+    onScreen: [],
+    motion: { kind: "hold", emotion: "calm" },
+    intent: "x",
+    maxSeconds: 2,
+  };
   expect(Beat.safeParse(beat).success).toBe(true);
   expect(Beat.safeParse({ ...beat, flowId: "f", in: 0, out: 2 }).success).toBe(true);
   expect(Beat.safeParse({ ...beat, flowId: "f", in: 0 }).success).toBe(false);
@@ -73,5 +95,15 @@ describe("variantMatrix", () => {
 
   test("duplicates collapse", () => {
     expect(ids({ aspects: ["16x9", "16x9"], langs: ["en", "en"], formFactors: ["desktop"] })).toEqual(["16x9-en"]);
+  });
+});
+
+describe("Job versions", () => {
+  test("a version 2 state.json (made before voiceover could be turned off) is upgraded as it's read", () => {
+    const current = Job.parse(JSON.parse(readFileSync(new URL("../fixtures/job-state.json", import.meta.url), "utf8")));
+    const { voiceover: _dropped, ...config } = current.config;
+    const old = { ...current, schemaVersion: 2, config };
+    expect(() => Job.parse(old)).toThrow();
+    expect(StoredJob.parse(old)).toEqual(current);
   });
 });

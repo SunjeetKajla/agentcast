@@ -17,7 +17,7 @@ import { z } from "zod";
 import { EventBus } from "./bus.ts";
 import { createContext, decisionPath } from "./context.ts";
 import { WorkerError } from "./errors.ts";
-import type { GateFn, StageRegistry } from "./stages/index.ts";
+import type { GateAction, GateFn, StageRegistry } from "./stages/index.ts";
 import type { JobStore } from "./store.ts";
 
 type RunnableStage = Exclude<StageName, GateName>;
@@ -43,13 +43,60 @@ const errorMessage = (err: unknown) => (err instanceof Error ? err.message : Str
  */
 export class Orchestrator {
   private readonly lives = new Map<string, Promise<Live | undefined>>();
+  /** Jobs with a gate action in progress: one at a time, and the gate can't be decided meanwhile. */
+  private readonly acting = new Set<string>();
 
   constructor(
     private readonly store: JobStore,
     private readonly stages: StageRegistry,
     private readonly gates: { [G in GateName]?: GateFn<G> },
     private readonly log: Logger,
+    private readonly actions: {
+      [G in GateName]?: Record<string, GateAction>;
+    } = {},
   ) {}
+
+  /**
+   * POST /jobs/:id/gates/:gate/actions/:action: work a waiting gate does without releasing it (edit a
+   * step, add a flow). The payload is checked now; the work runs in the background and reports
+   * "action" events (started, then done or failed). Artifacts it rewrites announce themselves.
+   */
+  async act(id: string, gate: GateName, name: string, body: unknown): Promise<{ accepted: true }> {
+    const live = await this.require(id);
+    const action = this.actions[gate]?.[name];
+    if (!action) throw new WorkerError(404, `no action ${name} at ${gate}`);
+    const state = live.job.stages[gate];
+    if (state.status !== "waiting") throw new WorkerError(409, `${gate} isn't waiting (it's ${state.status})`);
+    if (this.acting.has(id)) throw new WorkerError(409, "another change is still being tried; wait for it to finish");
+    const parsed = action.schema.safeParse(body ?? {});
+    if (!parsed.success) throw new WorkerError(400, z.prettifyError(parsed.error));
+    this.acting.add(id);
+    const ctx = this.context(live, gate, state.attempts + 1);
+    live.bus.emit({ type: "action", gate, name, status: "started" });
+    void action
+      .run(ctx, parsed.data)
+      .then((result) =>
+        live.bus.emit({
+          type: "action",
+          gate,
+          name,
+          status: "done",
+          message: action.done(result),
+        }),
+      )
+      .catch((err) => {
+        if (!live.abort.signal.aborted) this.log.warn({ err, jobId: id, gate, action: name }, "gate action failed");
+        live.bus.emit({
+          type: "action",
+          gate,
+          name,
+          status: "failed",
+          message: errorMessage(err).slice(0, 500),
+        });
+      })
+      .finally(() => this.acting.delete(id));
+    return { accepted: true };
+  }
 
   async create(config: JobConfig): Promise<Job> {
     const created = await this.store.create(config);
@@ -87,10 +134,15 @@ export class Orchestrator {
   async decide(id: string, gate: GateName, body: unknown): Promise<Job> {
     const live = await this.require(id);
     const state = live.job.stages[gate];
-    if (state.status !== "waiting") throw new WorkerError(409, `${gate} isn't waiting for a decision (it's ${state.status})`);
+    if (state.status !== "waiting")
+      throw new WorkerError(409, `${gate} isn't waiting for a decision (it's ${state.status})`);
+    if (this.acting.has(id))
+      throw new WorkerError(409, "a change to the flows is still being tried; approve once it finishes");
     const parsed = GATE_DECISIONS[gate].safeParse(body);
     if (!parsed.success) throw new WorkerError(400, z.prettifyError(parsed.error));
-    await this.release(live, gate, parsed.data as GateDecision<typeof gate>, { manual: true });
+    await this.release(live, gate, parsed.data as GateDecision<typeof gate>, {
+      manual: true,
+    });
     return structuredClone(live.job);
   }
 
@@ -101,7 +153,10 @@ export class Orchestrator {
     for (const { name } of STAGES) {
       const status = live.job.stages[name].status;
       if (status === "running" || status === "waiting" || status === "pending") {
-        this.setStage(live, name, { status: "cancelled", finishedAt: new Date().toISOString() });
+        this.setStage(live, name, {
+          status: "cancelled",
+          finishedAt: new Date().toISOString(),
+        });
       }
     }
     this.setJobStatus(live, "cancelled");
@@ -125,10 +180,17 @@ export class Orchestrator {
       if (!live || TERMINAL.includes(live.job.status)) continue;
       for (const { name } of STAGES) {
         if (live.job.stages[name].status === "running") {
-          this.setStage(live, name, { status: "pending", message: "Restarted after a worker restart" });
+          this.setStage(live, name, {
+            status: "pending",
+            message: "Restarted after a worker restart",
+          });
         }
       }
-      live.bus.emit({ type: "log", level: "info", message: "Resumed after a worker restart" });
+      live.bus.emit({
+        type: "log",
+        level: "info",
+        message: "Resumed after a worker restart",
+      });
       this.advance(live);
       resumed.push(id);
     }
@@ -177,7 +239,12 @@ export class Orchestrator {
     const bus = await EventBus.open(id, join(this.store.dir(id), jobPaths.events), (err) =>
       this.log.error({ err, jobId: id }, "couldn't append to events.ndjson"),
     );
-    return { job, bus, abort: new AbortController(), saving: Promise.resolve() };
+    return {
+      job,
+      bus,
+      abort: new AbortController(),
+      saving: Promise.resolve(),
+    };
   }
 
   /** Start whatever is ready, then work out the job's status. Synchronous: stages run in the background. */
@@ -235,7 +302,10 @@ export class Orchestrator {
     if (live.job.config.autopilot) {
       void this.release(live, gate, { action: "approve" }, { manual: false }).catch(() => {});
     } else {
-      this.setStage(live, gate, { status: "waiting", message: "Waiting for your review" });
+      this.setStage(live, gate, {
+        status: "waiting",
+        message: "Waiting for your review",
+      });
     }
   }
 
@@ -247,7 +317,11 @@ export class Orchestrator {
     { manual }: { manual: boolean },
   ): Promise<void> {
     const attempt = live.job.stages[gate].attempts + 1;
-    this.setStage(live, gate, { status: "running", attempts: attempt, message: "Applying the review" });
+    this.setStage(live, gate, {
+      status: "running",
+      attempts: attempt,
+      message: "Applying the review",
+    });
     const ctx = this.context(live, gate, attempt);
     try {
       await writeArtifact(ctx.path(decisionPath(gate)), GATE_DECISIONS[gate], decision);
@@ -255,20 +329,33 @@ export class Orchestrator {
     } catch (err) {
       if (manual) {
         // A decision that doesn't fit the job (e.g. an unknown flow id): keep waiting, tell the caller.
-        this.setStage(live, gate, { status: "waiting", message: `Couldn't apply that: ${errorMessage(err)}` });
+        this.setStage(live, gate, {
+          status: "waiting",
+          message: `Couldn't apply that: ${errorMessage(err)}`,
+        });
         throw new WorkerError(400, errorMessage(err));
       }
-      this.setStage(live, gate, { status: "failed", error: { message: errorMessage(err) } });
+      this.setStage(live, gate, {
+        status: "failed",
+        error: { message: errorMessage(err) },
+      });
       this.advance(live);
       throw err;
     }
     if (gate === "gate-preview" && decision.action === "revise") {
-      this.setStage(live, "direct", { status: "pending", message: `Revising: ${decision.revise}` });
+      this.setStage(live, "direct", {
+        status: "pending",
+        message: `Revising: ${decision.revise}`,
+      });
       this.setStage(live, "preview", { status: "pending", message: undefined });
       this.setStage(live, gate, { status: "pending", message: undefined });
     } else {
       const message = manual ? "Approved" : "Approved on autopilot";
-      this.setStage(live, gate, { status: "done", finishedAt: new Date().toISOString(), message });
+      this.setStage(live, gate, {
+        status: "done",
+        finishedAt: new Date().toISOString(),
+        message,
+      });
     }
     this.advance(live);
   }

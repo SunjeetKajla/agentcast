@@ -8,6 +8,11 @@ export function makeVoice(
   deps: Pick<NarrationOptions, "client" | "duration"> = {},
 ): StageFn {
   return async (ctx) => {
+    if (!ctx.config.voiceover)
+      return {
+        skipped: true,
+        message: "No voiceover: the script becomes captions",
+      };
     if (fixtureStages()) {
       await pretend(ctx);
       for (const lang of fixtureLangs(ctx, ctx.config)) {

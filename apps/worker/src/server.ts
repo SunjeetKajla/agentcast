@@ -38,7 +38,10 @@ type IdParams = { id: string };
  * runs in a request (AGENTS.md rule 4).
  */
 export function buildServer(orchestrator: Orchestrator, store: JobStore, logger: Logger) {
-  const app = Fastify({ loggerInstance: logger, logController: new LogController({ disableRequestLogging: true }) });
+  const app = Fastify({
+    loggerInstance: logger,
+    logController: new LogController({ disableRequestLogging: true }),
+  });
 
   app.setErrorHandler((err, req, reply) => {
     if (err instanceof WorkerError) return reply.code(err.status).send({ error: err.message });
@@ -69,6 +72,15 @@ export function buildServer(orchestrator: Orchestrator, store: JobStore, logger:
     if (!gate.success) throw new WorkerError(404, `no gate ${req.params.gate}`);
     return reply.code(202).send(await orchestrator.decide(req.params.id, gate.data, req.body ?? {}));
   });
+
+  app.post<{ Params: IdParams & { gate: string; action: string } }>(
+    "/jobs/:id/gates/:gate/actions/:action",
+    async (req, reply) => {
+      const gate = GateName.safeParse(req.params.gate);
+      if (!gate.success) throw new WorkerError(404, `no gate ${req.params.gate}`);
+      return reply.code(202).send(await orchestrator.act(req.params.id, gate.data, req.params.action, req.body));
+    },
+  );
 
   app.post<{ Params: IdParams }>("/jobs/:id/cancel", async (req, reply) =>
     reply.code(202).send(await orchestrator.cancel(req.params.id)),

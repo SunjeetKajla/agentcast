@@ -5,6 +5,10 @@ import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import {
   launchRecorderBrowser,
+  replayKey,
+  serializeLocator,
+  snapshotOutcome,
+  type SemanticLocator,
   type RecorderBrowser,
   type RecorderBrowserOptions,
 } from "@agentcast/recorder";
@@ -118,8 +122,9 @@ async function pageIssue(page: Page) {
 }
 
 async function readyPage(page: Page, signal?: AbortSignal) {
-  // DOMContentLoaded can precede a client-rendered app by several seconds.
-  const until = Date.now() + 5000;
+  // DOMContentLoaded can precede a client-rendered app by a long way: Linear's public demo shows
+  // "Loading…" for ~15 s and its workspace at ~25 s. A page that renders returns at once.
+  const until = Date.now() + 30_000;
   for (;;) {
     signal?.throwIfAborted();
     try {
@@ -178,12 +183,17 @@ export async function openProduct(
           if (issue instanceof PageAccessError && issue.kind !== "unavailable")
             throw issue;
         }
-      } else break;
+      }
+      // Any other navigation error (an aborted load, a dropped connection) gets one more try.
+      await delay(1000, undefined, { signal });
     }
   }
+  const reason = (last as Error | undefined)?.message
+    ?.split("\n")[0]
+    ?.slice(0, 160);
   throw new PageAccessError(
     "unavailable",
-    `The product entrance could not be opened (${(last as Error)?.name ?? "navigation failure"}); no usable page was confirmed.`,
+    `The product entrance could not be opened (${reason || "navigation failure"}); no usable page was confirmed.`,
   );
 }
 
@@ -441,13 +451,21 @@ export function localBrowserAdapter(
         return await withPage(flow.startUrl, options, async (page) => {
           const started = Date.now();
           const steps = [];
+          const dropped: string[] = [];
           for (const step of flow.steps) {
             options.signal?.throwIfAborted();
             const before = await page.locator("body").innerText();
             const beforeUrl = page.url();
             let target: Awaited<ReturnType<typeof resolveSemantic>> | undefined;
+            // The first step waits for the app to finish building (Linear's demo takes ~25 s);
+            // later ones allow for a client-side navigation.
             if (step.target)
-              target = await resolveSemantic(page, step.target, options.signal);
+              target = await resolveSemantic(
+                page,
+                step.target,
+                options.signal,
+                step === flow.steps[0] ? 30_000 : 8000,
+              );
             if (
               ["click", "type", "select", "hover"].includes(step.action) &&
               !target
@@ -456,11 +474,17 @@ export function localBrowserAdapter(
                 `Step ${step.id}: no unique visible element matched.`,
               );
             if (target)
-              replay.byFormFactor.desktop![`${flow.id}.${step.id}`] = {
+              // The recorder's key and locator format, so it tries first what replayed here.
+              replay.byFormFactor.desktop![replayKey(step.id, flow.id)] = {
                 strategy: target.strategy,
-                locator: target.selector,
+                locator: serializeLocator(target.spec),
                 lastOk: new Date().toISOString(),
               };
+            // A click with no stated outcome must change the page, as the recorder will demand.
+            const shape =
+              step.action === "click" && !step.expect?.length
+                ? await snapshotOutcome(page, [])
+                : undefined;
             switch (step.action) {
               case "navigate":
                 await openProduct(
@@ -490,6 +514,24 @@ export function localBrowserAdapter(
                 const distance = Number(step.value ?? "600");
                 if (!Number.isFinite(distance) || Math.abs(distance) > 10000)
                   throw new Error("Invalid scroll distance.");
+                // The recorder scrolls the window only. A page whose window can't move that way
+                // (an app that scrolls an inner panel, or already at the end) would fail every
+                // take, so the scroll is left out of the flow.
+                if (!step.target) {
+                  const room = await page.evaluate(
+                    (d) =>
+                      d > 0
+                        ? document.documentElement.scrollHeight -
+                          innerHeight -
+                          scrollY
+                        : scrollY,
+                    distance,
+                  );
+                  if (room < 40) {
+                    dropped.push(step.id);
+                    continue;
+                  }
+                }
                 await page.mouse.wheel(0, distance);
                 break;
               }
@@ -504,6 +546,12 @@ export function localBrowserAdapter(
             productEntry(page.url(), options.authorizedUrl);
             await delay(150, undefined, { signal: options.signal });
             await pageIssue(page);
+            // A click that changes nothing (a toast that ignores clicks and closes on its own) adds
+            // nothing to a video and would fail every recording take: leave it out of the flow.
+            if (shape && !(await pageChanged(page, shape, options.signal))) {
+              dropped.push(step.id);
+              continue;
+            }
             for (const check of step.expect ?? []) {
               if (check.type === "text")
                 await page
@@ -557,6 +605,10 @@ export function localBrowserAdapter(
             }
             steps.push(next);
           }
+          if (!steps.some((s) => !["wait", "navigate"].includes(s.action)))
+            throw new Error(
+              `Step ${dropped[0] ?? flow.steps[0]?.id}: the page did not change.`,
+            );
           return {
             flow: Flow.parse({
               ...flow,
@@ -574,9 +626,12 @@ export function localBrowserAdapter(
             selected: false,
             rehearsal: {
               ok: false,
+              // Our own step messages say which step failed and how; anything else (a browser
+              // error that may quote page content) stays generic.
               reason:
-                error instanceof PageAccessError
-                  ? error.message
+                error instanceof PageAccessError ||
+                /^Step [\w-]+: /.test((error as Error).message)
+                  ? (error as Error).message
                   : "A reported step or its expected result could not be replayed uniquely in a fresh browser.",
             },
           },
@@ -587,54 +642,69 @@ export function localBrowserAdapter(
   };
 }
 
+/** Whether the page (its URL or the recorder's outcome signature) changes within 2.5 s. */
+async function pageChanged(
+  page: Page,
+  before: Awaited<ReturnType<typeof snapshotOutcome>>,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  const until = Date.now() + 2500;
+  for (;;) {
+    const after = await snapshotOutcome(page, []);
+    if (after.url !== before.url || after.signature !== before.signature)
+      return true;
+    if (Date.now() >= until) return false;
+    await delay(200, undefined, { signal });
+  }
+}
+
+/**
+ * The one visible element a target names, by role, label, placeholder or exact text, retried until
+ * `waitMs` passes: a client-rendered app can still be building its UI when the page counts as loaded.
+ */
 async function resolveSemantic(
   page: Page,
   target: Target,
   signal?: AbortSignal,
+  waitMs = 2000,
 ): Promise<
-  { locator: Locator; selector: string; strategy: LocatorStrategy } | undefined
+  | { locator: Locator; spec: SemanticLocator; strategy: LocatorStrategy }
+  | undefined
 > {
-  const candidates: Array<{
-    locator: Locator;
-    selector: string;
-    strategy: LocatorStrategy;
-  }> = [];
-  if (target.role) {
-    const role = target.role as "button";
-    const name = target.text || target.label;
-    if (name)
-      candidates.push({
-        locator: page.getByRole(role, { name, exact: true }),
-        selector: `role=${target.role}[name=${JSON.stringify(name)}]`,
-        strategy: "role",
-      });
-  }
-  if (target.label)
-    candidates.push({
-      locator: page.getByLabel(target.label, { exact: true }),
-      selector: `label=${JSON.stringify(target.label)}`,
-      strategy: "label",
-    });
+  const specs: SemanticLocator[] = [];
+  const name = target.text || target.label;
+  if (target.role && name)
+    specs.push({ kind: "role", role: target.role as "button", name });
+  if (target.label) specs.push({ kind: "label", name: target.label });
   if (target.placeholder)
-    candidates.push({
-      locator: page.getByPlaceholder(target.placeholder, { exact: true }),
-      selector: `placeholder=${JSON.stringify(target.placeholder)}`,
-      strategy: "placeholder",
-    });
-  if (target.text)
-    candidates.push({
-      locator: page.getByText(target.text, { exact: true }),
-      selector: `text=${JSON.stringify(target.text)}`,
-      strategy: "text",
-    });
-  for (let attempt = 0; attempt < 8; attempt++) {
+    specs.push({ kind: "placeholder", name: target.placeholder });
+  if (target.text) specs.push({ kind: "text", name: target.text });
+  // Agents mix up links and buttons (Linear's sidebar "Agent" is a link reported as a button,
+  // beside two real "Agent" buttons): the same name under another clickable role, if unique.
+  if (target.role && name)
+    for (const role of ["link", "button", "tab", "menuitem"] as const)
+      if (role !== target.role) specs.push({ kind: "role", role, name });
+  const candidates = specs.map((spec) => ({
+    spec,
+    strategy: spec.kind as LocatorStrategy,
+    locator:
+      spec.kind === "role"
+        ? page.getByRole(spec.role, { name: spec.name, exact: true })
+        : spec.kind === "label"
+          ? page.getByLabel(spec.name, { exact: true })
+          : spec.kind === "placeholder"
+            ? page.getByPlaceholder(spec.name, { exact: true })
+            : page.getByText(spec.name, { exact: true }),
+  }));
+  const until = Date.now() + waitMs;
+  for (;;) {
     signal?.throwIfAborted();
     for (const candidate of candidates) {
       const visible = candidate.locator.filter({ visible: true });
       if ((await visible.count()) === 1)
         return { ...candidate, locator: visible };
     }
+    if (Date.now() >= until) return undefined;
     await delay(250, undefined, { signal });
   }
-  return undefined;
 }

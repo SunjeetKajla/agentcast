@@ -91,7 +91,7 @@ async function agent<S extends typeof ScoutResult | typeof FlowRunResult>(
       tf: o.tf,
       signal: o.signal,
       maxMs: scout
-        ? (o.deadlines?.scoutMs ?? 180_000)
+        ? (o.deadlines?.scoutMs ?? 240_000)
         : (o.deadlines?.flowMs ?? 300_000),
       maxSteps: scout ? 18 : 32,
       intervalMs: o.deadlines?.intervalMs,
@@ -157,7 +157,7 @@ export async function discoverProduct(
       o.signal?.throwIfAborted();
       // A second POST after an ambiguous creation could charge twice; retain the first task instead.
       o.log?.(
-        "The remote scout did not produce usable candidates. Its checkpoint is retained; local tour candidates will be rehearsed.",
+        `The remote scout did not produce usable candidates (${(error as Error).message.slice(0, 200)}). Its checkpoint is retained; local tour candidates will be rehearsed.`,
       );
       break;
     }

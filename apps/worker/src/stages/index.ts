@@ -29,5 +29,5 @@ export const stages: StageRegistry = {
   render,
 };
 
-export { gates } from "./gates.ts";
+export { gateActions, gates, type GateAction } from "./gates.ts";
 export type { GateFn, StageFn, StageResult } from "./types.ts";

@@ -5,6 +5,7 @@ import { FlowsFile, Job, JobConfig, JobEvent, Script, jobPaths, type JobConfigIn
 import { readArtifact } from "@agentcast/shared/node";
 import { pino } from "pino";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { z } from "zod";
 import { createWorker, type Worker } from "./index.ts";
 import { Orchestrator } from "./orchestrator.ts";
 import { gates, stages } from "./stages/index.ts";
@@ -31,12 +32,20 @@ function start(): Worker {
 
 const config = (extra: Partial<JobConfigInput> = {}): JobConfigInput => ({
   url: "https://demoboard.vercel.app/",
-  variants: { aspects: ["16x9", "9x16"], langs: ["en", "hi"], formFactors: ["desktop"] },
+  variants: {
+    aspects: ["16x9", "9x16"],
+    langs: ["en", "hi"],
+    formFactors: ["desktop"],
+  },
   ...extra,
 });
 
 async function create(worker: Worker, body: JobConfigInput): Promise<Job> {
-  const res = await worker.app.inject({ method: "POST", url: "/jobs", payload: body });
+  const res = await worker.app.inject({
+    method: "POST",
+    url: "/jobs",
+    payload: body,
+  });
   expect(res.statusCode).toBe(202);
   return res.json();
 }
@@ -54,7 +63,11 @@ async function until(worker: Worker, id: string, done: (job: Job) => boolean): P
 const waitingAt = (gate: string) => (job: Job) => job.stages[gate as keyof Job["stages"]].status === "waiting";
 
 function decide(worker: Worker, id: string, gate: string, payload: unknown) {
-  return worker.app.inject({ method: "POST", url: `/jobs/${id}/gates/${gate}`, payload: payload as object });
+  return worker.app.inject({
+    method: "POST",
+    url: `/jobs/${id}/gates/${gate}`,
+    payload: payload as object,
+  });
 }
 
 describe("a job through the stub pipeline", () => {
@@ -84,7 +97,10 @@ describe("a job through the stub pipeline", () => {
 
     // Gate 2: edit a Hindi line.
     await until(worker, id, waitingAt("gate-script"));
-    res = await decide(worker, id, "gate-script", { action: "approve", edits: [{ lang: "hi", beatId: "b-cta", text: "अभी आज़माएँ।" }] });
+    res = await decide(worker, id, "gate-script", {
+      action: "approve",
+      edits: [{ lang: "hi", beatId: "b-cta", text: "अभी आज़माएँ।" }],
+    });
     expect(res.statusCode).toBe(202);
     const hi = await readArtifact(join(dir, jobPaths.script("hi")), Script);
     expect(hi.segments.find((s) => s.beatId === "b-cta")!.text).toBe("अभी आज़माएँ।");
@@ -92,7 +108,10 @@ describe("a job through the stub pipeline", () => {
     // Gate 3: revise once, then approve.
     job = await until(worker, id, waitingAt("gate-preview"));
     expect(job.stages.direct.attempts).toBe(1);
-    res = await decide(worker, id, "gate-preview", { action: "revise", revise: "Zoom harder on the template" });
+    res = await decide(worker, id, "gate-preview", {
+      action: "revise",
+      revise: "Zoom harder on the template",
+    });
     expect(res.statusCode).toBe(202);
     job = await until(worker, id, (j) => waitingAt("gate-preview")(j) && j.stages.direct.attempts === 2);
     expect(job.stages.preview.attempts).toBe(2);
@@ -126,11 +145,17 @@ describe("a job through the stub pipeline", () => {
 
   test("a failing stage fails the job, says why, and starts nothing after it", async () => {
     const store = new JobStore(home);
-    const failing = { ...stages, record: async () => Promise.reject(new Error("Chrome crashed")) };
+    const failing = {
+      ...stages,
+      record: async () => Promise.reject(new Error("Chrome crashed")),
+    };
     const orchestrator = new Orchestrator(store, failing, gates, silent);
     const { id } = await orchestrator.create(JobConfig.parse(config({ autopilot: true })));
     const job = await until({ orchestrator } as Worker, id, (j) => j.status === "failed");
-    expect(job.stages.record).toMatchObject({ status: "failed", error: { message: "Chrome crashed" } });
+    expect(job.stages.record).toMatchObject({
+      status: "failed",
+      error: { message: "Chrome crashed" },
+    });
     expect(job.stages.script.status).toBe("pending");
     await orchestrator.flush();
   });
@@ -144,7 +169,10 @@ describe("gates", () => {
     expect((await decide(worker, id, "gate-script", { action: "approve" })).statusCode).toBe(409);
     await until(worker, id, waitingAt("gate-flows"));
     expect((await decide(worker, id, "gate-flows", { action: "yes" })).statusCode).toBe(400);
-    const res = await decide(worker, id, "gate-flows", { action: "approve", flows: [{ id: "flow-ghost", selected: true }] });
+    const res = await decide(worker, id, "gate-flows", {
+      action: "approve",
+      flows: [{ id: "flow-ghost", selected: true }],
+    });
     expect(res.statusCode).toBe(400);
     expect(res.json().error).toMatch(/flow-ghost/);
     const job = await worker.orchestrator.get(id);
@@ -152,10 +180,98 @@ describe("gates", () => {
   });
 });
 
+describe("gate actions", () => {
+  test("run in the background while the gate waits, one at a time, and report how they went", async () => {
+    const store = new JobStore(home);
+    let finish!: () => void;
+    const actions = {
+      "gate-flows": {
+        "edit-step": {
+          schema: z.object({ text: z.string().min(1) }),
+          run: () => new Promise<unknown>((resolve) => (finish = () => resolve({ title: "Create" }))),
+          done: (r: unknown) => `edited ${(r as { title: string }).title}`,
+        },
+        "add-flow": {
+          schema: z.object({}),
+          run: async () => Promise.reject(new Error("TinyFish run failed")),
+          done: () => "added",
+        },
+      },
+    };
+    const orchestrator = new Orchestrator(store, stages, gates, silent, actions);
+    const { id } = await orchestrator.create(JobConfig.parse(config()));
+    await expect(orchestrator.act(id, "gate-flows", "edit-step", { text: "x" })).rejects.toMatchObject({ status: 409 });
+    await until({ orchestrator } as Worker, id, waitingAt("gate-flows"));
+    await expect(orchestrator.act(id, "gate-flows", "nope", {})).rejects.toMatchObject({ status: 404 });
+    await expect(orchestrator.act(id, "gate-flows", "edit-step", { text: "" })).rejects.toMatchObject({ status: 400 });
+
+    await expect(orchestrator.act(id, "gate-flows", "edit-step", { text: "Create" })).resolves.toEqual({
+      accepted: true,
+    });
+    // Still working: no second action, no decision.
+    await expect(orchestrator.act(id, "gate-flows", "add-flow", {})).rejects.toMatchObject({ status: 409 });
+    await expect(orchestrator.decide(id, "gate-flows", { action: "approve" })).rejects.toMatchObject({ status: 409 });
+    finish();
+    const bus = (await orchestrator.events(id))!;
+    const actionEvents = async (n: number) => {
+      for (let i = 0; i < 100; i++) {
+        const found = bus.since(0).filter((e) => e.type === "action");
+        if (found.length >= n) return found;
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      throw new Error("no action events");
+    };
+    expect((await actionEvents(2)).map((e) => e.type === "action" && [e.name, e.status, e.message])).toEqual([
+      ["edit-step", "started", undefined],
+      ["edit-step", "done", "edited Create"],
+    ]);
+    await orchestrator.act(id, "gate-flows", "add-flow", {});
+    const events = await actionEvents(4);
+    expect(events.at(-1)).toMatchObject({
+      name: "add-flow",
+      status: "failed",
+      message: "TinyFish run failed",
+    });
+    expect((await orchestrator.get(id))!.stages["gate-flows"].status).toBe("waiting");
+    await orchestrator.decide(id, "gate-flows", { action: "approve" });
+    await orchestrator.cancel(id);
+    await orchestrator.flush();
+  });
+
+  test("are reachable over HTTP", async () => {
+    const worker = start();
+    const { id } = await create(worker, config());
+    await until(worker, id, waitingAt("gate-flows"));
+    const res = await worker.app.inject({
+      method: "POST",
+      url: `/jobs/${id}/gates/gate-flows/actions/add-flow`,
+      payload: { description: "x" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(
+      (
+        await worker.app.inject({
+          method: "POST",
+          url: `/jobs/${id}/gates/gate-nope/actions/add-flow`,
+          payload: {},
+        })
+      ).statusCode,
+    ).toBe(404);
+  });
+});
+
 describe("API", () => {
   test("validates new jobs and 404s unknown ones", async () => {
     const worker = start();
-    expect((await worker.app.inject({ method: "POST", url: "/jobs", payload: { url: "ftp://x" } })).statusCode).toBe(400);
+    expect(
+      (
+        await worker.app.inject({
+          method: "POST",
+          url: "/jobs",
+          payload: { url: "ftp://x" },
+        })
+      ).statusCode,
+    ).toBe(400);
     expect((await worker.app.inject({ url: "/jobs/job_nope" })).statusCode).toBe(404);
     expect((await worker.app.inject({ url: "/jobs/..%2F..%2Fetc" })).statusCode).toBe(404);
     const { id } = await create(worker, config());
@@ -171,10 +287,15 @@ describe("API", () => {
     await mkdir(join(dir, "auth"), { recursive: true });
     await writeFile(join(dir, "auth", "session.enc"), "sealed");
 
-    const full = await worker.app.inject({ url: `/files/${id}/${jobPaths.recording("desktop")}` });
+    const full = await worker.app.inject({
+      url: `/files/${id}/${jobPaths.recording("desktop")}`,
+    });
     expect(full.statusCode).toBe(200);
     expect(full.headers["content-type"]).toBe("video/mp4");
-    const part = await worker.app.inject({ url: `/files/${id}/${jobPaths.recording("desktop")}`, headers: { range: "bytes=0-99" } });
+    const part = await worker.app.inject({
+      url: `/files/${id}/${jobPaths.recording("desktop")}`,
+      headers: { range: "bytes=0-99" },
+    });
     expect(part.statusCode).toBe(206);
     expect(part.rawPayload.length).toBe(100);
     expect(part.headers["content-range"]).toMatch(/^bytes 0-99\/\d+$/);
@@ -190,7 +311,9 @@ describe("API", () => {
     await until(worker, id, (j) => j.status === "done");
     await worker.app.listen({ host: "127.0.0.1", port: 0 });
     const address = worker.app.server.address() as { port: number };
-    const res = await fetch(`http://127.0.0.1:${address.port}/jobs/${id}/events`, { headers: { "last-event-id": "3" } });
+    const res = await fetch(`http://127.0.0.1:${address.port}/jobs/${id}/events`, {
+      headers: { "last-event-id": "3" },
+    });
     expect(res.headers.get("content-type")).toMatch(/^text\/event-stream/);
     const reader = res.body!.getReader();
     let text = "";
@@ -207,7 +330,10 @@ describe("lifecycle", () => {
     process.env.AGENTCAST_STUB_DELAY_MS = "10000";
     const worker = start();
     const { id } = await create(worker, config());
-    const res = await worker.app.inject({ method: "POST", url: `/jobs/${id}/cancel` });
+    const res = await worker.app.inject({
+      method: "POST",
+      url: `/jobs/${id}/cancel`,
+    });
     expect(res.statusCode).toBe(202);
     const job = res.json() as Job;
     expect(job.status).toBe("cancelled");

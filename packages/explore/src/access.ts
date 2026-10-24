@@ -136,7 +136,7 @@ export class ExplorationWatchdog {
   constructor(
     now = Date.now(),
     private readonly maxSteps = 32,
-    private readonly idleMs = 90_000,
+    private readonly idleMs = 150_000,
   ) {
     this.lastProgressAt = now;
   }

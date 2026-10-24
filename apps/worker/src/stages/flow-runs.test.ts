@@ -65,12 +65,12 @@ beforeEach(async () => {
     schemaVersion: 1,
     byFormFactor: {
       desktop: {
-        "flow-template.s1": {
+        "flow-template/s1": {
           strategy: "text",
           locator: "obsolete",
           lastOk: "",
         },
-        "other.s1": { strategy: "text", locator: "preserved", lastOk: "" },
+        "other/s1": { strategy: "text", locator: "preserved", lastOk: "" },
       },
     },
   });
@@ -83,7 +83,7 @@ beforeEach(async () => {
         schemaVersion: 1,
         byFormFactor: {
           desktop: {
-            [`${flow.id}.s1`]: {
+            [`${flow.id}/s1`]: {
               strategy: "role",
               locator: "rehearsed",
               lastOk: "",
@@ -126,10 +126,10 @@ describe("flow review action implementations", () => {
     expect(result.selected).toBe(true);
     expect(browser.rehearse).toHaveBeenCalledTimes(1);
     const replay = await ctx.read(jobPaths.replayPlan, ReplayPlan);
-    expect(replay.byFormFactor.desktop?.["flow-template.s1"]?.locator).toBe(
+    expect(replay.byFormFactor.desktop?.["flow-template/s1"]?.locator).toBe(
       "rehearsed",
     );
-    expect(replay.byFormFactor.desktop?.["other.s1"]?.locator).toBe(
+    expect(replay.byFormFactor.desktop?.["other/s1"]?.locator).toBe(
       "preserved",
     );
   });
@@ -145,7 +145,7 @@ describe("flow review action implementations", () => {
     expect(result.selected).toBe(false);
     expect(
       (await ctx.read(jobPaths.replayPlan, ReplayPlan)).byFormFactor.desktop,
-    ).not.toHaveProperty("flow-template.s1");
+    ).not.toHaveProperty("flow-template/s1");
   });
   it("reuses a completed add-flow request and saves its independent replay locators", async () => {
     const completed: Run = {
@@ -182,7 +182,7 @@ describe("flow review action implementations", () => {
     expect(added.selected).toBe(true);
     expect(
       (await ctx.read(jobPaths.replayPlan, ReplayPlan)).byFormFactor.desktop?.[
-        `${added.id}.s1`
+        `${added.id}/s1`
       ]?.locator,
     ).toBe("rehearsed");
     const again = await addFlow(

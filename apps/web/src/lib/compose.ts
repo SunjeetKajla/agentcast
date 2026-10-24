@@ -25,6 +25,7 @@ export type ComposerChoices = {
   langs: ("en" | "hi")[];
   auth: "public" | "sign-in-once";
   autopilot: boolean;
+  voiceover: boolean;
 };
 
 export const DEFAULT_CHOICES: ComposerChoices = {
@@ -33,6 +34,7 @@ export const DEFAULT_CHOICES: ComposerChoices = {
   langs: ["en"],
   auth: "public",
   autopilot: false,
+  voiceover: true,
 };
 
 export function toJobConfig(url: string, prompt: string, c: ComposerChoices): JobConfigInput {
@@ -43,10 +45,15 @@ export function toJobConfig(url: string, prompt: string, c: ComposerChoices): Jo
     auth: { mode: c.auth },
     variants: { aspects: c.aspects, langs: c.langs, formFactors: ["desktop"] },
     autopilot: c.autopilot,
+    voiceover: c.voiceover,
   };
 }
 
-const MODE_WORDS: Record<VideoMode, string> = { launch: "launch video", tutorial: "step-by-step tutorial", sales: "sales demo" };
+const MODE_WORDS: Record<VideoMode, string> = {
+  launch: "launch video",
+  tutorial: "step-by-step tutorial",
+  sales: "sales demo",
+};
 const LANG_WORDS: Record<string, string> = { en: "English", hi: "Hindi" };
 
 /** The plan read back before the job starts (PRD §5.1 "Plan"). */
@@ -56,5 +63,6 @@ export function readBack(c: ComposerChoices, prompt: string): string {
   const langs = c.langs.map((l) => LANG_WORDS[l] ?? l).join(" and ");
   const length = seconds ? `about ${seconds} s, ` : "";
   const review = c.autopilot ? "straight through on autopilot" : "with your review of flows, script and preview";
-  return `A ${MODE_WORDS[c.mode]}, ${length}${formats} in ${langs}, ${review}.`;
+  const voice = c.voiceover ? "" : " without voiceover";
+  return `A ${MODE_WORDS[c.mode]}, ${length}${formats} in ${langs}${voice}, ${review}.`;
 }

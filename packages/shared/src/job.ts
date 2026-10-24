@@ -74,6 +74,8 @@ export const JobConfig = z.object({
     })
     .default({ aspects: ["16x9"], langs: ["en"], formFactors: ["desktop"] }),
   autopilot: z.boolean().default(false),
+  /** Narrate the video (ElevenLabs). Off: a silent edit with the script as captions. */
+  voiceover: z.boolean().default(true),
   /** A re-run of job `of` (§9.8.1). */
   rerun: z.object({ of: z.string(), skipIfUnchanged: z.boolean() }).optional(),
 });
@@ -107,9 +109,9 @@ export const StageState = z.object({
 });
 export type StageState = z.infer<typeof StageState>;
 
-/** state.json: everything the worker needs to resume, and what GET /jobs/:id returns. */
+/** state.json: everything the worker needs to resume, and what GET /jobs/:id returns. Version 3 added `config.voiceover`. */
 export const Job = z.object({
-  schemaVersion: z.literal(2),
+  schemaVersion: z.literal(3),
   id: z.string(),
   createdAt: IsoTime,
   updatedAt: IsoTime,
@@ -118,6 +120,16 @@ export const Job = z.object({
   stages: z.record(StageName, StageState),
 });
 export type Job = z.infer<typeof Job>;
+
+/** A state.json from an older version, brought up to date: version 2 jobs were all narrated. */
+export function upgradeJob(raw: unknown): unknown {
+  const job = raw as { schemaVersion?: number; config?: Record<string, unknown> } | undefined;
+  if (job?.schemaVersion !== 2 || !job.config) return raw;
+  return { ...job, schemaVersion: 3, config: { voiceover: true, ...job.config } };
+}
+
+/** How the worker reads state.json: older versions are upgraded, then checked as the current one. */
+export const StoredJob = z.preprocess(upgradeJob, Job);
 
 // Gate decisions: the POST /jobs/:id/gates/:gate body
 

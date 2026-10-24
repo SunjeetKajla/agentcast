@@ -1402,6 +1402,7 @@ type JobConfig = {
     formFactors: ("desktop" | "mobile")[];
   }; // default 16x9 / en / desktop; each list non-empty
   autopilot: boolean; // default false
+  voiceover: boolean; // default true; false: no voice stage, a silent edit captioned from the script
   rerun?: { of: string; skipIfUnchanged: boolean }; // a re-run of job `of` (§9.8.1)
 };
 type AuthConfig =
@@ -1411,7 +1412,7 @@ type AuthConfig =
 
 // state.json — everything the worker needs to resume; what GET /jobs/:id returns
 type Job = {
-  schemaVersion: 2;
+  schemaVersion: 3; // 3 added config.voiceover; the worker upgrades version 2 jobs as it reads them
   id: string; // job_<base36 time><hex>
   createdAt: string;
   updatedAt: string;

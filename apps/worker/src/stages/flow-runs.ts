@@ -129,7 +129,8 @@ async function saveReplay(
   }
   const desktop = { ...replay.byFormFactor.desktop };
   for (const key of Object.keys(desktop))
-    if (key.startsWith(`${flowId}.`)) delete desktop[key];
+    // Entries are keyed the recorder's way: replayKey(stepId, flowId) = <flowId>/<stepId>.
+    if (key.startsWith(`${encodeURIComponent(flowId)}/`)) delete desktop[key];
   Object.assign(desktop, updated?.byFormFactor.desktop);
   replay.byFormFactor.desktop = desktop;
   await ctx.write(jobPaths.replayPlan, ReplayPlan, replay);

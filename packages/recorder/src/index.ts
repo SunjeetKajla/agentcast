@@ -41,6 +41,11 @@ export {
 } from "./flow/locate.ts";
 export { replayKey } from "./flow/replay.ts";
 export {
+  parseLocator,
+  serializeLocator,
+  type SemanticLocator,
+} from "./flow/semantic.ts";
+export {
   recordFlow,
   compileFlow,
   FlowRecordingError,

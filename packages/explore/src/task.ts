@@ -194,7 +194,9 @@ export async function runTask<S extends z.ZodType>(
     const watchdog = new ExplorationWatchdog(
       Date.now(),
       options.maxSteps ?? 32,
-      options.idleMs ?? 90_000,
+      // An agent writing its final report adds no steps for a while (a shadcn/ui scout: 92 s), so
+      // only a longer silence counts as stuck.
+      options.idleMs ?? 150_000,
     );
     const accept = async (run: Run) => {
       if (run.status !== "COMPLETED") return undefined;

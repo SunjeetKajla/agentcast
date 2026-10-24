@@ -60,6 +60,9 @@ export function makeRecord(
           replayPlanPath: ctx.path(jobPaths.replayPlan),
           recordingId: `${ctx.jobId}-${i + 1}`,
           browser: { formFactor: "desktop", storageState },
+          // Client-rendered apps can take ~25 s to show their first element (Linear's demo).
+          // The first lookup happens before filming starts, so the wait isn't in the video.
+          locate: { timeoutMs: 30_000 },
           signal: ctx.signal,
           onTake: (take) => {
             if (take.status === "failed")
