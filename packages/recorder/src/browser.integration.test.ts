@@ -7,15 +7,20 @@ import { withRecorderBrowser } from "./browser.ts";
 import { detectGpuAdapters, launchGpuBrowser } from "./gpu.ts";
 
 const executablePath = process.env.AGENTCAST_TEST_CHROMIUM;
-const browserAvailable = await access(
-  executablePath ?? chromium.executablePath(),
-).then(
-  () => true,
-  () => false,
-);
+// The recorder's default: Google Chrome if installed, else bundled Chromium.
+const chromeInstalled = await chromium
+  .launch({ channel: "chrome" })
+  .then((b) => b.close().then(() => true))
+  .catch(() => false);
+const browserAvailable =
+  chromeInstalled ||
+  (await access(executablePath ?? chromium.executablePath()).then(
+    () => true,
+    () => false,
+  ));
 const launchOptions = executablePath ? { executablePath } : undefined;
 
-// Uses bundled Chromium when installed; an explicit path also allows local Chrome.
+// Runs on the recorder's default browser; AGENTCAST_TEST_CHROMIUM pins an executable.
 describe.skipIf(!browserAvailable)("recorder browser in Chromium", () => {
   it.each(["auto", "igpu", "cpu"] as const)(
     "renders with verified GPU preference %s",
@@ -209,6 +214,39 @@ describe.skipIf(!browserAvailable)("recorder browser in Chromium", () => {
         expect(await otherPage.title()).toBe("empty");
         await page.goto("http://app.agentcast.test/again");
         expect(await page.title()).toBe("app-token");
+      },
+    );
+  });
+
+  it("restores localStorage once, so what the app writes afterwards survives a reload", async () => {
+    await withRecorderBrowser(
+      {
+        launchOptions,
+        storageState: {
+          cookies: [],
+          origins: [
+            {
+              origin: "http://app.agentcast.test",
+              localStorage: [{ name: "token", value: "saved-token" }],
+            },
+          ],
+        },
+      },
+      async ({ page, context }) => {
+        await context.route("http://app.agentcast.test/**", (route) =>
+          route.fulfill({
+            contentType: "text/html",
+            body: '<script>document.title = localStorage.getItem("token") ?? "empty"</script>',
+          }),
+        );
+        await page.goto("http://app.agentcast.test/");
+        expect(await page.title()).toBe("saved-token");
+        // The app refreshes its token, then the flow reloads and navigates.
+        await page.evaluate(() => localStorage.setItem("token", "refreshed-token"));
+        await page.reload();
+        expect(await page.title()).toBe("refreshed-token");
+        await page.goto("http://app.agentcast.test/next");
+        expect(await page.title()).toBe("refreshed-token");
       },
     );
   });

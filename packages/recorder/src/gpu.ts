@@ -10,7 +10,10 @@ export interface GpuAdapter {
   backend: Exclude<GpuBackend, "cpu">;
   vendorId: number;
   deviceId: number;
+  /** Vulkan's model name, or the DRM node (card0) when found through sysfs. */
   name: string;
+  /** sysfs adapters have no model name; the vendor identifies them (see detectGpuAdapters). */
+  source: "vulkan" | "sysfs";
 }
 
 export interface GpuAttempt {
@@ -21,6 +24,8 @@ export interface GpuAttempt {
 
 export interface GpuInfo {
   backend: GpuBackend;
+  /** The browser that ran: "chrome" (Google Chrome stable), "chromium" (bundled), or "custom" (executablePath). */
+  channel: string;
   renderer: string;
   vendor: string;
   hardwareAccelerated: boolean;
@@ -31,6 +36,8 @@ export interface GpuInfo {
 const execFileAsync = promisify(execFile);
 const softwareRenderer =
   /swiftshader|llvmpipe|softpipe|software|lavapipe|microsoft basic render/i;
+/** The renderer reported when WebGL itself is unavailable (recording only needs the page to paint). */
+export const NO_WEBGL = "(no WebGL)";
 
 /** Vulkan reports physical adapter types, unlike PCI boot_vga (which only means primary). */
 export function parseVulkanAdapters(summary: string): GpuAdapter[] {
@@ -54,12 +61,28 @@ export function parseVulkanAdapters(summary: string): GpuAdapter[] {
       vendorId: Number(vendorId),
       deviceId: Number(deviceId),
       name,
+      source: "vulkan",
     });
   }
   return adapters;
 }
 
-export async function detectGpuAdapters(): Promise<GpuAdapter[]> {
+// Adapters and the installed browser don't change while the worker runs: find them once.
+let adapterCache: Promise<GpuAdapter[]> | undefined;
+let channelCache: string | undefined;
+
+/** For tests. */
+export function clearGpuCaches(): void {
+  adapterCache = undefined;
+  channelCache = undefined;
+}
+
+export function detectGpuAdapters(): Promise<GpuAdapter[]> {
+  adapterCache ??= enumerateGpuAdapters();
+  return adapterCache;
+}
+
+async function enumerateGpuAdapters(): Promise<GpuAdapter[]> {
   // Optional utility, never a runtime prerequisite. Bound both time and output.
   try {
     const { stdout } = await execFileAsync("vulkaninfo", ["--summary"], {
@@ -100,7 +123,8 @@ export async function detectGpuAdapters(): Promise<GpuAdapter[]> {
             vendorId,
             deviceId: Number(device.trim()),
             name: card,
-          } satisfies GpuAdapter;
+            source: "sysfs",
+          } as GpuAdapter;
         } catch {
           return undefined;
         }
@@ -168,8 +192,10 @@ export function gpuLaunchOptions(
     ...base,
     env,
     args,
-    // Full Chromium uses modern headless mode; the old headless shell can force software.
-    channel: base.channel ?? (base.executablePath ? undefined : "chromium"),
+    // Google Chrome stable has the licensed codecs (H.264/AAC) that product videos need;
+    // launchGpuBrowser falls back to bundled Chromium when Chrome isn't installed. Both use
+    // modern headless mode (the old headless shell can force software rendering).
+    channel: base.channel ?? (base.executablePath ? undefined : "chrome"),
     timeout:
       base.timeout && base.timeout > 0
         ? Math.min(base.timeout, 15_000)
@@ -184,28 +210,27 @@ export function gpuLaunchOptions(
 /** Probe a separate context before restoring credentials or visiting a product. */
 export async function probeGpu(
   browser: Browser,
-): Promise<Omit<GpuInfo, "backend" | "attempts">> {
+): Promise<Omit<GpuInfo, "backend" | "attempts" | "channel">> {
   const context = await browser.newContext();
   try {
     const page = await context.newPage();
-    const webgl = await page.evaluate(() => {
+    // No usable WebGL is a fact to report, not a crash: the CPU fallback records without it.
+    const webgl = (await page.evaluate(() => {
       const canvas = document.createElement("canvas");
       canvas.width = canvas.height = 8;
       const gl = canvas.getContext("webgl");
-      if (!gl) throw new Error("WebGL unavailable");
-      const debug = gl.getExtension("WEBGL_debug_renderer_info");
-      if (!debug) throw new Error("WebGL renderer unavailable");
+      const debug = gl?.getExtension("WEBGL_debug_renderer_info");
+      if (!gl || !debug) return null;
       gl.clearColor(1, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
       const pixel = new Uint8Array(4);
       gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-      if (pixel[0] !== 255 || gl.isContextLost())
-        throw new Error("WebGL render failed");
+      if (pixel[0] !== 255 || gl.isContextLost()) return null;
       return {
         renderer: String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)),
         vendor: String(gl.getParameter(debug.UNMASKED_VENDOR_WEBGL)),
       };
-    });
+    })) ?? { renderer: NO_WEBGL, vendor: "" };
     const cdp = await browser.newBrowserCDPSession();
     try {
       const { gpu } = await cdp.send("SystemInfo.getInfo");
@@ -214,6 +239,7 @@ export async function probeGpu(
         ...webgl,
         featureStatus,
         hardwareAccelerated:
+          webgl.renderer !== NO_WEBGL &&
           !softwareRenderer.test(webgl.renderer) &&
           featureStatus.gpu_compositing === "enabled",
       };
@@ -227,14 +253,16 @@ export async function probeGpu(
 
 /** Chrome must render on the requested physical adapter, not just accept its flags. */
 export function gpuMismatch(
-  info: Omit<GpuInfo, "backend" | "attempts">,
+  info: Omit<GpuInfo, "backend" | "attempts" | "channel">,
   backend: GpuBackend,
   adapter?: GpuAdapter,
 ): string | undefined {
-  if (backend === "cpu")
-    return softwareRenderer.test(info.renderer)
-      ? undefined
-      : "software-renderer-not-selected";
+  if (backend === "cpu") {
+    if (softwareRenderer.test(info.renderer)) return undefined;
+    // Without WebGL there is no renderer string; software compositing proves we're on the CPU.
+    if (info.renderer === NO_WEBGL && info.featureStatus.gpu_compositing !== "enabled") return undefined;
+    return "software-renderer-not-selected";
+  }
   if (!info.hardwareAccelerated) return "hardware-rendering-unavailable";
   if (!adapter) return "adapter-not-detected";
   const renderer = `${info.vendor} ${info.renderer}`;
@@ -251,27 +279,41 @@ export function gpuMismatch(
     parseInt(match[1]!, 16),
   );
   if (ids.length && !ids.includes(adapter.deviceId)) return "wrong-adapter";
-  // Vendor alone cannot distinguish an Intel iGPU from an Intel Arc dGPU.
-  // If ANGLE omits PCI IDs, require the physical adapter's reported model name.
-  const normalize = (value: string) =>
-    value.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (!ids.length && !normalize(renderer).includes(normalize(adapter.name)))
-    return "unverified-adapter";
+  if (ids.length) return undefined;
+  // ANGLE's OpenGL backend omits PCI IDs, e.g. "ANGLE (NVIDIA Corporation, NVIDIA GeForce
+  // RTX 3050 6GB Laptop GPU/PCIe/SSE2, OpenGL ES 3.2)". sysfs adapters have no model name,
+  // but sysfs only reports NVIDIA (dGPU) and Intel chipset graphics at 00:02.0 (iGPU), so the
+  // vendor check above identifies them; only an Intel Arc renderer could still be the wrong one.
+  if (adapter.source === "sysfs")
+    return adapter.backend === "igpu" && /\barc\b/i.test(renderer) ? "wrong-adapter" : undefined;
+  // Vulkan and OpenGL describe the same card differently after the model ("AMD Radeon RX 6600
+  // (RADV NAVI23)" vs "(radeonsi, navi23, …)"), so compare the model only. It still tells an
+  // Intel iGPU from an Intel Arc dGPU.
+  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const model = normalize(adapter.name.replace(/\s*\([^)]*\)\s*$/, ""));
+  if (!model || !normalize(renderer).includes(model)) return "unverified-adapter";
   return undefined;
 }
 
-async function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
+async function withTimeout<T>(work: Promise<T>, ms: number, what = "GPU probe"): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       work,
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error("GPU probe timed out")), ms);
+        timer = setTimeout(() => reject(new Error(`${what} timed out`)), ms);
       }),
     ]);
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Playwright's errors for a channel or executable that isn't installed. */
+function notInstalled(error: unknown): boolean {
+  return /is not found at|Executable doesn't exist|run "npx playwright install/i.test(
+    error instanceof Error ? error.message : String(error),
+  );
 }
 
 export async function launchGpuBrowser(
@@ -297,6 +339,22 @@ export async function launchGpuBrowser(
         : ["dgpu", "igpu", "cpu"];
   const attempts: GpuAttempt[] = [];
   const errors: unknown[] = [];
+  // No channel or executable given: Chrome if it's installed, else bundled Chromium.
+  // Whichever launches first is kept for the rest of the process.
+  const explicit = options.channel !== undefined || options.executablePath !== undefined;
+  let channels = explicit ? [options.channel] : channelCache ? [channelCache] : ["chrome", "chromium"];
+  const launchAny = async (backend: GpuBackend, adapter?: GpuAdapter) => {
+    for (const [i, channel] of channels.entries()) {
+      try {
+        const browser = await launch(gpuLaunchOptions({ ...options, channel }, backend, adapter));
+        if (!explicit && channel) channels = [(channelCache = channel)];
+        return { browser, channel: channel ?? "custom" };
+      } catch (error) {
+        if (i === channels.length - 1 || !notInstalled(error)) throw error;
+      }
+    }
+    throw new Error("no browser channel to launch");
+  };
   for (const backend of order) {
     const adapter = adapters.find((item) => item.backend === backend);
     if (backend !== "cpu" && !adapter) {
@@ -309,14 +367,15 @@ export async function launchGpuBrowser(
     }
     let browser: Browser | undefined;
     try {
-      browser = await launch(gpuLaunchOptions(options, backend, adapter));
+      const launched = await launchAny(backend, adapter);
+      browser = launched.browser;
       const info = await withTimeout(probeGpu(browser), 5_000);
       const mismatch = gpuMismatch(info, backend, adapter);
       if (mismatch) {
         attempts.push({ backend, status: "failed", reason: mismatch });
       } else {
         attempts.push({ backend, status: "selected" });
-        return { browser, gpu: { ...info, backend, attempts } };
+        return { browser, gpu: { ...info, backend, channel: launched.channel, attempts } };
       }
     } catch (error) {
       errors.push(error);
@@ -327,7 +386,9 @@ export async function launchGpuBrowser(
         reason: browser ? "probe-failed" : "launch-failed",
       });
     }
-    await browser?.close(); // Never start the next browser until this one is released.
+    // Release this browser before starting the next, but don't let a hung GPU process
+    // (the usual reason a probe times out) block the fallback: give up waiting after 5 s.
+    if (browser) await withTimeout(browser.close(), 5_000, "Closing the browser").catch(() => {});
   }
   throw new AggregateError(
     errors,

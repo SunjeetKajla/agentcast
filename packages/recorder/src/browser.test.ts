@@ -168,32 +168,18 @@ describe("recorder browser lifecycle", () => {
       ],
     };
     const session = await launchRecorderBrowser({ storageState: state });
-    expect(mocks.addCookies).toHaveBeenCalledWith(state.cookies);
-    expect(mocks.addCookies.mock.invocationCallOrder[0]).toBeLessThan(
+    // Handed to the context, which applies it once, before any page exists.
+    expect(mocks.newContext).toHaveBeenCalledWith(
+      expect.objectContaining({ storageState: { cookies: state.cookies, origins: state.origins } }),
+    );
+    expect(mocks.addInitScript).not.toHaveBeenCalled();
+    expect(mocks.newContext.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.newPage.mock.invocationCallOrder[0]!,
     );
-    expect(mocks.addInitScript.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.newPage.mock.invocationCallOrder[0]!,
-    );
-    const [initialize, origins] = mocks.addInitScript.mock.calls[0]!;
-    const setItem = vi.fn();
-    vi.stubGlobal("window", {
-      location: { origin: "http://app.test" },
-      localStorage: { setItem },
-    });
-    initialize(origins);
-    expect(setItem.mock.calls).toEqual([["token", "app-token"]]);
-    setItem.mockClear();
-    vi.stubGlobal("window", {
-      location: { origin: "http://unrelated.test" },
-      localStorage: { setItem },
-    });
-    initialize(origins);
-    expect(setItem).not.toHaveBeenCalled();
     await session.close();
   });
 
-  it.each(["newContext", "addCookies", "addInitScript", "newPage"] as const)(
+  it.each(["newContext", "newPage"] as const)(
     "releases resources when %s fails without losing the setup error",
     async (operation) => {
       const failure = new Error("setup failed");

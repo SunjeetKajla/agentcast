@@ -1,7 +1,10 @@
 # Recorder browser launcher
 
-`launchRecorderBrowser()` starts a separate full Chromium instance in modern
-headless mode for each call. The desktop default is 1440×900 at DPR 2; mobile
+`launchRecorderBrowser()` starts a separate browser in modern headless mode for
+each call: Google Chrome stable by default (it has the H.264/AAC codecs product
+videos need), or Playwright's bundled Chromium when Chrome isn't installed. The
+first one that launches is kept for the rest of the process; `session.gpu.channel`
+says which ran. The desktop default is 1440×900 at DPR 2; mobile
 is 390×844 at DPR 3 with touch and a Chromium mobile user agent. Viewport, DPR
 and user agent can be overridden. Puppeteer Extra's stealth plugin is enabled
 through `playwright-extra`, preserving Playwright's page, context and CDP APIs.
@@ -24,19 +27,19 @@ await withRecorderBrowser(
 
 `storageState` is an in-memory Playwright state object containing `cookies` and
 `origins`. The worker is responsible for loading and decrypting session artifacts.
-Cookies are installed before page creation. An init script restores localStorage
-before app scripts on matching origins, including navigations and new pages.
-Restoration runs on each document load, so saved values overwrite the same keys
-on reload. State and credentials are never logged or written by this module.
+It is passed to `browser.newContext`, so Playwright sets the cookies and each
+origin's localStorage once, before any page loads. What the app writes afterwards
+(a refreshed token, new data) survives reloads and navigations. State and
+credentials are never logged or written by this module.
 
 For manual lifecycle management, call the returned session's idempotent `close()`
 in `finally`. Playwright's process exit cleanup and SIGINT, SIGTERM and SIGHUP
 handlers remain enabled; no asynchronous Node `exit` handler is installed.
 
-Install the matching bundled browser with
+Without Google Chrome, install the matching bundled browser with
 `pnpm --filter @agentcast/recorder exec playwright-core install chromium`.
-The real browser tests run when that binary is installed. To run against an
-existing local Chrome instead:
+The real browser tests run when either is available. To pin a specific
+executable instead:
 
 ```sh
 AGENTCAST_TEST_CHROMIUM=/usr/bin/google-chrome pnpm test
@@ -64,8 +67,15 @@ are bounded. Conflicting raw GPU flags are rejected; select the `gpu` option
 instead.
 
 Hardware selection requires a successful WebGL pixel readback, the expected
-adapter's renderer, and CDP hardware compositing. CPU selection requires a
-software renderer. `session.gpu` exposes the result and each failed/skipped
+adapter's renderer, and CDP hardware compositing. ANGLE's OpenGL renderer has no
+PCI IDs, so a Vulkan-detected adapter is matched by its model name (without the
+driver suffix in parentheses, which differs between Vulkan and OpenGL), and a
+sysfs-detected adapter by its vendor (sysfs only reports NVIDIA dGPUs and Intel
+chipset graphics; an Arc renderer is rejected for the iGPU). CPU selection
+requires a software renderer, or no WebGL at all with software compositing: a
+page only has to paint to be recorded. Adapters are detected once per process,
+and a browser that won't close after a failed probe is abandoned after 5 s so
+the fallback still runs. `session.gpu` exposes the result and each failed/skipped
 attempt, with no raw launch command lines or credentials. The library does not
 write a diagnostics artifact or choose an FFmpeg hardware encoder.
 
@@ -130,8 +140,10 @@ alone; the scene/flow driver must declare it.
 The callback and `prepare` run again in a fresh browser after a quality failure.
 Arrange app-state reset in `prepare` for flows that mutate server data. Action
 errors, cancel and timeout do not automatically replay the callback. Cancel with
-`signal`; each take is bounded by `timeoutMs` (default 120 seconds, including
-launch/preparation/encoding). Temporary frames and partial videos are removed
+`signal`; each take's launch, preparation and recorded flow are bounded by
+`timeoutMs` (default 120 seconds). Encoding is not: it has its own limit
+(`encoding.timeoutMs`, default 120 s or 10 s per second of video, whichever is
+longer). Retakes reuse the GPU backend the first take selected. Temporary frames and partial videos are removed
 after success/failure. Existing output files are never overwritten.
 
 Frames are ACKed before disk writes and queued with a 64 MiB default byte limit.
@@ -139,18 +151,22 @@ Frames are ACKed before disk writes and queued with a 64 MiB default byte limit.
 fails instead of silently dropping frames. The video preserves original timing
 and the last-frame hold, rounds duration up to the next 30 fps frame, converts
 full-range JPEG to limited-range H.264 `yuv420p`, and uses frequent keyframes
-(`-g 15`) with fast-start metadata. Validation checks every decoded presentation
-timestamp; advertised average frame rate alone is insufficient.
+(`-g 15`) with fast-start metadata. Validation checks every packet's timestamp
+and keyframe flag (`ffprobe -show_packets`, no decoding); advertised average frame
+rate alone is insufficient.
 
 The browser's physical device scale factor matches the context DPR so screencast
 frames contain actual viewport × DPR pixels without changing CSS coordinates or
-breaking Playwright hit testing. Encoding validates the expected physical source
+breaking Playwright hit testing. The capture size uses the DPR the recorder
+configured (`session.deviceScaleFactor`), never the page's `devicePixelRatio`,
+which page scripts can redefine. A frame older than the last one (GPU compositing
+occasionally delivers one late) is skipped like a duplicate. Encoding validates the expected physical source
 dimensions before publishing. The capture clock prefers CDP's monotonic frame
 timestamps when available and falls back to epoch timestamps on older Chrome;
 both are converted from seconds to milliseconds before alignment.
 
 `encoding.encoder` defaults to `"auto"`: probe NVENC → Quick Sync → x264 with a
-real encode. If encoding at the recording's actual dimensions fails, try the next
+real encode, once per encoder per process. If encoding at the recording's actual dimensions fails, try the next
 encoder using the same captured frames. Set `"libx264"` for deterministic CPU
 encoding, or select `"h264_nvenc"`/`"h264_qsv"` explicitly to require one encoder.
 `encoding` also accepts FFmpeg/ffprobe executable paths and an encoding timeout.

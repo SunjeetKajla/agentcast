@@ -29,7 +29,7 @@ export interface RecorderBrowserOptions {
   gpu?: GpuPreference;
   /** Puppeteer Extra's stealth plugin, enabled by default. */
   stealth?: boolean;
-  /** Bundled Chromium is the default; an explicit executable can be used for local checks. */
+  /** Google Chrome stable by default (licensed codecs), bundled Chromium if Chrome isn't installed. */
   launchOptions?: Omit<
     LaunchOptions,
     "headless" | "handleSIGINT" | "handleSIGTERM" | "handleSIGHUP"
@@ -41,6 +41,8 @@ export interface RecorderBrowser {
   browser: Browser;
   context: BrowserContext;
   page: Page;
+  /** The DPR the recorder configured. Trust this, not the page's window.devicePixelRatio. */
+  deviceScaleFactor: number;
   gpu: GpuInfo;
   /** Safe to call repeatedly, including from competing cleanup paths. */
   close(): Promise<void>;
@@ -111,26 +113,19 @@ export async function launchRecorderBrowser(
         (mobile ? devices["Pixel 7"]!.userAgent : undefined),
       isMobile: mobile,
       hasTouch: mobile,
+      // Playwright sets cookies and each origin's localStorage once, before any page loads.
+      // (An init script would write the saved values again on every navigation and undo
+      // whatever the app stored since, such as a refreshed token.)
+      storageState: options.storageState
+        ? {
+            cookies: options.storageState.cookies,
+            origins: options.storageState.origins,
+          }
+        : undefined,
     });
 
-    if (options.storageState) {
-      await context.addCookies(options.storageState.cookies);
-      await context.addInitScript(
-        (origins: RecorderStorageState["origins"]) => {
-          const state = origins.find(
-            ({ origin }) => origin === window.location.origin,
-          );
-          if (!state) return;
-          for (const { name, value } of state.localStorage) {
-            window.localStorage.setItem(name, value);
-          }
-        },
-        options.storageState.origins,
-      );
-    }
-
     const page = await context.newPage();
-    return { formFactor, browser, context, page, gpu, close };
+    return { formFactor, browser, context, page, deviceScaleFactor, gpu, close };
   } catch (error) {
     // Preserve the setup error, including when a disconnected browser cannot close.
     await close().catch(() => {});

@@ -9,10 +9,15 @@ import { runMediaCommand } from "./encode.ts";
 
 const executablePath = process.env.AGENTCAST_TEST_CHROMIUM;
 const ready = await Promise.all([
-  access(executablePath ?? chromium.executablePath()).then(
-    () => true,
-    () => false,
-  ),
+  chromium
+    .launch({ channel: "chrome" })
+    .then((b) => b.close().then(() => true))
+    .catch(() =>
+      access(executablePath ?? chromium.executablePath()).then(
+        () => true,
+        () => false,
+      ),
+    ),
   ...["ffmpeg", "ffprobe"].map((tool) =>
     runMediaCommand(tool, ["-version"]).then(
       () => true,
@@ -151,6 +156,22 @@ describe.skipIf(ready.includes(false))("Live CDP to CFR MP4", () => {
       expect(await page.evaluate(() => document.body.dataset.clicked)).toBe(
         "yes",
       );
+      await delay(200);
+    });
+    expect(result).toMatchObject({ width: 640, height: 360, fps: 30 });
+  }, 30_000);
+
+  it("sizes the capture from the configured DPR even when the page redefines devicePixelRatio", async () => {
+    const config = await options();
+    config.browser!.deviceScaleFactor = 2;
+    const prepare = config.prepare!;
+    config.prepare = async (session, attempt, signal) => {
+      await prepare(session, attempt, signal);
+      await session.page.evaluate(() =>
+        Object.defineProperty(window, "devicePixelRatio", { get: () => 1 }),
+      );
+    };
+    const result = await recordLive(config, async () => {
       await delay(200);
     });
     expect(result).toMatchObject({ width: 640, height: 360, fps: 30 });

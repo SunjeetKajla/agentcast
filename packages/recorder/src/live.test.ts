@@ -36,6 +36,7 @@ beforeEach(async () => {
         viewportSize: () => ({ width: 320, height: 180 }),
         evaluate: async () => 1,
       },
+      deviceScaleFactor: 1,
       close: closed,
       gpu: { backend: "cpu" },
     };
@@ -188,5 +189,52 @@ describe("Live take orchestration", () => {
       ),
     ).rejects.toThrow("timed out");
     expect(await readdir(directory)).toEqual([]);
+  });
+
+  it("gives encoding its own time instead of what is left of the take deadline", async () => {
+    mocks.encode.mockImplementation(async (_capture, path, options) => {
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      expect(options.signal?.aborted ?? false).toBe(false);
+      return { path, duration: 1, fps: 30, frameCount: 30, encoder: "libx264", attempts: [] };
+    });
+    const result = await recordLive(
+      { outputPath: join(directory, "clip.mp4"), timeoutMs: 30 },
+      async () => {},
+    );
+    expect(result.path).toBe(join(directory, "clip.mp4"));
+  });
+
+  it("sizes the capture from the configured DPR, not the page's devicePixelRatio", async () => {
+    mocks.withBrowser.mockImplementation(async (_options, run) =>
+      run({
+        context: new EventEmitter(),
+        page: { viewportSize: () => ({ width: 320, height: 180 }), evaluate: async () => 1 },
+        deviceScaleFactor: 2,
+        close: closed,
+        gpu: { backend: "cpu" },
+      }),
+    );
+    await recordLive({ outputPath: join(directory, "clip.mp4") }, async () => {});
+    expect(mocks.start.mock.calls[0]![1]).toMatchObject({
+      maxWidth: 640,
+      maxHeight: 360,
+      expectedSize: { width: 640, height: 360 },
+    });
+  });
+
+  it("reuses the first take's GPU backend for retakes instead of re-running the cascade", async () => {
+    smoothAfter = 3;
+    const gpus: unknown[] = [];
+    const inner = mocks.withBrowser.getMockImplementation()!;
+    mocks.withBrowser.mockImplementation(async (options, run) => {
+      gpus.push(options.gpu);
+      return inner(options, (session: { gpu: unknown }) => run({ ...session, gpu: { backend: "igpu" } }));
+    });
+    await recordLive({ outputPath: join(directory, "clip.mp4") }, async ({ motion }) => {
+      await motion(async () => {
+        clock += 1000;
+      });
+    });
+    expect(gpus).toEqual([undefined, "igpu", "igpu"]);
   });
 });

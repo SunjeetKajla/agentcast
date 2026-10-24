@@ -124,11 +124,10 @@ export async function startScreencast(
     }
     const timestampMs = timestamp * 1000;
     const previous = frames.at(-1);
-    if (previous && timestampMs === previous.timestampMs) return;
-    if (previous && timestampMs < previous.timestampMs) {
-      fail(new Error("CDP frame timestamps moved backwards"));
-      return;
-    }
+    // With GPU compositing, Chrome occasionally delivers an older frame after a newer one.
+    // Like a duplicate, it's a stale picture we already have something newer than: skip it
+    // (it has been acknowledged above) rather than failing the whole take.
+    if (previous && timestampMs <= previous.timestampMs) return;
     const bytes = Buffer.from(data, "base64");
     if (bytes[0] !== 0xff || bytes[1] !== 0xd8) {
       fail(new Error("CDP did not return a JPEG frame"));

@@ -11,6 +11,7 @@ export interface EncodingOptions {
   ffmpegPath?: string;
   ffprobePath?: string;
   signal?: AbortSignal;
+  /** Per ffmpeg/ffprobe command. Default: 120 s, or 10 s per second of video for longer clips. */
   timeoutMs?: number;
 }
 export interface EncodingAttempt {
@@ -105,6 +106,28 @@ export async function probeEncoder(
   );
 }
 
+// Which encoders this machine has doesn't change while the worker runs: probe each once.
+const probes = new Map<string, Promise<void>>();
+
+/** For tests. */
+export function clearEncoderProbes(): void {
+  probes.clear();
+}
+
+function probeEncoderOnce(encoder: VideoEncoder, options: EncodingOptions): Promise<void> {
+  const key = `${options.ffmpegPath ?? "ffmpeg"}\0${encoder}`;
+  let probe = probes.get(key);
+  if (!probe) {
+    probe = probeEncoder(encoder, options);
+    probes.set(key, probe);
+    // A cancelled probe says nothing about the encoder; let the next encode probe again.
+    probe.catch(() => {
+      if (options.signal?.aborted) probes.delete(key);
+    });
+  }
+  return probe;
+}
+
 /** Reject a malformed/non-CFR artifact before making it visible to the worker. */
 export async function validateCfrMp4(
   path: string,
@@ -120,9 +143,10 @@ export async function validateCfrMp4(
       "error",
       "-select_streams",
       "v:0",
-      "-show_frames",
+      // Packets, not frames: the same timestamps and keyframe flags without decoding every frame.
+      "-show_packets",
       "-show_entries",
-      "stream=codec_name,pix_fmt,width,height,r_frame_rate,avg_frame_rate,nb_frames,duration:frame=best_effort_timestamp_time,key_frame",
+      "stream=codec_name,pix_fmt,width,height,r_frame_rate,avg_frame_rate,nb_frames,duration:packet=pts_time,flags",
       "-of",
       "json",
       path,
@@ -140,10 +164,13 @@ export async function validateCfrMp4(
       nb_frames?: string;
       duration?: string;
     }[];
-    frames?: { best_effort_timestamp_time?: string; key_frame?: number }[];
+    packets?: { pts_time?: string; flags?: string }[];
   };
   const stream = result.streams?.[0];
-  const frames = result.frames;
+  // Packets come in decode order; with no B-frames (-bf 0) that is presentation order, but sort to be safe.
+  const frames = result.packets
+    ?.map((p) => ({ time: Number(p.pts_time), key: p.flags?.includes("K") ?? false }))
+    .sort((a, b) => a.time - b.time);
   if (
     !stream ||
     !Array.isArray(frames) ||
@@ -170,11 +197,11 @@ export async function validateCfrMp4(
     );
   let lastKeyframe = 0;
   for (let i = 0; i < frames.length; i++) {
-    const timestamp = Number(frames[i]!.best_effort_timestamp_time);
+    const timestamp = frames[i]!.time;
     if (!Number.isFinite(timestamp) || Math.abs(timestamp - i / 30) > 0.0001)
       throw new Error("Encoded MP4 frame timestamps are not constant-rate");
-    if (frames[i]!.key_frame === 1) lastKeyframe = i;
-    if ((i === 0 && frames[i]!.key_frame !== 1) || i - lastKeyframe >= 15)
+    if (frames[i]!.key) lastKeyframe = i;
+    if ((i === 0 && !frames[i]!.key) || i - lastKeyframe >= 15)
       throw new Error("Encoded MP4 has insufficient seeking keyframes");
   }
   return { width: stream.width, height: stream.height };
@@ -194,6 +221,11 @@ export async function encodeCfrMp4(
     ...buildCfrPlan(capture.frames, capture.startedAtMs, capture.durationMs),
     expectedSize: capture.expectedSize,
   };
+  // A long take encoded on the CPU can run slower than real time at 2880x1800.
+  const commandOptions = {
+    ...options,
+    timeoutMs: options.timeoutMs ?? Math.max(120_000, Math.ceil(plan.duration) * 10_000),
+  };
   const manifestPath = join(capture.directory, "frames.ffconcat");
   await writeFile(manifestPath, plan.manifest, { mode: 0o600, flag: "wx" });
   const encodedPath = join(capture.directory, "encoded.mp4");
@@ -206,7 +238,7 @@ export async function encodeCfrMp4(
   for (const encoder of encoders) {
     options.signal?.throwIfAborted();
     try {
-      await probeEncoder(encoder, options);
+      await probeEncoderOnce(encoder, options);
     } catch (error) {
       options.signal?.throwIfAborted();
       failures.push(error);
@@ -256,9 +288,9 @@ export async function encodeCfrMp4(
           "+faststart",
           encodedPath,
         ],
-        { signal: options.signal, timeout: options.timeoutMs },
+        { signal: options.signal, timeout: commandOptions.timeoutMs },
       );
-      dimensions = await validateCfrMp4(encodedPath, plan, options);
+      dimensions = await validateCfrMp4(encodedPath, plan, commandOptions);
     } catch (error) {
       options.signal?.throwIfAborted();
       failures.push(error);

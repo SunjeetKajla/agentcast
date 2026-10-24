@@ -87,8 +87,8 @@ describe("CDP screencast", () => {
     ).rejects.toThrow("queue");
   });
 
-  it.each([undefined, NaN, 999])(
-    "rejects missing or backwards CDP timestamps: %s",
+  it.each([undefined, NaN])(
+    "rejects missing CDP timestamps: %s",
     async (timestamp) => {
       const { page, cdp } = setup();
       const capture = await startScreencast(page, {
@@ -105,6 +105,19 @@ describe("CDP screencast", () => {
       await expect(capture.stop()).rejects.toThrow(/timestamp/);
     },
   );
+
+  it("skips a stale frame that arrives after a newer one, and still acknowledges it", async () => {
+    const { page, cdp } = setup();
+    const capture = await startScreencast(page, {
+      directory: "/tmp/capture",
+      maxWidth: 800,
+      maxHeight: 600,
+    });
+    cdp.emit("Page.screencastFrame", { data: "/9j/2Q==", metadata: { timestamp: 999 }, sessionId: 8 });
+    const result = await capture.stop();
+    expect(result.frames.map((f) => f.timestampMs)).toEqual([1_000_000]);
+    expect(cdp.send.mock.calls.filter(([method]) => method === "Page.screencastFrameAck")).toHaveLength(2);
+  });
 
   it("ignores duplicate frames but still acknowledges them", async () => {
     const { page, cdp, emit } = setup();

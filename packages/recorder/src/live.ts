@@ -42,6 +42,7 @@ export interface LiveOptions {
     signal: AbortSignal,
   ) => Promise<void>;
   maxTakes?: number;
+  /** Per take: launching the browser, prepare and the recorded flow (default 120 s). Encoding has its own limit (encoding.timeoutMs). */
   timeoutMs?: number;
   signal?: AbortSignal;
   capture?: Pick<
@@ -114,6 +115,8 @@ export async function recordLive(
   );
   await mkdir(dirname(outputPath), { recursive: true });
   const takes: LiveRecording["takes"] = [];
+  // The first take finds a working GPU backend; retakes start there instead of re-running the cascade.
+  let browserOptions = options.browser ?? {};
   for (let attempt = 1; attempt <= maxTakes; attempt++) {
     options.signal?.throwIfAborted();
     const directory = await mkdtemp(
@@ -130,7 +133,7 @@ export async function recordLive(
     let capture: Screencast | undefined;
     try {
       const result = await withRecorderBrowser(
-        options.browser ?? {},
+        browserOptions,
         async (session) => {
           signal.throwIfAborted();
           if (options.prepare)
@@ -141,9 +144,8 @@ export async function recordLive(
           const viewport = session.page.viewportSize();
           if (!viewport)
             throw new Error("Live recording requires a fixed viewport");
-          const dpr = await session.page.evaluate(
-            () => window.devicePixelRatio,
-          );
+          // The DPR we configured, not window.devicePixelRatio: page scripts can redefine that.
+          const dpr = session.deviceScaleFactor;
           const starting = startScreencast(session.page, {
             ...options.capture,
             directory,
@@ -211,10 +213,14 @@ export async function recordLive(
           }
         },
       );
+      // Capture is over: the take deadline stops here. Encoding a long take on the CPU can take
+      // longer than the flow did, so it runs under its own limit and only the caller can cancel it.
+      clearTimeout(timer);
+      browserOptions = { ...browserOptions, gpu: result.gpu.backend };
       if (result.stall.status === "failed") continue;
       const video = await encodeCfrMp4(result.recorded, outputPath, {
         ...options.encoding,
-        signal,
+        signal: options.signal,
       });
       return {
         ...video,

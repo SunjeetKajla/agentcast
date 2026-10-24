@@ -10,6 +10,8 @@ vi.mock("node:child_process", () => ({
 vi.mock("node:fs/promises", () => ({ readdir: mocks.readdir }));
 
 import {
+  NO_WEBGL,
+  clearGpuCaches,
   detectGpuAdapters,
   gpuLaunchOptions,
   gpuMismatch,
@@ -64,6 +66,7 @@ function fakeBrowser(renderer: string, hardware = true) {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  clearGpuCaches();
   mocks.enumerate.mockResolvedValue({ stdout: summary });
   mocks.readdir.mockResolvedValue([]);
 });
@@ -257,5 +260,80 @@ describe("GPU selection", () => {
       launchGpuBrowser(launch, { args: ["--disable-gpu"] }),
     ).rejects.toThrow("GPU flags are managed");
     expect(launch).not.toHaveBeenCalled();
+  });
+
+  it("confirms sysfs adapters (no model name) by vendor when the renderer has no PCI IDs", () => {
+    // The real strings from an RTX 3050 laptop without vulkaninfo.
+    const dgpu = { backend: "dgpu", vendorId: 0x10de, deviceId: 0x25ac, name: "card0", source: "sysfs" } as const;
+    const igpu = { backend: "igpu", vendorId: 0x8086, deviceId: 0xa7a8, name: "card1", source: "sysfs" } as const;
+    const info = (renderer: string) => ({ renderer, vendor: "Google Inc.", hardwareAccelerated: true, featureStatus: {} });
+    const nvidiaGl = info("ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3050 6GB Laptop GPU/PCIe/SSE2, OpenGL ES 3.2)");
+    const intelGl = info("ANGLE (Intel, Mesa Intel(R) Graphics (RPL-P), OpenGL ES 3.2)");
+    expect(gpuMismatch(nvidiaGl, "dgpu", dgpu)).toBeUndefined();
+    expect(gpuMismatch(intelGl, "igpu", igpu)).toBeUndefined();
+    expect(gpuMismatch(intelGl, "dgpu", dgpu)).toBe("wrong-adapter");
+    expect(gpuMismatch(info("ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics, OpenGL ES 3.2)"), "igpu", igpu)).toBe("wrong-adapter");
+  });
+
+  it("matches a Vulkan model name whose suffix differs from the OpenGL one", () => {
+    const [amd] = parseVulkanAdapters(`GPU0:
+vendorID = 0x1002
+deviceID = 0x73ff
+deviceType = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
+deviceName = AMD Radeon RX 6600 (RADV NAVI23)
+`);
+    const info = (renderer: string) => ({ renderer, vendor: "AMD", hardwareAccelerated: true, featureStatus: {} });
+    expect(gpuMismatch(info("ANGLE (AMD, AMD Radeon RX 6600 (radeonsi, navi23, LLVM 17.0.6), OpenGL ES 3.2)"), "dgpu", amd)).toBeUndefined();
+    expect(gpuMismatch(info("ANGLE (AMD, AMD Radeon RX 7900 XT (radeonsi, navi31), OpenGL ES 3.2)"), "dgpu", amd)).toBe("unverified-adapter");
+  });
+
+  it("records on the CPU without WebGL, but never counts missing WebGL as hardware", async () => {
+    const info = { renderer: NO_WEBGL, vendor: "", hardwareAccelerated: false, featureStatus: { gpu_compositing: "disabled_software" } };
+    expect(gpuMismatch(info, "cpu")).toBeUndefined();
+    expect(gpuMismatch({ ...info, featureStatus: { gpu_compositing: "enabled" } }, "cpu")).toBe("software-renderer-not-selected");
+    expect(gpuMismatch(info, "igpu", intel)).toBe("hardware-rendering-unavailable");
+    const noWebgl = fakeBrowser("unused", false);
+    noWebgl.context.newPage.mockResolvedValue({ evaluate: vi.fn().mockResolvedValue(null) });
+    const { gpu } = await launchGpuBrowser(vi.fn().mockResolvedValue(noWebgl.value), {}, "cpu");
+    expect(gpu).toMatchObject({ backend: "cpu", renderer: NO_WEBGL, hardwareAccelerated: false });
+  });
+
+  it("moves on when a failed browser won't close", async () => {
+    vi.useFakeTimers();
+    try {
+      const stuck = fakeBrowser("SwiftShader", false);
+      stuck.browser.close.mockReturnValue(new Promise(() => {}));
+      const integrated = fakeBrowser("Intel (0x0000A788)");
+      const launch = vi.fn().mockResolvedValueOnce(stuck.value).mockResolvedValueOnce(integrated.value);
+      const result = launchGpuBrowser(launch);
+      await vi.advanceTimersByTimeAsync(5_001);
+      expect((await result).gpu.backend).toBe("igpu");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("prefers Google Chrome, falls back to bundled Chromium when Chrome isn't installed, and remembers it", async () => {
+    const launch = vi.fn(async (options: LaunchOptions) => {
+      if (options.channel === "chrome")
+        throw new Error(`Chromium distribution 'chrome' is not found at /opt/google/chrome/chrome\nRun "npx playwright install chrome"`);
+      return fakeBrowser("Intel (0x0000A788)").value;
+    });
+    expect((await launchGpuBrowser(launch, {}, "igpu")).gpu.channel).toBe("chromium");
+    expect(launch.mock.calls.map(([o]) => o.channel)).toEqual(["chrome", "chromium"]);
+    launch.mockClear();
+    await launchGpuBrowser(launch, {}, "igpu");
+    expect(launch.mock.calls.map(([o]) => o.channel)).toEqual(["chromium"]);
+    // A real failure in Chrome is a GPU failure, not a reason to switch browsers.
+    clearGpuCaches();
+    const broken = vi.fn().mockRejectedValue(new Error("GPU process crashed"));
+    await expect(launchGpuBrowser(broken, {}, "igpu")).rejects.toThrow("No usable Chromium renderer");
+    expect(broken.mock.calls.every(([o]) => o.channel === "chrome")).toBe(true);
+  });
+
+  it("looks for adapters once per process", async () => {
+    await detectGpuAdapters();
+    await detectGpuAdapters();
+    expect(mocks.enumerate).toHaveBeenCalledOnce();
   });
 });
