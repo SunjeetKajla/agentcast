@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "flows": [
+    {
+      "id": "flow-template",
+      "title": "Create a project from a template",
+      "whyItMatters": "Shows the core promise: a ready launch plan in one click.",
+      "startUrl": "https://demoboard.vercel.app/dashboard",
+      "requiresAuth": false,
+      "rank": 1,
+      "selected": true,
+      "source": "agent",
+      "tinyfishRunId": "run_fixture_001",
+      "rehearsal": { "ok": true, "seconds": 6 },
+      "scoring": {
+        "valueAlignment": 5,
+        "visiblePayoff": 4,
+        "lengthFit": 1,
+        "distinctness": 1,
+        "riskPenalty": 0,
+        "score": 0.89,
+        "storyRole": "core",
+        "valuePropCited": "Start any project from a proven template in one click",
+        "rationale": "Empty dashboard to a full launch plan in four steps."
+      },
+      "steps": [
+        {
+          "id": "s1",
+          "action": "click",
+          "target": { "text": "New project", "role": "button" },
+          "expected": "The template picker opens",
+          "narrationHint": "Start a new project",
+          "expect": [{ "type": "element", "role": "dialog", "name": "Choose a template" }]
+        },
+        {
+          "id": "s2",
+          "action": "click",
+          "target": { "text": "Launch plan", "role": "button", "near": "Templates" },
+          "expected": "The Launch plan template is chosen",
+          "narrationHint": "Pick the launch plan template",
+          "expect": [{ "type": "changed" }]
+        },
+        {
+          "id": "s3",
+          "action": "type",
+          "target": { "label": "Project name" },
+          "value": "Q4 Launch",
+          "narrationHint": "Name the project",
+          "expect": [{ "type": "value", "target": "Project name", "value": "Q4 Launch" }]
+        },
+        {
+          "id": "s4",
+          "action": "click",
+          "target": { "text": "Create project", "role": "button" },
+          "expected": "The new project opens with its plan",
+          "narrationHint": "Create it and the plan is ready",
+          "expect": [
+            { "type": "url", "pattern": "/projects/*" },
+            { "type": "text", "text": "Q4 Launch", "match": "loose" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow-export",
+      "title": "Export a plan as Markdown",
+      "whyItMatters": "Shows the plan leaves the app in a useful format.",
+      "startUrl": "https://demoboard.vercel.app/projects/q4-launch",
+      "requiresAuth": false,
+      "rank": 2,
+      "selected": false,
+      "source": "agent",
+      "tinyfishRunId": "run_fixture_002",
+      "rehearsal": { "ok": true, "seconds": 4 },
+      "scoring": {
+        "valueAlignment": 2,
+        "visiblePayoff": 2,
+        "lengthFit": 1,
+        "distinctness": 0.8,
+        "riskPenalty": 0,
+        "score": 0.48,
+        "storyRole": "share",
+        "valuePropCited": "See progress across every project on one dashboard",
+        "rationale": "Useful but the payoff is a download, not a visible change."
+      },
+      "steps": [
+        { "id": "e1", "action": "click", "target": { "text": "Export", "role": "button" } },
+        { "id": "e2", "action": "click", "target": { "text": "Markdown", "role": "menuitem" } }
+      ]
+    }
+  ]
+}

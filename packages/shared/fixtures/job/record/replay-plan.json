@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "byFormFactor": {
+    "desktop": {
+      "s1": {
+        "strategy": "role",
+        "locator": "getByRole('button', { name: 'New project', exact: true })",
+        "lastOk": "2026-01-01T00:00:00.000Z",
+        "learnedExpect": [{ "type": "element", "role": "dialog", "name": "Choose a template" }]
+      },
+      "s2": {
+        "strategy": "role",
+        "locator": "getByRole('button', { name: 'Launch plan', exact: true })",
+        "lastOk": "2026-01-01T00:00:00.000Z"
+      },
+      "s3": {
+        "strategy": "label",
+        "locator": "getByLabel('Project name', { exact: true })",
+        "lastOk": "2026-01-01T00:00:00.000Z",
+        "learnedExpect": [{ "type": "value", "target": "Project name", "value": "Q4 Launch" }]
+      },
+      "s4": {
+        "strategy": "role",
+        "locator": "getByRole('button', { name: 'Create project', exact: true })",
+        "lastOk": "2026-01-01T00:00:00.000Z",
+        "learnedExpect": [
+          { "type": "url", "pattern": "/projects/*" },
+          { "type": "element", "role": "heading", "name": "Q4 Launch" }
+        ]
+      }
+    }
+  }
+}

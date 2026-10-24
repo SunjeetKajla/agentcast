@@ -1,0 +1,63 @@
+{"seq": 1, "at": "2026-10-24T10:00:01.500Z", "jobId": "job_fixture", "type": "job", "status": "running"}
+{"seq": 2, "at": "2026-10-24T10:00:03.000Z", "jobId": "job_fixture", "type": "stage", "stage": "understand", "status": "running", "attempt": 1}
+{"seq": 3, "at": "2026-10-24T10:00:04.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "understand", "path": "brief/product-brief.json"}
+{"seq": 4, "at": "2026-10-24T10:00:06.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "understand", "path": "brief/creative.json"}
+{"seq": 5, "at": "2026-10-24T10:00:07.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "understand", "path": "brief/brand.json"}
+{"seq": 6, "at": "2026-10-24T10:00:09.000Z", "jobId": "job_fixture", "type": "stage", "stage": "understand", "status": "done"}
+{"seq": 7, "at": "2026-10-24T10:00:10.500Z", "jobId": "job_fixture", "type": "stage", "stage": "auth", "status": "skipped", "message": "Public site: no sign-in needed"}
+{"seq": 8, "at": "2026-10-24T10:00:12.000Z", "jobId": "job_fixture", "type": "stage", "stage": "discover", "status": "running", "attempt": 1}
+{"seq": 9, "at": "2026-10-24T10:00:13.500Z", "jobId": "job_fixture", "type": "agent", "stage": "discover", "agentId": "scout", "title": "Find the app entrance", "status": "started", "streamingUrl": "https://live.tinyfish.ai/session/fixture-scout"}
+{"seq": 10, "at": "2026-10-24T10:00:15.000Z", "jobId": "job_fixture", "type": "agent", "stage": "discover", "agentId": "scout", "title": "Find the app entrance", "status": "step", "step": "Clicked 'Open dashboard'"}
+{"seq": 11, "at": "2026-10-24T10:00:16.500Z", "jobId": "job_fixture", "type": "agent", "stage": "discover", "agentId": "scout", "title": "Find the app entrance", "status": "done"}
+{"seq": 12, "at": "2026-10-24T10:00:18.000Z", "jobId": "job_fixture", "type": "stage", "stage": "discover", "status": "done"}
+{"seq": 13, "at": "2026-10-24T10:00:19.500Z", "jobId": "job_fixture", "type": "stage", "stage": "flow-runs", "status": "running", "attempt": 1}
+{"seq": 14, "at": "2026-10-24T10:00:21.000Z", "jobId": "job_fixture", "type": "agent", "stage": "flow-runs", "agentId": "flow-template", "title": "Create a project from a template", "status": "started", "streamingUrl": "https://live.tinyfish.ai/session/fixture-flow-template"}
+{"seq": 15, "at": "2026-10-24T10:00:22.500Z", "jobId": "job_fixture", "type": "agent", "stage": "flow-runs", "agentId": "flow-template", "title": "Create a project from a template", "status": "step", "step": "Clicked 'New project'"}
+{"seq": 16, "at": "2026-10-24T10:00:24.000Z", "jobId": "job_fixture", "type": "agent", "stage": "flow-runs", "agentId": "flow-template", "title": "Create a project from a template", "status": "done"}
+{"seq": 17, "at": "2026-10-24T10:00:25.500Z", "jobId": "job_fixture", "type": "agent", "stage": "flow-runs", "agentId": "flow-export", "title": "Export a plan as Markdown", "status": "started", "streamingUrl": "https://live.tinyfish.ai/session/fixture-flow-export"}
+{"seq": 18, "at": "2026-10-24T10:00:27.000Z", "jobId": "job_fixture", "type": "agent", "stage": "flow-runs", "agentId": "flow-export", "title": "Export a plan as Markdown", "status": "step", "step": "Clicked 'New project'"}
+{"seq": 19, "at": "2026-10-24T10:00:28.500Z", "jobId": "job_fixture", "type": "agent", "stage": "flow-runs", "agentId": "flow-export", "title": "Export a plan as Markdown", "status": "done"}
+{"seq": 20, "at": "2026-10-24T10:00:30.000Z", "jobId": "job_fixture", "type": "log", "stage": "flow-runs", "level": "info", "message": "2 flows rehearsed locally; 1 selected"}
+{"seq": 21, "at": "2026-10-24T10:00:31.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "flow-runs", "path": "explore/flows.json"}
+{"seq": 22, "at": "2026-10-24T10:00:33.000Z", "jobId": "job_fixture", "type": "stage", "stage": "flow-runs", "status": "done"}
+{"seq": 23, "at": "2026-10-24T10:00:34.500Z", "jobId": "job_fixture", "type": "stage", "stage": "gate-flows", "status": "waiting", "message": "Waiting for your review"}
+{"seq": 24, "at": "2026-10-24T10:00:36.000Z", "jobId": "job_fixture", "type": "job", "status": "waiting"}
+{"seq": 25, "at": "2026-10-24T10:00:37.500Z", "jobId": "job_fixture", "type": "stage", "stage": "gate-flows", "status": "done", "message": "Approved"}
+{"seq": 26, "at": "2026-10-24T10:00:39.000Z", "jobId": "job_fixture", "type": "job", "status": "running"}
+{"seq": 27, "at": "2026-10-24T10:00:40.500Z", "jobId": "job_fixture", "type": "stage", "stage": "record", "status": "running", "attempt": 1}
+{"seq": 28, "at": "2026-10-24T10:00:42.000Z", "jobId": "job_fixture", "type": "progress", "stage": "record", "progress": 0.5, "message": "Halfway"}
+{"seq": 29, "at": "2026-10-24T10:00:43.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "record", "path": "record/desktop/recording.mp4"}
+{"seq": 30, "at": "2026-10-24T10:00:45.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "record", "path": "record/desktop/timeline.json"}
+{"seq": 31, "at": "2026-10-24T10:00:46.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "record", "path": "record/replay-plan.json"}
+{"seq": 32, "at": "2026-10-24T10:00:48.000Z", "jobId": "job_fixture", "type": "stage", "stage": "record", "status": "done"}
+{"seq": 33, "at": "2026-10-24T10:00:49.500Z", "jobId": "job_fixture", "type": "stage", "stage": "script", "status": "running", "attempt": 1}
+{"seq": 34, "at": "2026-10-24T10:00:51.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "script", "path": "script/storyboard.json"}
+{"seq": 35, "at": "2026-10-24T10:00:52.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "script", "path": "script/script.en.json"}
+{"seq": 36, "at": "2026-10-24T10:00:54.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "script", "path": "script/script.hi.json"}
+{"seq": 37, "at": "2026-10-24T10:00:55.500Z", "jobId": "job_fixture", "type": "stage", "stage": "script", "status": "done"}
+{"seq": 38, "at": "2026-10-24T10:00:57.000Z", "jobId": "job_fixture", "type": "stage", "stage": "gate-script", "status": "waiting", "message": "Waiting for your review"}
+{"seq": 39, "at": "2026-10-24T10:00:58.500Z", "jobId": "job_fixture", "type": "stage", "stage": "gate-script", "status": "done", "message": "Approved"}
+{"seq": 40, "at": "2026-10-24T10:01:00.000Z", "jobId": "job_fixture", "type": "stage", "stage": "voice", "status": "running", "attempt": 1}
+{"seq": 41, "at": "2026-10-24T10:01:01.500Z", "jobId": "job_fixture", "type": "progress", "stage": "voice", "progress": 0.5, "message": "Halfway"}
+{"seq": 42, "at": "2026-10-24T10:01:03.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "voice", "path": "voice/en.json"}
+{"seq": 43, "at": "2026-10-24T10:01:04.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "voice", "path": "voice/hi.json"}
+{"seq": 44, "at": "2026-10-24T10:01:06.000Z", "jobId": "job_fixture", "type": "stage", "stage": "voice", "status": "done"}
+{"seq": 45, "at": "2026-10-24T10:01:07.500Z", "jobId": "job_fixture", "type": "stage", "stage": "direct", "status": "running", "attempt": 1}
+{"seq": 46, "at": "2026-10-24T10:01:09.000Z", "jobId": "job_fixture", "type": "llm", "stage": "direct", "kind": "tool_use", "text": "Read DIRECTOR.md"}
+{"seq": 47, "at": "2026-10-24T10:01:10.500Z", "jobId": "job_fixture", "type": "llm", "stage": "direct", "kind": "tool_use", "text": "Edit edl.json"}
+{"seq": 48, "at": "2026-10-24T10:01:12.000Z", "jobId": "job_fixture", "type": "llm", "stage": "direct", "kind": "done", "text": "Edit passes the motion lint"}
+{"seq": 49, "at": "2026-10-24T10:01:13.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "direct", "path": "render/edl.json"}
+{"seq": 50, "at": "2026-10-24T10:01:15.000Z", "jobId": "job_fixture", "type": "stage", "stage": "direct", "status": "done"}
+{"seq": 51, "at": "2026-10-24T10:01:16.500Z", "jobId": "job_fixture", "type": "stage", "stage": "preview", "status": "running", "attempt": 1}
+{"seq": 52, "at": "2026-10-24T10:01:18.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "preview", "path": "out/preview.mp4"}
+{"seq": 53, "at": "2026-10-24T10:01:19.500Z", "jobId": "job_fixture", "type": "stage", "stage": "preview", "status": "done"}
+{"seq": 54, "at": "2026-10-24T10:01:21.000Z", "jobId": "job_fixture", "type": "stage", "stage": "gate-preview", "status": "waiting", "message": "Waiting for your review"}
+{"seq": 55, "at": "2026-10-24T10:01:22.500Z", "jobId": "job_fixture", "type": "stage", "stage": "gate-preview", "status": "done", "message": "Approved"}
+{"seq": 56, "at": "2026-10-24T10:01:24.000Z", "jobId": "job_fixture", "type": "stage", "stage": "render", "status": "running", "attempt": 1}
+{"seq": 57, "at": "2026-10-24T10:01:25.500Z", "jobId": "job_fixture", "type": "progress", "stage": "render", "progress": 0.5, "message": "Halfway"}
+{"seq": 58, "at": "2026-10-24T10:01:27.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "render", "path": "out/16x9-en.mp4"}
+{"seq": 59, "at": "2026-10-24T10:01:28.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "render", "path": "out/16x9-hi.mp4"}
+{"seq": 60, "at": "2026-10-24T10:01:30.000Z", "jobId": "job_fixture", "type": "artifact", "stage": "render", "path": "out/9x16-en.mp4"}
+{"seq": 61, "at": "2026-10-24T10:01:31.500Z", "jobId": "job_fixture", "type": "artifact", "stage": "render", "path": "out/9x16-hi.mp4"}
+{"seq": 62, "at": "2026-10-24T10:01:33.000Z", "jobId": "job_fixture", "type": "stage", "stage": "render", "status": "done"}
+{"seq": 63, "at": "2026-10-24T10:01:34.500Z", "jobId": "job_fixture", "type": "job", "status": "done"}

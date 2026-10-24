@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "lang": "hi",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "voiceName": "Brian",
+  "clips": [
+    {
+      "beatId": "b-hook",
+      "file": "voice/hi/b-hook.mp3",
+      "text": "दिनों में नहीं, मिनटों में launch plan तैयार।",
+      "seconds": 3.34,
+      "words": [
+        {
+          "text": "दिनों",
+          "start": 0.1,
+          "end": 0.452
+        },
+        {
+          "text": "में",
+          "start": 0.492,
+          "end": 0.845
+        },
+        {
+          "text": "नहीं,",
+          "start": 0.885,
+          "end": 1.237
+        },
+        {
+          "text": "मिनटों",
+          "start": 1.277,
+          "end": 1.63
+        },
+        {
+          "text": "में",
+          "start": 1.67,
+          "end": 2.022
+        },
+        {
+          "text": "launch",
+          "start": 2.062,
+          "end": 2.415
+        },
+        {
+          "text": "plan",
+          "start": 2.455,
+          "end": 2.807
+        },
+        {
+          "text": "तैयार।",
+          "start": 2.847,
+          "end": 3.2
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "22cb59db72f542ae"
+    },
+    {
+      "beatId": "b-core-1",
+      "file": "voice/hi/b-core-1.mp3",
+      "text": "एक proven template से शुरू करें।",
+      "seconds": 2.55,
+      "words": [
+        {
+          "text": "एक",
+          "start": 0.1,
+          "end": 0.452
+        },
+        {
+          "text": "proven",
+          "start": 0.492,
+          "end": 0.843
+        },
+        {
+          "text": "template",
+          "start": 0.883,
+          "end": 1.235
+        },
+        {
+          "text": "से",
+          "start": 1.275,
+          "end": 1.627
+        },
+        {
+          "text": "शुरू",
+          "start": 1.667,
+          "end": 2.018
+        },
+        {
+          "text": "करें।",
+          "start": 2.058,
+          "end": 2.41
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "15ecfaad5d4df827"
+    },
+    {
+      "beatId": "b-headline",
+      "file": "voice/hi/b-headline.mp3",
+      "text": "खाली पन्ने से छुटकारा।",
+      "seconds": 1.77,
+      "words": [
+        {
+          "text": "खाली",
+          "start": 0.1,
+          "end": 0.453
+        },
+        {
+          "text": "पन्ने",
+          "start": 0.493,
+          "end": 0.845
+        },
+        {
+          "text": "से",
+          "start": 0.885,
+          "end": 1.238
+        },
+        {
+          "text": "छुटकारा।",
+          "start": 1.278,
+          "end": 1.63
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "5ce93040c12f7b3f"
+    },
+    {
+      "beatId": "b-core-2",
+      "file": "voice/hi/b-core-2.mp3",
+      "text": "नाम दें, और आपका plan तैयार है।",
+      "seconds": 2.95,
+      "words": [
+        {
+          "text": "नाम",
+          "start": 0.1,
+          "end": 0.453
+        },
+        {
+          "text": "दें,",
+          "start": 0.493,
+          "end": 0.846
+        },
+        {
+          "text": "और",
+          "start": 0.886,
+          "end": 1.239
+        },
+        {
+          "text": "आपका",
+          "start": 1.279,
+          "end": 1.631
+        },
+        {
+          "text": "plan",
+          "start": 1.671,
+          "end": 2.024
+        },
+        {
+          "text": "तैयार",
+          "start": 2.064,
+          "end": 2.417
+        },
+        {
+          "text": "है।",
+          "start": 2.457,
+          "end": 2.81
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "53c57881cb3dfe80"
+    },
+    {
+      "beatId": "b-cta",
+      "file": "voice/hi/b-cta.mp3",
+      "text": "आज ही DemoBoard free में आज़माएँ।",
+      "seconds": 2.55,
+      "words": [
+        {
+          "text": "आज",
+          "start": 0.1,
+          "end": 0.452
+        },
+        {
+          "text": "ही",
+          "start": 0.492,
+          "end": 0.843
+        },
+        {
+          "text": "DemoBoard",
+          "start": 0.883,
+          "end": 1.235
+        },
+        {
+          "text": "free",
+          "start": 1.275,
+          "end": 1.627
+        },
+        {
+          "text": "में",
+          "start": 1.667,
+          "end": 2.018
+        },
+        {
+          "text": "आज़माएँ।",
+          "start": 2.058,
+          "end": 2.41
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "e5d10848ded9aeff"
+    }
+  ]
+}

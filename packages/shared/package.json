@@ -5,7 +5,8 @@
   "type": "module",
   "description": "zod schemas for every artifact, fixtures, and pure helpers shared by web, worker and video.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

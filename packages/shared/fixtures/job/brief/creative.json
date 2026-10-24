@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "prompt": "Punchy Product Hunt launch, 30 s",
+  "audience": "makers on Product Hunt",
+  "goal": "Get sign-ups on launch day",
+  "targetSeconds": 30,
+  "tone": ["punchy", "upbeat"],
+  "personality": "energetic",
+  "cta": "Try DemoBoard free",
+  "mustShow": ["templates"],
+  "avoid": [],
+  "inferred": false,
+  "summary": "A punchy 30 s launch video for makers, ending on 'Try DemoBoard free'."
+}

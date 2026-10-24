@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "lang": "en",
+  "voiceId": "EXAVITQu4vr4xnSDxMaL",
+  "voiceName": "Bella",
+  "clips": [
+    {
+      "beatId": "b-hook",
+      "file": "voice/en/b-hook.mp3",
+      "text": "Launch plans in minutes, not days.",
+      "seconds": 2.34,
+      "words": [
+        {
+          "text": "Launch",
+          "start": 0.1,
+          "end": 0.417
+        },
+        {
+          "text": "plans",
+          "start": 0.457,
+          "end": 0.773
+        },
+        {
+          "text": "in",
+          "start": 0.813,
+          "end": 1.13
+        },
+        {
+          "text": "minutes,",
+          "start": 1.17,
+          "end": 1.487
+        },
+        {
+          "text": "not",
+          "start": 1.527,
+          "end": 1.843
+        },
+        {
+          "text": "days.",
+          "start": 1.883,
+          "end": 2.2
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "fab2c642293059d1"
+    },
+    {
+      "beatId": "b-core-1",
+      "file": "voice/en/b-core-1.mp3",
+      "text": "Start from a proven template.",
+      "seconds": 1.99,
+      "words": [
+        {
+          "text": "Start",
+          "start": 0.1,
+          "end": 0.418
+        },
+        {
+          "text": "from",
+          "start": 0.458,
+          "end": 0.776
+        },
+        {
+          "text": "a",
+          "start": 0.816,
+          "end": 1.134
+        },
+        {
+          "text": "proven",
+          "start": 1.174,
+          "end": 1.492
+        },
+        {
+          "text": "template.",
+          "start": 1.532,
+          "end": 1.85
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "f3f3c46008f8368b"
+    },
+    {
+      "beatId": "b-headline",
+      "file": "voice/en/b-headline.mp3",
+      "text": "No blank page.",
+      "seconds": 1.27,
+      "words": [
+        {
+          "text": "No",
+          "start": 0.1,
+          "end": 0.417
+        },
+        {
+          "text": "blank",
+          "start": 0.457,
+          "end": 0.773
+        },
+        {
+          "text": "page.",
+          "start": 0.813,
+          "end": 1.13
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "ce66a690276a398f"
+    },
+    {
+      "beatId": "b-core-2",
+      "file": "voice/en/b-core-2.mp3",
+      "text": "Name it, and your plan is ready.",
+      "seconds": 2.7,
+      "words": [
+        {
+          "text": "Name",
+          "start": 0.1,
+          "end": 0.417
+        },
+        {
+          "text": "it,",
+          "start": 0.457,
+          "end": 0.774
+        },
+        {
+          "text": "and",
+          "start": 0.814,
+          "end": 1.131
+        },
+        {
+          "text": "your",
+          "start": 1.171,
+          "end": 1.489
+        },
+        {
+          "text": "plan",
+          "start": 1.529,
+          "end": 1.846
+        },
+        {
+          "text": "is",
+          "start": 1.886,
+          "end": 2.203
+        },
+        {
+          "text": "ready.",
+          "start": 2.243,
+          "end": 2.56
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "47fb3b8554be5562"
+    },
+    {
+      "beatId": "b-cta",
+      "file": "voice/en/b-cta.mp3",
+      "text": "Try DemoBoard free today.",
+      "seconds": 1.63,
+      "words": [
+        {
+          "text": "Try",
+          "start": 0.1,
+          "end": 0.418
+        },
+        {
+          "text": "DemoBoard",
+          "start": 0.458,
+          "end": 0.775
+        },
+        {
+          "text": "free",
+          "start": 0.815,
+          "end": 1.133
+        },
+        {
+          "text": "today.",
+          "start": 1.173,
+          "end": 1.49
+        }
+      ],
+      "model": "eleven_v4",
+      "key": "3d34f0ee071fa7b9"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "arc": "launch",
+  "edit": "trailer",
+  "beats": [
+    {
+      "id": "b-hook",
+      "role": "hook",
+      "onScreen": [{ "kind": "title", "text": "Launch plans in minutes" }],
+      "motion": { "kind": "reveal", "emotion": "excitement" },
+      "intent": "Plans take days; DemoBoard makes them in minutes.",
+      "maxSeconds": 3
+    },
+    {
+      "id": "b-core-1",
+      "role": "core",
+      "flowId": "flow-template",
+      "in": 0,
+      "out": 2,
+      "onScreen": [{ "kind": "callout", "text": "1 click", "stepId": "s2" }],
+      "motion": { "kind": "emphasis", "emotion": "ease", "focusStepId": "s2" },
+      "intent": "You start from a proven template.",
+      "maxSeconds": 1.4
+    },
+    {
+      "id": "b-headline",
+      "role": "headline",
+      "onScreen": [{ "kind": "title", "text": "No blank page" }],
+      "motion": { "kind": "transition", "emotion": "confidence" },
+      "intent": "You never start from nothing.",
+      "maxSeconds": 2
+    },
+    {
+      "id": "b-core-2",
+      "role": "payoff",
+      "flowId": "flow-template",
+      "in": 2,
+      "out": 5.6,
+      "onScreen": [{ "kind": "lowerThird", "text": "Your plan, ready", "stepId": "s4" }],
+      "motion": { "kind": "reveal", "emotion": "delight", "focusStepId": "s4" },
+      "intent": "Name it and the whole plan is there.",
+      "maxSeconds": 2.5
+    },
+    {
+      "id": "b-cta",
+      "role": "cta",
+      "onScreen": [{ "kind": "title", "text": "Try DemoBoard free" }],
+      "motion": { "kind": "hold", "emotion": "invitation" },
+      "intent": "Try it free today.",
+      "maxSeconds": 3
+    }
+  ]
+}
