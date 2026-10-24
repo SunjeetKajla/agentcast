@@ -1,2 +1,15 @@
-// @agentcast/recorder: Local Chromium recorder: Live/Studio capture, locator chain, takes, timeline. Owner: Neeraj.
-export {};
+export {
+  launchRecorderBrowser,
+  withRecorderBrowser,
+  type FormFactor,
+  type RecorderBrowser,
+  type RecorderBrowserOptions,
+  type RecorderStorageState,
+} from "./browser.ts";
+export type {
+  GpuAdapter,
+  GpuAttempt,
+  GpuBackend,
+  GpuInfo,
+  GpuPreference,
+} from "./gpu.ts";

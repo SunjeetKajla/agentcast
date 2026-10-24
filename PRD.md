@@ -610,7 +610,7 @@ Weights live in config and are tuned against the benchmark set (implementation p
 
 Per form factor:
 
-1. `chromium.launch()` on the worker machine (headless).
+1. Launch full bundled Chromium on the worker in modern headless mode through `playwright-extra`, with `puppeteer-extra-plugin-stealth` enabled by default (`stealth: false` opts out). Retain Playwright's page/context/CDP APIs and isolate plugin instances per launcher. Select a verified renderer using dGPU → iGPU → CPU fallback (§9.3.3).
 2. Create a context with the form factor's viewport, DPR, UA, touch. Inject `storageState`.
 3. Inject recording CSS: hide scrollbars, disable caret blink, blur redaction selectors, `prefers-reduced-motion: no-preference`.
 4. `Page.startScreencast({format:'jpeg', quality:85, maxWidth, maxHeight})`. Frames are acked; each frame is stored with `metadata.timestamp`.
@@ -687,8 +687,8 @@ To be confirmed by spikes S7 and S7b.
 
 **Both modes:**
 
-- **Browser:** Google Chrome stable, for the licensed codecs.
-- **GPU:** by default headless Chrome renders in software (SwiftShader). On NVIDIA laptops set `__NV_PRIME_RENDER_OFFLOAD=1` and `__GLX_VENDOR_LIBRARY_NAME=nvidia`, with `--use-gl=angle --use-angle=gl --ignore-gpu-blocklist --enable-gpu-rasterization`. Fall back to the integrated GPU, then software. Log the WebGL renderer for every job.
+- **Browser:** full bundled Chromium with `channel: "chromium"` for modern headless mode. An installed Google Chrome stable can be selected with `launchOptions.channel: "chrome"` for licensed codecs. Stealth uses Puppeteer Extra's plugin through its Playwright adapter; WebGL vendor spoofing is disabled, and mobile/custom user agents retain their configured values.
+- **GPU:** `gpu: "auto"` tries dGPU → iGPU → CPU. Optional `vulkaninfo --summary` identifies physical adapter types; Linux sysfs provides a fallback for NVIDIA and Intel chipset graphics. Unknown adapters are skipped. NVIDIA uses PRIME offload, Mesa uses a `DRI_PRIME` vendor/device selector; routing is confined to each child process, with inherited GPU selectors cleared between attempts. Hardware attempts must produce a working WebGL frame on the expected adapter and CDP `gpu_compositing: "enabled"`; software renderers never count as GPU success. Failed browsers close before fallback. CPU mode verifies SwiftShader/software rendering. `gpu: "igpu"` starts at iGPU, and `gpu: "cpu"` skips hardware attempts. Renderer, acceleration status and attempt reasons are returned on `session.gpu` for worker logging; no secrets or raw launch command lines are included in these diagnostics. Probes run before session state is restored. Fallback applies to startup/probe failures, not to replaying an already-running flow after a driver crash.
 - **Encoding:** the hardware encoder, through the same detection order as FR-44.
 
 **Studio's virtual clock** is our own page script, not Playwright's clock API, which can hang on heavy pages like Wikipedia.
@@ -1403,7 +1403,7 @@ type ChangeReport = {
 | **Agent doing damage in a real account**  | Guardrails in every goal (FR-23). Recommend test accounts or staging. Domain allowlist. The recorder only executes approved steps. Steps whose labels match destructive keywords (`delete`, `remove`, `pay`, `purchase`, `send`, `invite`) need explicit approval at gate 1 even in autopilot.                                                                                                                                                                                                                                                      |
 | **SSRF via URL intake**                   | Validate scheme and host, block private/loopback/link-local ranges and metadata IPs. TinyFish Fetch also rejects these.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | **Third-party content rights**            | Users may only generate videos of products they own or are authorized to show. Music library is royalty-free with each track's source and licence recorded in `assets/music/tags.json` (required by the schema); sound effects are generated, not sourced.                                                                                                                                                                                                                                                                                          |
-| **Bot detection / ToS**                   | The local recorder is a plain Chromium without stealth. If a site blocks it, that flow moves to the TinyFish fallback recorder. Use `browser_profile: "stealth"` only for the user's own product. No CAPTCHA solving.                                                                                                                                                                                                                                                                                                                               |
+| **Bot detection / ToS**                   | The local recorder uses Puppeteer Extra's stealth plugin through Playwright Extra by default, with an explicit opt-out. Automate only products the user owns or is authorized to demo. Stealth does not guarantee access; explicit security blocks still stop local replay and follow the existing fallback policy. No CAPTCHA solving. |
 
 ---
 

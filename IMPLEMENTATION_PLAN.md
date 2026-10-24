@@ -155,7 +155,7 @@ Tasks
 Recording runs in **local Chromium** (decision from S1). TinyFish Browser sessions are the state-capture fallback (task 10).
 Tasks
 
-1. **Browser launcher:** `chromium.launch()` per form factor on the worker (Playwright's bundled Chromium, headless). Context with viewport/DPR/UA, inject storageState (cookies via `context.addCookies`, localStorage via `addInitScript` keyed by origin). Close in `finally` and on process exit. Reuse `spikes/s1-record/record.ts` for the capture and CFR code.
+1. **Browser launcher:** `packages/recorder/src/browser.ts` launches full bundled Chromium in modern headless mode per form factor, using `playwright-extra` with `puppeteer-extra-plugin-stealth` by default (`stealth: false` opts out). Keep Playwright/CDP APIs and create an isolated plugin instance per launcher. `gpu.ts` tries dGPU → iGPU → CPU; route NVIDIA PRIME/Mesa per child process, verify the actual WebGL renderer and CDP hardware-compositing status, and close failed browsers before fallback. Disable the plugin's WebGL vendor spoofing so diagnostics remain truthful; preserve mobile/custom UAs. Return renderer and attempt diagnostics on the session. Context with viewport/DPR/UA, inject storageState (cookies via `context.addCookies`, localStorage via `addInitScript` keyed by origin). Close in `finally` and on process exit. The referenced `spikes/s1-record/record.ts` is absent in this checkout; capture and CFR remain separate tasks.
 2. **Recording hygiene:** `addStyleTag` (hide scrollbars, `caret-color: transparent`, redaction blur for selectors + regex-matched text nodes via a MutationObserver script), dismiss cookie banners (common selectors + "Accept" role buttons), wait for fonts (`document.fonts.ready`).
 3. **Screencast capture:**
    ```ts
