@@ -12,6 +12,8 @@ import {
   runTask,
   requestHash,
   hasSecretTarget,
+  ExplorationPlan,
+  verifyFlowEntry,
   type BrowserAdapter,
 } from "@agentcast/explore";
 import { type TinyFish } from "@agentcast/tinyfish";
@@ -148,18 +150,25 @@ export async function addFlow(
   const id = `user-${requestHash(description).slice(0, 12)}`;
   if (file.flows.some((flow) => flow.id === id))
     return file.flows.find((flow) => flow.id === id)!;
+  let entryUrl = ctx.config.url;
+  try {
+    entryUrl = (await ctx.read("explore/plan.json", ExplorationPlan)).entryUrl;
+  } catch (error) {
+    if ((error as { cause?: NodeJS.ErrnoException }).cause?.code !== "ENOENT") throw error;
+  }
+  const startUrl = await verifyFlowEntry(options, entryUrl);
   const candidate = Candidate.parse({
     title: description.slice(0, 100),
     why_it_matters: description,
-    start_url: ctx.config.url,
+    start_url: startUrl,
     outline: [description],
     needs_sign_in: !options.publicMode,
   });
   const result = await runTask({
     id,
     request: {
-      url: ctx.config.url,
-      goal: flowGoal(candidate, new URL(ctx.config.url).hostname),
+      url: startUrl,
+      goal: flowGoal(candidate, new URL(startUrl).hostname, undefined, !options.publicMode),
       output_schema: FLOW_RUN_SCHEMA,
       browser_profile: "stealth",
       agent_config: { max_duration_seconds: 120 },
@@ -177,11 +186,11 @@ export async function addFlow(
     candidate,
     productUrl: ctx.config.url,
     runId: result.runId,
-    startedAt: ctx.config.url,
+    startedAt: startUrl,
   });
   if (normalized.issues.length)
     throw new Error(
-      "The new flow could not be completed safely. Its task checkpoint was saved.",
+      `The new flow could not be completed: ${[...new Set(normalized.issues)].join("; ")}. Its task checkpoint was saved.`,
     );
   const rehearsed = await rehearseCandidate(options, {
     ...normalized.flow,

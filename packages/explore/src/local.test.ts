@@ -162,6 +162,18 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
       },
       30_000,
     );
+    it("reports a rejected saved session separately from public sign-in requirements", async () => {
+      await expect(browser.inspect(url + "/signin", { ...options(), storageState: { cookies: [], origins: [] } }))
+        .rejects.toMatchObject({ kind: "sign-in-required", message: expect.stringContaining("saved session was rejected") });
+    }, 30_000);
+    it("replays ordinary menu/button clicks despite an overly broad secret report flag", async () => {
+      const flow = Flow.parse({ id: "auth-navigation", title: "Preview", whyItMatters: "See result", startUrl: url, requiresAuth: true, rank: 1, selected: false, steps: [
+        { id: "s1", action: "click", target: { role: "button", text: "Continue" }, secret: true },
+        { id: "s2", action: "click", target: { role: "button", text: "Show result" }, secret: true },
+      ] });
+      const result = await browser.rehearse(flow, options());
+      expect(result.flow.rehearsal?.ok).toBe(true);
+    }, 30_000);
     it("replays prerequisites in a fresh browser and produces review frames", async () => {
       const result = await browser.rehearse(
         flow([

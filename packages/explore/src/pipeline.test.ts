@@ -22,6 +22,7 @@ import {
 import { Candidate } from "./agent";
 import { ExplorationPlan } from "./artifacts";
 import { discoverProduct, executeFlows, type ExploreOptions } from "./pipeline";
+import { PageAccessError } from "./local";
 
 const url = "https://product.example/";
 const candidate = (title: string) =>
@@ -132,6 +133,49 @@ afterEach(async () => {
 });
 
 describe("exploration orchestration (ported worker regressions)", () => {
+  it("checks app routes with the session before focused runs and does not pay for a 404 candidate", async () => {
+    const entry = "https://app.product.example/home";
+    const good = "https://app.product.example/monitor";
+    const bad = "https://app.product.example/missing";
+    options.publicMode = false;
+    options.auth = { use_profile: true, profile_id: "profile-fixture" };
+    const state = { cookies: [], origins: [{ origin: "https://app.product.example", localStorage: [{ name: "session", value: "private-token" }] }] };
+    options.browserOptions = { storageState: state };
+    vi.mocked(options.browser.inspect).mockImplementation(async (requested) => {
+      if (requested === bad) throw new PageAccessError("unavailable", "The product entrance returned HTTP 404.");
+      return { facts: { url: requested, title: "Workspace", heading: "Workspace", height: 1000, viewport: 900, links: [], tabs: [] } };
+    });
+    await options.io.write("explore/plan.json", ExplorationPlan, {
+      schemaVersion: 1, entryUrl: entry, access: "authenticated", reason: "", blockers: [],
+      candidates: [{ ...candidate("Preview monitor"), start_url: good }, { ...candidate("Missing feature"), start_url: bad }],
+    });
+    vi.mocked(options.tf.getRun).mockResolvedValue(complete("scout-id", {
+      ...report("Preview monitor"), steps: [{ action: "navigate", result_url_path: "/monitor" }, ...report("Preview monitor").steps],
+    }));
+    const flows = await executeFlows(options);
+    expect(options.tf.runAsync).toHaveBeenCalledTimes(1);
+    expect(options.tf.runAsync).toHaveBeenCalledWith(expect.objectContaining({ url: good, use_profile: true, profile_id: "profile-fixture" }), expect.any(AbortSignal));
+    expect(options.browser.inspect).toHaveBeenCalledWith(bad, expect.objectContaining({ storageState: state }));
+    expect(flows.find((flow) => flow.id === "f1")?.startUrl).toBe(good);
+    const failed = flows.find((flow) => flow.id === "f2")!;
+    expect(failed.selected).toBe(false);
+    expect(failed.rehearsal?.reason).toContain("HTTP 404");
+    expect(options.browser.rehearse).not.toHaveBeenCalledWith(expect.objectContaining({ id: "f2" }), expect.anything());
+  });
+
+  it("resolves relative scout candidates on the discovered app origin", async () => {
+    const entry = "https://app.product.example/home";
+    vi.mocked(options.browser.inspect).mockImplementation(async (requested) => ({ facts: {
+      url: requested, title: "Workspace", heading: "Workspace", height: 1000, viewport: 900, links: [], tabs: [],
+    } }));
+    vi.mocked(options.tf.getRun).mockResolvedValue(complete("scout-id", {
+      entry_url: entry, access: "public", reason: "Public app", blockers: [],
+      candidates: [{ ...candidate("Preview monitor"), start_url: "/monitor" }],
+    }));
+    const plan = await discoverProduct(options);
+    expect(plan.entryUrl).toBe(entry);
+    expect(plan.candidates[0]?.start_url).toBe("https://app.product.example/monitor");
+  });
   it("uses stealth without beta-only max_steps and filters account/off-site candidates in public mode", async () => {
     vi.mocked(options.tf.getRun).mockResolvedValue(
       complete("scout-id", {

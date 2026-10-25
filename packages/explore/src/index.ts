@@ -73,6 +73,7 @@ export {
   discoverProduct,
   executeFlows,
   rehearseCandidate,
+  verifyFlowEntry,
   type ExploreOptions,
 } from "./pipeline";
 export { localBrowserAdapter, openProduct, PageAccessError } from "./local";

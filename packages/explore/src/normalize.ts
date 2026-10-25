@@ -35,14 +35,16 @@ const SECRET =
   /pass(word|code|phrase)?\b|\bpin\b|\botp\b|one[- ]time|secret|token|api[ _-]?key|card number|\bcvv\b|\bcvc\b/i;
 
 export function hasSecretTarget(
-  step: Pick<Step, "secret" | "target">,
+  step: Pick<Step, "action" | "secret" | "target">,
 ): boolean {
-  return (
-    step.secret === true ||
-    [step.target?.text, step.target?.label, step.target?.placeholder].some(
+  if ([step.target?.text, step.target?.label, step.target?.placeholder].some(
       (value) => value !== undefined && SECRET.test(value),
-    )
-  );
+    )) return true;
+  // Reports sometimes mark every authenticated action secret, even a menu click with no input.
+  // Only clear that broad flag for ordinary navigation controls; credential fields remain blocked.
+  const navigation = ["click", "hover"].includes(step.action) &&
+    ["button", "link", "tab", "menuitem", "checkbox", "radio", "switch", "option"].includes(step.target?.role ?? "");
+  return step.secret === true && !navigation;
 }
 /** Labels that make a step destructive or outward-facing; such flows need explicit approval (PRD §9.2.1). */
 export const DESTRUCTIVE =
@@ -80,10 +82,10 @@ export function toFlow(
   },
 ): Normalized {
   const issues: string[] = [];
-  const abs = (u: string | undefined) => {
+  const abs = (u: string | undefined, base = ctx.productUrl) => {
     if (!u) return undefined;
     try {
-      return new URL(u, ctx.productUrl).toString();
+      return new URL(u, base).toString();
     } catch {
       return undefined;
     }
@@ -92,7 +94,7 @@ export function toFlow(
   // start_url it reports (often where the flow's main part happens). A first `navigate` still wins.
   let startUrl =
     abs(ctx.startedAt) ??
-    abs(r.start_url) ??
+    abs(r.start_url, abs(ctx.candidate.start_url) ?? ctx.productUrl) ??
     abs(ctx.candidate.start_url) ??
     ctx.productUrl;
 
@@ -118,7 +120,7 @@ export function toFlow(
       // Only text that looks like a URL counts; agents also put link text ("TodoMVC") in these fields.
       const urlish = (u?: string) =>
         u && /^(https?:\/\/|\/)/.test(u) ? u : undefined;
-      const to = abs(urlish(raw.value) ?? urlish(raw.result_url_path));
+      const to = abs(urlish(raw.value) ?? urlish(raw.result_url_path), startUrl);
       if (steps.length === 0) {
         if (to) startUrl = to;
       } else
@@ -129,19 +131,15 @@ export function toFlow(
 
     const act: StepAction = clicked ? "click" : action;
     const target = targetOf(raw, act);
-    const secret =
-      raw.secret === true ||
-      [raw.target_label, raw.target_placeholder, raw.target_text].some(
-        (s) => s && SECRET.test(s),
-      );
+    const secret = hasSecretTarget({ action: act, target, secret: raw.secret });
     const step: Step = { id: `s${steps.length + 1}`, action: act };
     if (target) step.target = target;
     if (act === "press" && !secret) step.value = raw.value ?? "Enter";
-    else if (raw.value && !secret) step.value = raw.value;
+    else if (raw.value && !secret && !raw.secret) step.value = raw.value;
     if (secret) step.secret = true;
     if (secret)
       issues.push(
-        "blocked: sign-in required; secret inputs cannot be replayed from a public report. Use sign-in-once.",
+        "Secret inputs cannot be replayed from an agent report. Omit credential-entry steps and use a saved signed-in session.",
       );
     if (raw.result_visible_text) step.expected = raw.result_visible_text;
     if (raw.narration_hint) step.narrationHint = raw.narration_hint;
@@ -192,7 +190,7 @@ export function toFlow(
     ...(ctx.runId ? { tinyfishRunId: ctx.runId } : {}),
     source: "agent",
   });
-  return { flow, issues };
+  return { flow, issues: [...new Set(issues)] };
 }
 
 /** Placeholders agents put in fields they have nothing for ("—", "n/a"): not page text. */

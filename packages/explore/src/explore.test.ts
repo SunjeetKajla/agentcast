@@ -120,7 +120,7 @@ describe("toFlow", () => {
     });
     const { flow, issues } = toFlow(r, ctx);
     expect(issues).toEqual([
-      expect.stringMatching(/secret inputs cannot be replayed/),
+      expect.stringMatching(/Secret inputs cannot be replayed/),
     ]);
     expect(flow.startUrl).toBe("https://demo.app/projects");
     expect(flow.steps.map((s) => s.action)).toEqual([
@@ -156,7 +156,8 @@ describe("toFlow", () => {
     const normalized = toFlow(report, ctx);
     expect(normalized.flow.steps[0]!.secret).toBe(true);
     expect(normalized.flow.steps[0]!.value).toBeUndefined();
-    expect(normalized.issues.join(" ")).toMatch(/sign-in required/);
+    expect(normalized.issues.join(" ")).toMatch(/Omit credential-entry steps/);
+    expect(normalized.issues.join(" ")).not.toMatch(/public report|sign-in required/);
   });
 
   it('decodes HTML-escaped agent text and drops "no blockers" notes', () => {
@@ -272,6 +273,37 @@ describe("toFlow", () => {
     expect(
       toFlow(r, { ...ctx, startedAt: "https://demo.app/" }).flow.startUrl,
     ).toBe("https://demo.app/");
+  });
+
+  it("resolves relative initial navigation against the app entrance, preserving its hostname", () => {
+    const report = FlowRunResult.parse({ flow_title: "Monitor", completed: true, steps: [
+      { action: "navigate", result_url_path: "/monitor" },
+      { action: "click", target_role: "button", target_text: "New monitor" },
+      { action: "click", target_role: "button", target_text: "Preview" },
+    ] });
+    const context = { ...ctx, productUrl: "https://www.tinyfish.ai/", startedAt: "https://agent.tinyfish.ai/home" };
+    expect(toFlow(report, context).flow.startUrl).toBe("https://agent.tinyfish.ai/monitor");
+    expect(toFlow({ ...report, start_url: "/monitor" }, {
+      ...context, startedAt: undefined, candidate: { ...candidate, start_url: "https://agent.tinyfish.ai/home" },
+    }).flow.startUrl).toBe("https://agent.tinyfish.ai/monitor");
+    expect(toFlow(FlowRunResult.parse({ ...report, steps: [{ action: "navigate", value: "https://other.example/" }, ...report.steps.slice(1)] }), context).issues.join(" "))
+      .toMatch(/off the product/);
+  });
+
+  it("does not confuse signed-in navigation clicks with credential entry", () => {
+    const report = FlowRunResult.parse({ flow_title: "Monitor", completed: true, steps: [
+      { action: "click", target_role: "menuitem", target_text: "Monitor", secret: true },
+      { action: "click", target_role: "button", target_text: "New monitor", secret: true },
+    ] });
+    const normalized = toFlow(report, ctx);
+    expect(normalized.issues).toEqual([]);
+    expect(normalized.flow.steps.every((step) => !step.secret)).toBe(true);
+    const credential = toFlow(FlowRunResult.parse({ ...report, steps: [
+      { action: "click", target_role: "textbox", target_label: "Password", secret: true },
+      { action: "type", target_label: "Security code", value: undefined, secret: true },
+    ] }), ctx);
+    expect(credential.issues.filter((issue) => issue.includes("Secret inputs"))).toHaveLength(1);
+    expect(credential.flow.steps.every((step) => step.secret && step.value === undefined)).toBe(true);
   });
 
   it("flags what the recorder or the gates reject", () => {

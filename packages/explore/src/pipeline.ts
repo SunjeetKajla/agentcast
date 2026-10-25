@@ -35,7 +35,7 @@ import type {
   RehearsalResult,
 } from "./runtime";
 import type { Llm } from "./llm";
-import { safeId } from "./local";
+import { PageAccessError, safeId } from "./local";
 
 export type ExploreOptions = {
   url: string;
@@ -70,6 +70,22 @@ const browserOptions = (o: ExploreOptions): BrowserOptions => ({
   signal: o.signal,
   captureAssets: false,
 });
+
+/** Check a reported route locally with the same session before paying for a focused run. */
+export async function verifyFlowEntry(o: ExploreOptions, requested: string): Promise<string> {
+  const url = productEntry(requested, o.url);
+  try {
+    const page = await o.browser.inspect(url, browserOptions(o));
+    productEntry(page.facts.url, o.url);
+    // Keep a stable entrance such as /login; a redirect may name a session-only workspace.
+    return url;
+  } catch (error) {
+    o.signal?.throwIfAborted();
+    if (!o.publicMode && (error as { kind?: string }).kind === "sign-in-required")
+      throw new PageAccessError("sign-in-required", "The saved session was rejected or has expired at the app entrance. Sign in again before exploring authenticated flows.");
+    throw error;
+  }
+}
 const missing = (error: unknown) =>
   (error as { cause?: NodeJS.ErrnoException }).cause?.code === "ENOENT" ||
   (error as NodeJS.ErrnoException).code === "ENOENT";
@@ -170,8 +186,7 @@ export async function discoverProduct(
   let entryUrl = o.url;
   if (scout?.entry_url) {
     try {
-      entryUrl = productEntry(scout.entry_url, o.url);
-      await o.browser.inspect(entryUrl, browserOptions(o));
+      entryUrl = await verifyFlowEntry(o, productEntry(scout.entry_url, o.url));
     } catch (error) {
       o.signal?.throwIfAborted();
       if (
@@ -195,7 +210,7 @@ export async function discoverProduct(
     .map((candidate) =>
       Candidate.parse({
         ...candidate,
-        start_url: productEntry(candidate.start_url || entryUrl, o.url),
+        start_url: productEntry(candidate.start_url || entryUrl, entryUrl),
         needs_sign_in: !o.publicMode && Boolean(candidate.needs_sign_in),
         performed: false,
         steps: [],
@@ -254,6 +269,9 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
     "Checking the product page locally before rehearsing flows",
   );
   const page = await o.browser.inspect(plan.entryUrl, browserOptions(o));
+  const entries = new Map<string, Promise<string>>([
+    [plan.entryUrl, Promise.resolve(productEntry(plan.entryUrl, o.url))],
+  ]);
   o.log?.(
     "Local page inspection finished; preparing the candidate rehearsals.",
   );
@@ -289,20 +307,32 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
       const index = next++;
       const candidate = plan.candidates[index]!;
       const id = `f${index + 1}`;
+      let startUrl: string;
+      try {
+        const requested = productEntry(candidate.start_url || plan.entryUrl, plan.entryUrl);
+        if (!entries.has(requested)) entries.set(requested, verifyFlowEntry(o, requested));
+        startUrl = await entries.get(requested)!;
+      } catch (error) {
+        o.signal?.throwIfAborted();
+        const normalized = toFlow(FlowRunResult.parse({ flow_title: candidate.title, completed: false, steps: [] }), {
+          id, candidate, productUrl: o.url, runId: "", startedAt: plan.entryUrl,
+        });
+        await remember({ flow: { ...normalized.flow, rehearsal: {
+          ok: false, reason: `Candidate entrance could not be verified: ${(error as Error).message.split("\n")[0]}`,
+        } } });
+        o.progress?.(++completed / Math.max(1, plan.candidates.length), `Checked ${completed} candidate flows`);
+        continue;
+      }
       let previous: string | undefined;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const startUrl = productEntry(
-            candidate.start_url || plan.entryUrl,
-            o.url,
-          );
           const run = await agent(
             o,
             attempt ? `${id}-repair` : id,
             candidate.title,
             {
               url: startUrl,
-              goal: flowGoal(candidate, new URL(o.url).hostname, previous),
+              goal: flowGoal({ ...candidate, start_url: startUrl }, new URL(startUrl).hostname, previous, !o.publicMode),
               output_schema: FLOW_RUN_SCHEMA,
               agent_config: { max_duration_seconds: 120 },
             },

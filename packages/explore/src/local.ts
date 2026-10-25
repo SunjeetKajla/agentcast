@@ -246,6 +246,10 @@ export function localBrowserAdapter(
     })();
     try {
       return await Promise.race([work, aborted]);
+    } catch (error) {
+      if (options.storageState && error instanceof PageAccessError && error.kind === "sign-in-required")
+        throw new PageAccessError("sign-in-required", "The saved session was rejected or has expired at this app entrance. Sign in again before exploring authenticated flows.");
+      throw error;
     } finally {
       clearTimeout(timer);
       signal.removeEventListener("abort", abort);
@@ -447,7 +451,7 @@ export function localBrowserAdapter(
             rehearsal: {
               ok: false,
               reason:
-                "A secret-bearing step cannot be replayed from a public report. Use sign-in-once and omit login steps.",
+                "Secret inputs cannot be replayed from an agent report. Omit credential-entry steps and use a saved signed-in session.",
             },
           },
         };
