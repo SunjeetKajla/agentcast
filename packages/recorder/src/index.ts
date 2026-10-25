@@ -32,7 +32,8 @@ export {
   type EncodedVideo,
   type VideoEncoder,
 } from "./encode.ts";
-export { checkStalls, type StallReport, type MotionWindow } from "./timing.ts";
+export { checkStalls, STALL, type StallReport, type MotionWindow } from "./timing.ts";
+export { selectMatch, type Match } from "./flow/select.ts";
 export {
   resolveTarget,
   LocatorResolutionError,

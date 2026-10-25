@@ -4,7 +4,7 @@ import type { MotionTokens } from "@agentcast/shared";
 import { overlay, settled } from "../motion.ts";
 import { sfxCues } from "../audio.ts";
 import { planParts, type Caption, type Part, type VideoInput } from "../plan.ts";
-import { Montage, Outro, Stat, Statement, TitleCard } from "./cards.tsx";
+import { Backdrop, Montage, Outro, Stat, Statement, TitleCard } from "./cards.tsx";
 import { fontStack, useFonts } from "./fonts.ts";
 import { Shot } from "./Shot.tsx";
 
@@ -56,6 +56,8 @@ function PartView({ input, part }: { input: VideoInput; part: Part }) {
   if (segment.kind === "shot") return <Shot input={input} part={part} />;
   if (segment.kind === "statement") return <Statement input={input} segment={segment} />;
   if (segment.kind === "stat") return <Stat input={input} segment={segment} />;
+  // Director-written scenes are HyperFrames files; the legacy renderer shows the backdrop.
+  if (segment.kind === "scene") return <Backdrop input={input} />;
   return <Montage input={input} segment={segment} />;
 }
 

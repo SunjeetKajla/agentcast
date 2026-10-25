@@ -35,8 +35,8 @@ export type VideoInput = {
   copy: { title?: string; cta?: string };
   /** 540 for the preview, 1080 for finals; the width follows the aspect. */
   height: number;
-  /** The generated sound effects, when the edit has any. */
-  audio?: { sfx: Partial<Record<SfxKind, string>> };
+  /** The generated sound effects, when the edit has any, and the music bed (style.music's track). */
+  audio?: { sfx: Partial<Record<SfxKind, string>>; music?: string };
 };
 
 export const outputSize = (aspect: Aspect, height: number) => {
@@ -88,7 +88,7 @@ export function assignNarration(storyboard: Storyboard, voice: Voiceover, edl: P
   });
 }
 
-export type Transition = { kind: "cut" | "fade" | "slide" | "zoom-through"; frames: number };
+export type Transition = { kind: Edl["segments"][number]["transitionIn"]; frames: number };
 
 /**
  * One part of the output, in frames from the start of the video. A part's `enter` overlaps the end of

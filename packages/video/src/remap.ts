@@ -132,7 +132,7 @@ export function remapEdl(
 ): Edl {
   const kept = (flowId: string) => !drop.has(flowId) && retakes[flowId];
   const segments = edl.segments.flatMap((seg): Edl["segments"] => {
-    if (seg.kind === "statement" || seg.kind === "stat") return [seg];
+    if (seg.kind === "statement" || seg.kind === "stat" || seg.kind === "scene") return [seg];
     if (seg.kind === "montage") {
       const clips = seg.clips
         .filter((c) => kept(c.flowId))

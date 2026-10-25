@@ -12,11 +12,15 @@
   },
   "dependencies": {
     "@agentcast/shared": "workspace:*",
+    "@hyperframes/core": "0.8.189",
+    "@hyperframes/producer": "0.8.189",
     "@remotion/bundler": "4.0.538",
     "@remotion/google-fonts": "4.0.538",
     "@remotion/media-utils": "4.0.538",
     "@remotion/renderer": "4.0.538",
     "@remotion/transitions": "4.0.538",
+    "gsap": "3.15.0",
+    "hyperframes": "0.8.189",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "remotion": "4.0.538"

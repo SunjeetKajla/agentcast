@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import { access, copyFile, mkdir } from "node:fs/promises";
 import { z } from "zod";
 import {
   Brand,
@@ -17,7 +17,7 @@ import {
   runDirector,
   type DirectorOptions,
 } from "@agentcast/director";
-import { baselineEdl, renderStills, stillMoments } from "@agentcast/video";
+import { baselineEdl, loadMusicLibrary, MUSIC_LEVEL, musicDir, pickTrack, renderStills, stillMoments } from "@agentcast/video";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
 import { optional, videoInput } from "./preview.ts";
@@ -34,6 +34,8 @@ const DirectorState = z.object({
   applied: z.array(z.string()).default([]),
 });
 const STATE = "render/director.json";
+/** The picked track, copied into the job (render reads it like any job file). */
+export const MUSIC_FILE = "render/audio/music.mp3";
 
 export function makeDirect(
   deps: {
@@ -167,6 +169,7 @@ async function stillsOf(ctx: StageContext, edl: Edl): Promise<string[]> {
     outDir: ctx.path("render/stills"),
     moments: stillMoments(edl, input.narration).slice(0, 12),
     signal: ctx.signal,
+    scenes: ctx.path("render/composition/compositions"),
   });
 }
 
@@ -205,6 +208,31 @@ async function workspaceFor(ctx: StageContext) {
     personality: creative.personality,
     ...(brand ? { brand } : {}),
   });
+  // The music bed (PRD §9.7.2): the library's best fit for the personality and grammar, copied into
+  // the job so renders read it like any other job file. No library, no music.
+  const track = pickTrack(await loadMusicLibrary().catch(() => undefined), {
+    personality: creative.personality,
+    edit: baseline.style.edit,
+    seconds: creative.targetSeconds,
+    seed: ctx.jobId,
+  });
+  if (track) {
+    await mkdir(ctx.path("render/audio"), { recursive: true });
+    const copied = await copyFile(`${musicDir().replace(/\/$/, "")}/${track.file}`, ctx.path(MUSIC_FILE)).then(
+      () => true,
+      (error: Error) => (ctx.log(`Music "${track.title}" is in tags.json but its file isn't there (${error.message}); no music.`, "warn"), false),
+    );
+    if (copied) {
+      baseline.style.music = { mood: track.mood[0] ?? baseline.style.music.mood, trackId: track.id, bpm: track.bpm, firstBeat: track.firstBeat, ...MUSIC_LEVEL[baseline.style.edit] };
+      ctx.log(`Music: "${track.title}" by ${track.artist ?? "unknown"} (${track.license}).`);
+    }
+  }
+  // The preview's render input, so the workspace gets the composition the director edits (§9.7.5).
+  // The legacy renderer has no composition.
+  const render =
+    process.env.AGENTCAST_RENDERER === "remotion"
+      ? undefined
+      : await videoInput(ctx, "16x9", langs[0] ?? "en", 540, baseline).then(({ edl: _edl, ...rest }) => rest);
   // The script stage saved a frame of each footage beat, by its place in the storyboard.
   const frames: Record<string, string> = {};
   for (const [i, beat] of storyboard.beats.entries()) {
@@ -229,5 +257,6 @@ async function workspaceFor(ctx: StageContext) {
     baseline,
     ...(brand ? { brand } : {}),
     frames,
+    ...(render ? { render } : {}),
   };
 }

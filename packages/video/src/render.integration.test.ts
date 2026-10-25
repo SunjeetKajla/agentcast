@@ -6,9 +6,10 @@ import { Edl, Timeline, jobPaths } from "@agentcast/shared";
 import { FIXTURE_JOB_DIR, readArtifact } from "@agentcast/shared/node";
 import { renderVideo } from "./render";
 
-it.skipIf(process.env.AGENTCAST_RENDER_TESTS !== "1")(
-  "renders actual fixture footage into an H.264 video through the production Remotion bundle",
-  async () => {
+it.skipIf(process.env.AGENTCAST_RENDER_TESTS !== "1").each(["hyperframes", "remotion"])(
+  "renders actual fixture footage into an H.264 video through %s",
+  async (renderer) => {
+    process.env.AGENTCAST_RENDERER = renderer;
     const root = await mkdtemp(join(tmpdir(), "agentcast-render-integration-"));
     try {
       await cp(FIXTURE_JOB_DIR, root, { recursive: true });
@@ -55,6 +56,7 @@ it.skipIf(process.env.AGENTCAST_RENDER_TESTS !== "1")(
       expect(rendered.frames).toBeGreaterThan(60);
       expect((await stat(out)).size).toBeGreaterThan(1000);
     } finally {
+      delete process.env.AGENTCAST_RENDERER;
       await rm(root, { recursive: true, force: true });
     }
   },

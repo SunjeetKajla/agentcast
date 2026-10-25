@@ -40,6 +40,9 @@ export function alignFrames(frames: CapturedFrame[], startedAtMs: number) {
 }
 
 /** Evaluate the original capture cadence, never duplicated CFR output frames. */
+/** The stall limits (PRD FR-44a). */
+export const STALL = { hitchMs: 250, hitchEveryMs: 5000, maxGapMs: 400, p95GapMs: 73 } as const;
+
 export function checkStalls(
   frameTimesMs: number[],
   windows: MotionWindow[],
@@ -77,10 +80,15 @@ export function checkStalls(
   const sorted = [...gaps].sort((a, b) => a - b);
   const p95GapMs = sorted[Math.ceil(sorted.length * 0.95) - 1] ?? 0;
   const maxGapMs = sorted.at(-1) ?? 0;
+  // Short hitches (≤ 400 ms: a heavy section painting as it scrolls in, on Linear or React Bits) pass,
+  // one per 5 s of motion; more of them, a longer gap, or uneven motion fails the take. Footage is
+  // published at 30 fps, so uneven means a p95 gap over ~2.2 output frames (73 ms).
+  const hitches = gaps.filter((gap) => gap > STALL.hitchMs).length;
+  const allowed = Math.max(1, Math.floor(motionDurationMs / STALL.hitchEveryMs));
   return {
     status: !motionDurationMs
       ? "not-applicable"
-      : maxGapMs > 250 || p95GapMs > 60
+      : maxGapMs > STALL.maxGapMs || hitches > allowed || p95GapMs > STALL.p95GapMs
         ? "failed"
         : "passed",
     maxGapMs,

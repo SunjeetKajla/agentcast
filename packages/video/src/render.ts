@@ -1,5 +1,5 @@
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { rename, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { extname, join, resolve, sep } from "node:path";
@@ -7,11 +7,24 @@ import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { makeCancelSignal, renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import type { Edl } from "@agentcast/shared";
+import { compileComposition } from "./hyperframes/compile.ts";
+import { renderComposition, snapshotComposition } from "./hyperframes/render.ts";
 import { moveSeconds } from "./motion.ts";
 import { clockOf } from "./retime.ts";
 import { planParts, type Narration, type VideoInput } from "./plan.ts";
 
-// renderVideo(): one variant of the edit to an H.264 MP4 through Remotion (PRD §9.8).
+// renderVideo(): one variant of the edit to an H.264 MP4 (PRD §9.8). HyperFrames by default (the
+// edit compiled to a composition per variant); AGENTCAST_RENDERER=remotion keeps the legacy path
+// until Phase 10 parity.
+
+const useRemotion = () => process.env.AGENTCAST_RENDERER === "remotion";
+
+/**
+ * Where a variant's composition is compiled: `build/<aspect>-<lang>-<height>/` in the job, outside the
+ * director's workspace (render/), which only holds what it edits.
+ */
+export const variantDir = (root: string, input: VideoInput) =>
+  join(root, "build", `${input.aspect}-${input.lang}-${input.height}`);
 
 let bundled: Promise<string> | undefined;
 
@@ -114,11 +127,31 @@ export type RenderOptions = {
   concurrency?: number;
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
+  /** The director's scene files (`render/composition/compositions/`), kept over the catalogue's. */
+  scenes?: string;
 };
 
 /** Renders one variant. Returns the frame count and how long rendering took. */
 export async function renderVideo(o: RenderOptions): Promise<{ frames: number; seconds: number }> {
   o.signal?.throwIfAborted();
+  if (!useRemotion()) {
+    const dir = variantDir(o.root, o.input);
+    const { duration } = await compileComposition({
+      input: o.input,
+      root: o.root,
+      out: dir,
+      ...(o.scenes ? { scenes: o.scenes } : {}),
+      ...(o.signal ? { signal: o.signal } : {}),
+    });
+    const { seconds } = await renderComposition({
+      dir,
+      out: o.out,
+      draft: o.input.height <= 540,
+      ...(o.onProgress ? { onProgress: o.onProgress } : {}),
+      ...(o.signal ? { signal: o.signal } : {}),
+    });
+    return { frames: Math.round(duration * o.input.edl.fps), seconds };
+  }
   const serveUrl = await bundleOnce();
   const files = await serveFiles(o.root, new Set(filesOf(o.input)));
   const cancel = makeCancelSignal();
@@ -182,7 +215,29 @@ export async function renderStills(o: {
   outDir: string;
   moments: { frame: number; label: string }[];
   signal?: AbortSignal;
+  scenes?: string;
 }): Promise<string[]> {
+  if (!useRemotion()) {
+    const dir = variantDir(o.root, o.input);
+    const { duration } = await compileComposition({
+      input: o.input,
+      root: o.root,
+      out: dir,
+      ...(o.scenes ? { scenes: o.scenes } : {}),
+      ...(o.signal ? { signal: o.signal } : {}),
+    });
+    const fps = o.input.edl.fps;
+    const times = o.moments.map((m) => Math.min(duration - 1 / fps, m.frame / fps));
+    const shots = await snapshotComposition({ dir, outDir: join(o.outDir, ".snap"), times, ...(o.signal ? { signal: o.signal } : {}) });
+    const written: string[] = [];
+    for (const [i, m] of o.moments.entries()) {
+      if (!shots[i]) break;
+      const file = join(o.outDir, `${String(i + 1).padStart(2, "0")}-${m.label.replace(/[^a-z0-9.-]+/gi, "-")}.png`);
+      await rename(shots[i]!, file);
+      written.push(file);
+    }
+    return written;
+  }
   const serveUrl = await bundleOnce();
   const files = await serveFiles(o.root, new Set(filesOf(o.input)));
   try {

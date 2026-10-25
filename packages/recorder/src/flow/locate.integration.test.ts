@@ -81,6 +81,14 @@ describe.skipIf(!available)("locator chain in Chromium", () => {
     expect(await result.locator.getAttribute("id")).toBe("correct");
   });
 
+  it("takes the match inside an open modal over the same text behind it", async () => {
+    await page.setContent(
+      '<main><span>Initiatives</span></main><div role="dialog" aria-modal="true" style="position:fixed;inset:40px;background:#fff"><nav><span id="target">Initiatives</span></nav></div>',
+    );
+    const result = await resolveTarget(page, click({ text: "Initiatives" }), opts);
+    expect(await result.locator.getAttribute("id")).toBe("target");
+  });
+
   it("falls back to label and excludes a disabled role match", async () => {
     await page.setContent(
       '<input disabled role="textbox" aria-label="Old name"><label for="field">Project name</label><input id="field">',

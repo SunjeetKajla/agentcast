@@ -1,10 +1,12 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Edl, Script, Storyboard, type CameraKey, type ShotSegment, type Timeline } from "@agentcast/shared";
 import { calloutSeconds, cropFor, inView, moveSeconds, readSeconds } from "@agentcast/video";
+import { checkRender, checkScenes, savedInput } from "./composition.ts";
 
-// Checks the director's edl.json. The director runs it (check-cli.ts) while it works; the worker runs
-// it again afterwards and doesn't take the agent's word for it.
+// Checks the director's work: edl.json, then (with a composition) the scene contract on the scene
+// files it wrote and `hyperframes check` on the composition rebuilt from the edit. The director runs
+// it (check-cli.ts) while it works; the worker runs it again afterwards and doesn't take its word.
 
 export type Issue = { severity: "error" | "warn"; at: string; message: string };
 export type CheckResult = { edl?: Edl; issues: Issue[] };
@@ -19,13 +21,26 @@ type WorkspaceTimeline = Pick<Timeline, "viewport" | "duration"> & {
   events: Pick<Timeline["events"][number], "t" | "stepId" | "kind" | "bbox">[];
 };
 
-export async function checkWorkspace(dir: string): Promise<CheckResult> {
+export type CheckOptions = {
+  /** Rebuild the composition and run `hyperframes check` (default true; needs composition/input.json). */
+  render?: boolean;
+  /** Values that must appear in no scene file (rule 5). */
+  secrets?: string[];
+  signal?: AbortSignal;
+};
+
+export async function checkWorkspace(dir: string, o: CheckOptions = {}): Promise<CheckResult> {
   let raw: unknown;
   try {
     raw = await readJson(dir, "edl.json");
   } catch (e) {
     return { issues: [error("edl.json", `isn't valid JSON: ${(e as Error).message}`)] };
   }
+  // What the director may not change (the brand, the music pick, the grammar) is put back from the
+  // baseline before checking, with a warning, so a slip there can't sink the rest of its edit.
+  const baselineRaw = (await readJson(dir, "edl.baseline.json")) as { style: Record<string, unknown> };
+  const restored = restoreFixed(raw, baselineRaw);
+  if (restored.length) await writeFile(join(dir, "edl.json"), JSON.stringify(raw, null, 2));
   const parsed = Edl.safeParse(raw);
   if (!parsed.success)
     return {
@@ -39,7 +54,38 @@ export async function checkWorkspace(dir: string): Promise<CheckResult> {
     .filter((f) => /^script\.[\w-]+\.json$/.test(f))
     .map((f) => f.slice("script.".length, -".json".length));
   for (const lang of langs) Script.parse(await readJson(dir, `data/script.${lang}.json`));
-  return { edl, issues: lint(edl, baseline, storyboard, timeline, langs) };
+  const issues = [
+    ...restored.map((key) => warn(`style.${key}`, "is fixed by the brand, the brief or the music pick: put back as the baseline has it")),
+    ...lint(edl, baseline, storyboard, timeline, langs),
+  ];
+  if (await savedInput(dir)) {
+    issues.push(...(await checkScenes(dir, edl, o.secrets)));
+    if (o.render !== false && !issues.some((i) => i.severity === "error"))
+      issues.push(...(await checkRender(dir, edl, o.signal)));
+  }
+  return { edl, issues };
+}
+
+/** The style fields the director doesn't own. */
+const FIXED = ["palette", "fonts", "music", "edit", "pacing"] as const;
+
+/** Puts the baseline's fixed style fields (and look.theme) back into `raw`; returns what changed. */
+function restoreFixed(raw: unknown, baseline: { style: Record<string, unknown> }): string[] {
+  const style = (raw as { style?: Record<string, unknown> } | undefined)?.style;
+  if (!style || typeof style !== "object") return [];
+  const changed: string[] = [];
+  for (const key of FIXED)
+    if (JSON.stringify(style[key]) !== JSON.stringify(baseline.style[key])) {
+      style[key] = baseline.style[key];
+      changed.push(key);
+    }
+  const look = style.look as Record<string, unknown> | undefined;
+  const theme = (baseline.style.look as Record<string, unknown>).theme;
+  if (look && typeof look === "object" && look.theme !== theme) {
+    look.theme = theme;
+    changed.push("look.theme");
+  }
+  return changed;
 }
 
 /** The rules, on parsed inputs. */
@@ -60,8 +106,8 @@ export function lint(
   if (motion.personality !== baseline.style.motion.personality)
     issues.push(error("style.motion.personality", `must stay "${baseline.style.motion.personality}" (the brief's)`));
   if (edl.style.edit !== baseline.style.edit) issues.push(error("style.edit", `must stay "${baseline.style.edit}"`));
-  if (edl.style.music.trackId)
-    issues.push(error("style.music", "music isn't rendered yet: leave style.music as it was"));
+  if (JSON.stringify(edl.style.music) !== JSON.stringify(baseline.style.music))
+    issues.push(error("style.music", "the music bed is the worker's pick: leave style.music as the baseline has it"));
   if (edl.style.look.theme !== baseline.style.look.theme)
     issues.push(error("style.look.theme", `must stay "${baseline.style.look.theme}" (the product's own)`));
   if (edl.style.captionStyle === "karaoke" && baseline.style.captionStyle === "block")
@@ -98,6 +144,10 @@ export function lint(
       return;
     }
     if (segment.kind === "stat") return fullText(at, "the label", segment.label);
+    if (segment.kind === "scene") {
+      for (const [name, text] of Object.entries(segment.copy ?? {})) fullText(at, `the ${name} copy`, text);
+      return;
+    }
     if (segment.kind === "montage") {
       if (segment.clips.length < 2 || segment.clips.length > 4) issues.push(error(at, "a montage has 2–4 clips"));
       for (const c of segment.clips)

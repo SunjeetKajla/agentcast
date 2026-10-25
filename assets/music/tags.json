@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "tracks": [
+    {
+      "id": "enter-the-party",
+      "file": "enter-the-party.mp3",
+      "title": "Enter the Party",
+      "artist": "Kevin MacLeod",
+      "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100240",
+      "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/): credit \"Enter the Party\" Kevin MacLeod (incompetech.com)",
+      "mood": ["energetic", "upbeat", "driving", "playful", "fun", "bright"],
+      "energy": 5,
+      "bpm": 120,
+      "firstBeat": 0.025,
+      "seconds": 188.056
+    },
+    {
+      "id": "electrodoodle",
+      "file": "electrodoodle.mp3",
+      "title": "Electrodoodle",
+      "artist": "Kevin MacLeod",
+      "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200079",
+      "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/): credit \"Electrodoodle\" Kevin MacLeod (incompetech.com)",
+      "mood": ["playful", "quirky", "tech", "electronic", "bright", "corporate"],
+      "energy": 3,
+      "bpm": 79.8,
+      "firstBeat": 0.035,
+      "seconds": 166.06
+    }
+  ]
+}

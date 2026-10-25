@@ -2,9 +2,10 @@ import { z } from "zod";
 import { FormFactor, HexColor, Rect, Seconds, TextByLang } from "./common.ts";
 import { MotionTokens } from "./motion.ts";
 
-// render/edl.json: written by the baseline and the director, rendered by Remotion (PRD §10, §9.7)
+// render/edl.json: written by the baseline and the director, compiled to a HyperFrames composition (PRD §10, §9.7.5)
 
-export const TransitionKind = z.enum(["cut", "fade", "slide", "zoom-through"]);
+/** v6 adds blur-zoom (Lovable's zoom through a blur) and ribbon (LangEase's colour sweep). */
+export const TransitionKind = z.enum(["cut", "fade", "slide", "zoom-through", "blur-zoom", "ribbon"]);
 
 export const CameraKey = z.object({
   /** Source seconds. */
@@ -54,6 +55,8 @@ export const StatementSegment = z.object({
   id: z.string(),
   beatId: z.string().optional(),
   text: TextByLang,
+  /** v6: the word(s) of `text` set in the accent colour. */
+  accent: TextByLang.optional(),
   kicker: TextByLang.optional(),
   seconds: Seconds,
   transitionIn: TransitionKind,
@@ -80,7 +83,26 @@ export const StatSegment = z.object({
   transitionIn: TransitionKind,
 });
 
-export const Segment = z.discriminatedUnion("kind", [ShotSegment, StatementSegment, MontageSegment, StatSegment]);
+/**
+ * v6: a scene the director wrote itself, `composition/compositions/<id>.html` (PRD §9.7.5). Its copy
+ * reaches the file as variables: variable → language → text.
+ */
+export const SceneSegment = z.object({
+  kind: z.literal("scene"),
+  id: z.string().regex(/^[a-z][a-z0-9-]*$/),
+  beatId: z.string().optional(),
+  copy: z.record(z.string().regex(/^[a-z][a-zA-Z0-9]*$/), TextByLang).optional(),
+  seconds: Seconds,
+  transitionIn: TransitionKind,
+});
+
+export const Segment = z.discriminatedUnion("kind", [
+  ShotSegment,
+  StatementSegment,
+  MontageSegment,
+  StatSegment,
+  SceneSegment,
+]);
 export type Segment = z.infer<typeof Segment>;
 
 export const Card = z.object({
@@ -127,7 +149,8 @@ export const EdlStyle = z.object({
 export type EdlStyle = z.infer<typeof EdlStyle>;
 
 export const Edl = z.object({
-  schemaVersion: z.literal(5),
+  /** v6 is additive, so a v5 edit still reads; writers emit 6. */
+  schemaVersion: z.union([z.literal(5), z.literal(6)]),
   fps: z.literal(30),
   style: EdlStyle,
   intro: Card,

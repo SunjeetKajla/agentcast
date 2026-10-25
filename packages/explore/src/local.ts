@@ -7,6 +7,7 @@ import {
   launchRecorderBrowser,
   replayKey,
   serializeLocator,
+  selectMatch,
   snapshotOutcome,
   type SemanticLocator,
   type RecorderBrowser,
@@ -494,6 +495,7 @@ export function localBrowserAdapter(
                 step.target,
                 options.signal,
                 optional ? 1500 : step === flow.steps[0] ? 30_000 : 8000,
+                step,
               );
             if (optional && !target) continue;
             if (
@@ -702,6 +704,8 @@ async function resolveSemantic(
   target: Target,
   signal?: AbortSignal,
   waitMs = 2000,
+  /** The step, so ties break the way the recorder breaks them (its near hint, the viewport, links). */
+  step?: Flow["steps"][number],
 ): Promise<
   | { locator: Locator; spec: SemanticLocator; strategy: LocatorStrategy }
   | undefined
@@ -737,10 +741,17 @@ async function resolveSemantic(
     let ambiguous=false;
     signal?.throwIfAborted();
     for (const candidate of candidates) {
-      const visible = candidate.locator.filter({ visible: true });
-      const count=await visible.count();
-      if(count===1) return {...candidate,locator:visible};
-      if(count>1) ambiguous=true;
+      // The recorder's own selection: one eligible match, or a tie it can break safely. A flow
+      // that rehearses here then films with the same element (Linear repeats nav labels in the
+      // page body and footer).
+      const selected = await selectMatch(
+        page,
+        candidate.locator,
+        step ?? { id: "check", action: "click", target },
+        100,
+      );
+      if (selected.match) return { ...candidate, locator: selected.match.locator };
+      if (selected.ambiguous) ambiguous = true;
     }
     if (Date.now() >= until || ambiguous && Date.now()-started>=2000) return undefined;
     await delay(250, undefined, { signal });

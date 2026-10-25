@@ -5,6 +5,14 @@
   "type": "module",
   "description": "Throwaway Phase 0 experiments, one folder per person (spikes/<name>-*). Results go in spikes/RESULTS.md.",
   "dependencies": {
-    "playwright-core": "^1.64.1"
+    "playwright-core": "^1.64.1",
+    "@agentcast/shared": "workspace:*",
+    "@agentcast/video": "workspace:*",
+    "@agentcast/director": "workspace:*",
+    "@agentcast/recorder": "workspace:*"
+  },
+  "scripts": {
+    "hf": "tsx kaustav-hyperframes/render-job.ts",
+    "hf-director": "tsx kaustav-hyperframes/director-workspace.ts"
   }
 }

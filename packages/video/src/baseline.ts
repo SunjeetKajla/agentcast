@@ -156,7 +156,7 @@ export function baselineEdl(o: BaselineInput): Edl {
   const card = cardSeconds(motion);
   const brand = o.brand;
   return Edl.parse({
-    schemaVersion: 5,
+    schemaVersion: 6,
     fps: 30,
     style: {
       palette: brand ? brand.palette : DEFAULT_PALETTE,

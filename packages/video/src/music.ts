@@ -1,4 +1,22 @@
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { MusicLibrary as MusicLibrarySchema } from "@agentcast/shared";
 import type { Edl, MusicLibrary, MusicTrack, Personality } from "./compat";
+
+/** The music library folder: assets/music/ in the repo, or AGENTCAST_MUSIC_DIR. */
+export const musicDir = () => process.env.AGENTCAST_MUSIC_DIR ?? fileURLToPath(new URL("../../../assets/music/", import.meta.url));
+
+/** assets/music/tags.json, validated; undefined when there's no library. */
+export async function loadMusicLibrary(dir = musicDir()): Promise<MusicLibrary | undefined> {
+  const text = await readFile(`${dir.replace(/\/$/, "")}/tags.json`, "utf8").catch(() => undefined);
+  return text ? MusicLibrarySchema.parse(JSON.parse(text)) : undefined;
+}
+
+/** Levels by grammar (PRD §9.7.2): music up front in a trailer, a quiet bed under a guide. */
+export const MUSIC_LEVEL: Record<Edl["style"]["edit"], { gainDb: number; duckDb: number }> = {
+  trailer: { gainDb: -6, duckDb: -13 },
+  guide: { gainDb: -18, duckDb: -10 },
+};
 
 /** Moods that suit each motion personality, best first. */
 const MOODS: Record<Personality, string[]> = {

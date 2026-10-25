@@ -6,5 +6,7 @@ export default defineConfig({
     exclude: ["**/node_modules/**", "apps/demoboard/**", "apps/web/.next/**"],
     environment: "node",
     passWithNoTests: true,
+    // No network from tests: compositions use the fonts Chrome has instead of fetching the brand's.
+    env: { AGENTCAST_FONTS: "off" },
   },
 });

@@ -1,4 +1,4 @@
-import { copyFile, mkdir, rename } from "node:fs/promises";
+import { access, copyFile, mkdir, rename } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import {
   Brand,
@@ -15,6 +15,7 @@ import { fixtureStages } from "@agentcast/explore";
 import {
   assignNarration,
   ensureSfx,
+  measureVideo,
   planParts,
   renderVideo,
   scriptCaptions,
@@ -46,10 +47,12 @@ export async function videoInput(
   aspect: Aspect,
   lang: string,
   height: number,
+  /** The edit to render (default: render/edl.json). */
+  edit?: Edl,
 ): Promise<VideoInput> {
   const [edl, timeline, storyboard, script, product, voice, brand] =
     await Promise.all([
-      ctx.read(jobPaths.edl, Edl),
+      edit ?? ctx.read(jobPaths.edl, Edl),
       ctx.read(jobPaths.timeline("desktop"), Timeline),
       ctx.read(jobPaths.storyboard, Storyboard),
       ctx.read(jobPaths.script(lang), Script),
@@ -64,6 +67,15 @@ export async function videoInput(
   const narration = voice ? assignNarration(storyboard, voice, edl) : [];
   const plan = planParts(edl, narration);
   const logo = brand?.logo;
+  // The music bed the direct stage picked and copied in (PRD §9.7.2).
+  const music =
+    edl.style.music.trackId &&
+    (await access(ctx.path("render/audio/music.mp3")).then(
+      () => true,
+      () => false,
+    ))
+      ? "render/audio/music.mp3"
+      : undefined;
   const sfx =
     edl.style.sfx === "auto" ||
     edl.segments.some((s) => s.kind === "shot" && s.sfx?.length);
@@ -94,7 +106,9 @@ export async function videoInput(
     },
     copy: { title: script.titleCard, cta: script.cta },
     height,
-    ...(sfx ? { audio: { sfx: await soundEffects(ctx) } } : {}),
+    ...(sfx || music
+      ? { audio: { sfx: sfx ? await soundEffects(ctx) : {}, ...(music ? { music } : {}) } }
+      : {}),
   };
 }
 
@@ -135,6 +149,8 @@ export async function renderTo(
     out: staged,
     signal: ctx.signal,
     onProgress,
+    // The director's scene files (PRD §9.7.5); the catalogue draws every other part.
+    scenes: ctx.path("render/composition/compositions"),
   });
   await rename(staged, out);
   ctx.artifact(rel);
@@ -156,4 +172,10 @@ export const preview: StageFn = async (ctx) => {
   ctx.log(
     `Preview: ${result.frames} frames in ${result.seconds.toFixed(1)} s.`,
   );
+  // The reference-look numbers (PRD FR-88), so an edit that stands still or plays quiet shows here.
+  const m = await measureVideo(ctx.path(jobPaths.preview), ctx.signal).catch(() => undefined);
+  if (m) {
+    const line = `still ${(m.stillShareExEnd * 100).toFixed(0)}% (target ≤ 10%, end card excluded), ${m.lufs ?? "no"} LUFS`;
+    ctx.log(`Reference check: ${line}.`, m.stillShareExEnd > 0.1 || (m.lufs !== undefined && Math.abs(m.lufs + 14) > 1.5) ? "warn" : "info");
+  }
 };

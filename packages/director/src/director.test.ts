@@ -135,6 +135,21 @@ describe("the check", () => {
     expect(errors).toMatch(/overlaps the title/);
   });
 
+  it("puts back the style fields the director doesn't own, with a warning, instead of failing", async () => {
+    await edit((edl) => {
+      (edl.style as Partial<Edl["style"]>).music = undefined;
+      edl.style.palette = { ...edl.style.palette, accent: "#ff0000" };
+    });
+    const result = await checkWorkspace(dir);
+    expect(errorsOf(result)).toEqual([]);
+    expect(result.issues.filter((i) => i.severity === "warn").map((i) => i.at)).toEqual(
+      expect.arrayContaining(["style.palette", "style.music"]),
+    );
+    const saved = JSON.parse(await readFile(join(dir, "edl.json"), "utf8")) as Edl;
+    expect(saved.style.music).toEqual(baseline.style.music);
+    expect(saved.style.palette).toEqual(baseline.style.palette);
+  });
+
   it("reports broken JSON and schema errors instead of throwing", async () => {
     await writeFile(join(dir, "edl.json"), "{ not json");
     expect(errorsOf(await checkWorkspace(dir))[0]!.message).toMatch(/valid JSON/);

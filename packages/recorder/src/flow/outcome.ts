@@ -320,11 +320,13 @@ async function check(
         step.target?.placeholder,
         "",
       ].includes(expectation.target);
+      // A check on the field this step typed into reads that field, not another one with the same label
+      // (React Bits: the page's "Search components" box opens a dialog whose input gets the text).
       const locator =
-        (await byLabel.count()) === 1
-          ? byLabel
-          : sameTarget
-            ? options.locator
+        sameTarget && options.locator
+          ? options.locator
+          : (await byLabel.count()) === 1
+            ? byLabel
             : undefined;
       return !!locator && (await controlValue(locator)) === expectation.value;
     }
