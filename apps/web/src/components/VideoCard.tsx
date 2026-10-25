@@ -22,7 +22,7 @@ export default function VideoCard({ job }: { job: Job }) {
       onMouseLeave={() => video.current?.pause()}
     >
       <motion.div
-        whileHover={{ y: -6, boxShadow: "0 16px 40px rgba(139,92,246,0.25)" }}
+        whileHover={{ y: -6, boxShadow: "0 16px 40px rgba(56,189,248,0.25)" }}
         transition={{ type: "spring", stiffness: 350, damping: 22 }}
         className="group cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-[#121215]/80 transition-colors hover:border-white/20"
       >

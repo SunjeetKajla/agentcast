@@ -213,7 +213,7 @@ export default function VideoPlayer({
           className="group/scrub relative mb-3 h-2 w-full cursor-pointer rounded-full bg-white/20 transition-all hover:h-2.5"
         >
           <div
-            className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-accent to-purple-400"
+            className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-accent to-sky-300"
             style={{ width: `${progressPercent}%` }}
           />
           <div

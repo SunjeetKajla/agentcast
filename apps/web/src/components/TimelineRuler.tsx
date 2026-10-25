@@ -64,7 +64,7 @@ export default function TimelineRuler() {
             <span ref={code} className="absolute bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[10px] text-accent/80">
               {timecode(0)}
             </span>
-            <div className="mx-auto h-5 w-[2px] rounded-full bg-accent shadow-[0_0_10px_rgba(139,92,246,0.7)]" />
+            <div className="mx-auto h-5 w-[2px] rounded-full bg-accent shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
           </div>
         </div>
       </div>

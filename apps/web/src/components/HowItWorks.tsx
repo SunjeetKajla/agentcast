@@ -30,7 +30,7 @@ export default function HowItWorks() {
         });
         tl.fromTo("[data-step-bar]", ...settle({ scaleX: 0, transformOrigin: "left center", duration: cards.length }), 0);
         cards.forEach((card, i) => {
-          tl.to(card, { autoAlpha: 1, scale: 1, borderColor: "rgba(139,92,246,0.5)", duration: 0.6 }, i);
+          tl.to(card, { autoAlpha: 1, scale: 1, borderColor: "rgba(56,189,248,0.5)", duration: 0.6 }, i);
           if (i > 0) tl.to(cards[i - 1]!, { borderColor: "rgba(255,255,255,0.08)", duration: 0.4 }, i);
         });
         gsap.fromTo("[data-step-head]", ...settle({

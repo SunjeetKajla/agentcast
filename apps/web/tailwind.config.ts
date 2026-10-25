@@ -21,12 +21,12 @@ const config: Config = {
           foreground: "#A1A1AA",
         },
         accent: {
-          DEFAULT: "#8B5CF6",
+          DEFAULT: "#38BDF8",
           foreground: "#FAFAFA",
         },
         border: "rgba(255, 255, 255, 0.08)",
         input: "rgba(255, 255, 255, 0.08)",
-        ring: "#8B5CF6",
+        ring: "#38BDF8",
       },
       borderRadius: {
         xl: "14px",
