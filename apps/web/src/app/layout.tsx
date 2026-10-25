@@ -13,6 +13,14 @@ export const metadata: Metadata = {
   title: "AgentCast — link in. video out.",
   description:
     "Paste your product's URL. Web agents explore it, record the flows worth showing, and edit them into a narrated demo video.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -23,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {/* Marks the page as scripted before first paint, so hero motion starts hidden only when it will run. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
       </head>
