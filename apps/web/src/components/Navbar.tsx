@@ -32,7 +32,12 @@ export default function Navbar() {
         {/* Left: Logo */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5 text-base font-medium tracking-tight text-white group">
-            <span className="text-xl transition-transform duration-300 group-hover:scale-110">🎬</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.svg"
+              alt="AgentCast logo"
+              className="h-6 w-6 rounded-md shadow-sm transition-transform duration-300 group-hover:scale-110 object-contain"
+            />
             <span className="font-semibold tracking-tight text-white font-serif italic text-lg">
               AgentCast
             </span>

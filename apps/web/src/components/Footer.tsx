@@ -9,7 +9,8 @@ export default function Footer() {
         {/* Brand */}
         <div className="flex flex-col items-center gap-1 sm:items-start">
           <div className="flex items-center gap-2">
-            <span className="text-base">🎬</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="AgentCast" className="h-4 w-4 rounded object-contain" />
             <span className="font-serif italic font-medium text-white text-sm">
               AgentCast
             </span>
