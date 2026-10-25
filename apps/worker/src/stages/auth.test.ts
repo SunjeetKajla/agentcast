@@ -53,6 +53,7 @@ beforeEach(async () => {
     ...io,
     log: vi.fn(),
     progress: vi.fn(),
+    when: vi.fn(() => new Promise<void>(() => {})),
   } as unknown as StageContext;
 });
 afterEach(async () => {
@@ -71,6 +72,28 @@ const deps = () => ({
 });
 
 describe("real auth stage", () => {
+  it("waits for the stage's completion signal while the ordinary Chrome window is open", async () => {
+    const services = deps();
+    let finish!: () => void;
+    const done = new Promise<void>((resolve) => { finish = resolve; });
+    vi.mocked(ctx.when).mockReturnValue(done);
+    let opened!: () => void;
+    const ready = new Promise<void>((resolve) => { opened = resolve; });
+    vi.mocked(services.browser.signIn!).mockImplementation(async (options) => {
+      options.onOpen?.();
+      opened();
+      await options.done;
+      return state;
+    });
+    const run = makeAuth(services)(ctx);
+    await ready;
+    expect(ctx.when).toHaveBeenCalledWith("signed-in");
+    expect(services.tf.uploadProfile).not.toHaveBeenCalled();
+    finish();
+    await run;
+    expect(services.tf.uploadProfile).toHaveBeenCalledTimes(1);
+    expect(ctx.progress).toHaveBeenCalledWith(0.5, "Saving your signed-in session");
+  });
   it("seals only the authorized product state and omits invalid session-cookie expiry on upload", async () => {
     const services = deps();
     await makeAuth(services)(ctx);
@@ -121,6 +144,7 @@ describe("real auth stage", () => {
     expect(await makeAuth(services)(ctx)).toMatchObject({ skipped: true });
     expect(services.browser.signIn).not.toHaveBeenCalled();
     expect(services.tf.createProfile).not.toHaveBeenCalled();
+    expect(ctx.when).not.toHaveBeenCalled();
     expect(await authRequest(ctx)).toEqual({});
   });
   it("uses Vault item IDs for agents and the sealed local session for rehearsal", async () => {

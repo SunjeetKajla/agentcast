@@ -112,8 +112,10 @@ export function makeAuth(
           "The configured browser adapter does not support ordinary Chrome sign-in.",
         );
       ctx.log(
-        "Sign in in the Chrome window, then close it after the product dashboard is visible.",
+        "Sign in in the Chrome window on the worker's machine. When the product dashboard is visible, press I'm signed in on the job page or close the window.",
       );
+      const done = deps.done ?? ctx.when("signed-in");
+      ctx.progress(0.05, "Opening the sign-in window on the worker's machine");
       captured = SessionState.parse(
         await browser.signIn({
           url: ctx.config.url,
@@ -123,11 +125,13 @@ export function makeAuth(
             site.replace(/[^a-z0-9.-]/gi, "_"),
           ),
           signal: ctx.signal,
-          done: deps.done,
-          onOpen: () => ctx.progress(0.1, "Waiting for you to sign in"),
+          done,
+          onOpen: () => ctx.progress(0.1, "Sign in in Chrome, then press I'm signed in or close the window"),
         }),
       );
     } else ctx.log("Reusing the encrypted session saved by this job.");
+    ctx.signal.throwIfAborted();
+    ctx.progress(0.5, "Saving your signed-in session");
     // Only the authorized site's state is exported; identity-provider cookies stay in Chrome.
     const state = SessionState.parse({
       cookies: captured.cookies.filter(
@@ -161,6 +165,7 @@ export function makeAuth(
     await rename(temp, file);
     let profileId: string | undefined;
     if (ctx.config.auth.mode === "sign-in-once") {
+      ctx.progress(0.8, "Sharing your session with the exploration agents");
       const tf = deps.tf ?? new TinyFish();
       profileId = ctx.config.auth.profileId;
       if (!profileId) {

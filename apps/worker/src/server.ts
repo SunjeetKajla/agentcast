@@ -86,6 +86,16 @@ export function buildServer(orchestrator: Orchestrator, store: JobStore, logger:
     reply.code(202).send(await orchestrator.cancel(req.params.id)),
   );
 
+  app.post<{ Params: IdParams & { stage: string; name: string } }>(
+    "/jobs/:id/stages/:stage/signals/:name",
+    async (req, reply) => {
+      const parsed = z.object({ attempt: z.number().int().positive() }).strict().safeParse(req.body);
+      if (!parsed.success) throw new WorkerError(400, "A current stage attempt number is required.");
+      const { id, stage, name } = req.params;
+      return reply.code(202).send(await orchestrator.signal(id, stage, name, parsed.data.attempt));
+    },
+  );
+
   // Server-sent events: replays the job's events after Last-Event-ID (or ?after=), then follows live ones.
   app.get<{ Params: IdParams; Querystring: { after?: string } }>("/jobs/:id/events", async (req, reply) => {
     const bus = await orchestrator.events(req.params.id);

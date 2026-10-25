@@ -1,6 +1,7 @@
 "use client";
 
 import { STAGES, type Job, type JobEvent } from "@agentcast/shared";
+import SignInCompletion from "./SignInCompletion";
 
 // What the pipeline is doing right now, and, while the coding agent directs the edit, what it's doing
 // step by step (Claude Code or Codex, whichever the worker uses).
@@ -40,6 +41,11 @@ export default function NowCard({ job, events }: { job: Job; events: JobEvent[] 
               {s.attempts > 1 && <span className="text-xs text-amber-400">attempt {s.attempts}</span>}
             </div>
             <p className="mt-1 text-sm text-white/60">{s.message ?? DESCRIBE[info.name]}</p>
+            {info.name === "auth" && job.config.auth.mode !== "public" &&
+              !["cancelled", "failed", "done"].includes(job.status) &&
+              (s.progress ?? 0) >= 0.1 && (s.progress ?? 0) < 0.5 && (
+                <SignInCompletion key={`${job.id}/${s.attempts}`} jobId={job.id} attempt={s.attempts} />
+              )}
             <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
               {s.progress !== undefined ? (
                 <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${Math.round(s.progress * 100)}%` }} />

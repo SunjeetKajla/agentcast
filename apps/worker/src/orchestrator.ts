@@ -28,6 +28,7 @@ type Live = {
   bus: EventBus;
   abort: AbortController;
   saving: Promise<void>;
+  signals: Map<string, { promise: Promise<void>; resolve: () => void; reject: (reason: unknown) => void }>;
 };
 
 const TERMINAL: JobStatus[] = ["done", "failed", "cancelled"];
@@ -171,6 +172,20 @@ export class Orchestrator {
     return structuredClone(live.job);
   }
 
+  /** A human completion signal, never credentials. An attempt number prevents stale-tab submissions. */
+  async signal(id: string, stage: string, name: string, attempt: number): Promise<{ accepted: true }> {
+    const live = await this.require(id);
+    if (stage !== "auth" || name !== "signed-in") throw new WorkerError(400, "unsupported stage signal");
+    const state = live.job.stages.auth;
+    const waiter = live.signals.get(`auth/${attempt}/signed-in`);
+    if (live.abort.signal.aborted || TERMINAL.includes(live.job.status) ||
+        live.job.config.auth.mode === "public" || state.status !== "running" ||
+        state.attempts !== attempt || !waiter)
+      throw new WorkerError(409, "This sign-in attempt is no longer waiting. Refresh the job page.");
+    waiter.resolve();
+    return { accepted: true };
+  }
+
   /** On start: carry on with every unfinished job. Stages that were running start again. */
   async resumeAll(): Promise<string[]> {
     const resumed: string[] = [];
@@ -247,11 +262,18 @@ export class Orchestrator {
     const bus = await EventBus.open(id, join(this.store.dir(id), jobPaths.events), (err) =>
       this.log.error({ err, jobId: id }, "couldn't append to events.ndjson"),
     );
+    const signals: Live["signals"] = new Map();
+    const abort = new AbortController();
+    abort.signal.addEventListener("abort", () => {
+      for (const waiter of signals.values()) waiter.reject(abort.signal.reason);
+      signals.clear();
+    }, { once: true });
     return {
       job,
       bus,
-      abort: new AbortController(),
+      abort,
       saving: Promise.resolve(),
+      signals,
     };
   }
 
@@ -302,6 +324,12 @@ export class Orchestrator {
         finishedAt: new Date().toISOString(),
         error: { message: errorMessage(err) },
       });
+    } finally {
+      const prefix = `${name}/${attempt}/`;
+      for (const [key, waiter] of live.signals) if (key.startsWith(prefix)) {
+        live.signals.delete(key);
+        waiter.reject(new Error("The stage attempt has finished."));
+      }
     }
     this.advance(live);
   }
@@ -380,6 +408,24 @@ export class Orchestrator {
       dir: this.store.dir(live.job.id),
       signal: live.abort.signal,
       bus: live.bus,
+      when: (name) => {
+        if (live.abort.signal.aborted) return Promise.reject(live.abort.signal.reason);
+        const state = live.job.stages[stage];
+        if (state.status !== "running" || state.attempts !== attempt)
+          return Promise.reject(new Error("The stage attempt is not running."));
+        const key = `${stage}/${attempt}/${name}`;
+        let waiter = live.signals.get(key);
+        if (!waiter) {
+          let resolve!: () => void;
+          let reject!: (reason: unknown) => void;
+          const promise = new Promise<void>((yes, no) => { resolve = yes; reject = no; });
+          // Closing the Chrome window can finish the stage without consuming this signal.
+          void promise.catch(() => {});
+          waiter = { promise, resolve, reject };
+          live.signals.set(key, waiter);
+        }
+        return waiter.promise;
+      },
     });
   }
 

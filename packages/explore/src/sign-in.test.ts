@@ -95,9 +95,14 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
         signInLocally({ url, profileDir, headless: true }),
       ).rejects.toThrow("already open");
       const state = await first;
+      expect(state.cookies.find((cookie) => cookie.name === "sid")).toMatchObject({
+        value: "session-secret", httpOnly: true,
+      });
       expect(
         state.cookies.find((cookie) => cookie.name === "pref")?.value,
       ).toBe("dark");
+      expect(state.origins.find((origin) => origin.origin === new URL(url).origin)?.localStorage)
+        .toEqual([{ name: "token", value: "local-token" }]);
       expect(hits).toBe(1);
     }, 60_000);
     it("cancels the process and releases the profile reservation", async () => {

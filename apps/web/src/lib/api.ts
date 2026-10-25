@@ -39,6 +39,12 @@ export const createJob = (config: JobConfigInput) => call<Job>("/api/jobs", json
 export const listJobs = () => call<{ jobs: Job[] }>("/api/jobs").then((r) => r.jobs);
 export const getJob = (id: string) => call<Job>(`/api/jobs/${id}`);
 export const cancelJob = (id: string) => call<Job>(`/api/jobs/${id}/cancel`, { method: "POST", signal: AbortSignal.timeout(5000) });
+/** Complete only the sign-in attempt currently displayed; never send session secrets through the UI. */
+export const finishSignIn = (id: string, attempt: number) =>
+  call<{ accepted: true }>(`/api/jobs/${id}/stages/auth/signals/signed-in`, {
+    ...json({ attempt }),
+    signal: AbortSignal.timeout(5000),
+  });
 export const decide = <G extends GateName>(id: string, gate: G, decision: GateDecision<G>) =>
   call<Job>(`/api/jobs/${id}/gates/${gate}`, json(decision));
 

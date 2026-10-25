@@ -23,6 +23,8 @@ export type StageContext = {
   readonly dir: string;
   /** Aborted when the job is cancelled. Pass it to every long call. */
   readonly signal: AbortSignal;
+  /** Wait for a human signal scoped to this stage attempt. Rejected on cancel or stage exit. */
+  when(name: string): Promise<void>;
   /** Absolute path of a job-relative path. */
   path(rel: string): string;
   /** Read and validate a JSON artifact. */
@@ -55,6 +57,7 @@ export function createContext(opts: {
   dir: string;
   signal: AbortSignal;
   bus: EventBus;
+  when?: (name: string) => Promise<void>;
 }): StageContext {
   const { bus, stage, dir } = opts;
   const path = (rel: string) => join(dir, rel);
@@ -68,6 +71,7 @@ export function createContext(opts: {
     config: opts.config,
     dir,
     signal: opts.signal,
+    when: opts.when ?? (() => Promise.reject(new Error("Stage signals are unavailable in this context."))),
     path,
     read: (rel, schema) => readArtifact(path(rel), schema),
     async write(rel, schema, data) {

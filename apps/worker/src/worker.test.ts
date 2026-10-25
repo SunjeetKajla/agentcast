@@ -369,6 +369,84 @@ describe("API", () => {
 });
 
 describe("lifecycle", () => {
+  test("sign-in signals target the current job/attempt, are idempotent, and expire with the stage", async () => {
+    const contexts = new Map<string, StageContext>();
+    let release!: () => void;
+    const saving = new Promise<void>((resolve) => { release = resolve; });
+    const worker = startWith({ auth: async (ctx) => {
+      const done = ctx.when("signed-in");
+      contexts.set(ctx.jobId, ctx);
+      await done;
+      await saving;
+    } });
+    const signal = (id: string, attempt = 1, stage = "auth", name = "signed-in") =>
+      worker.app.inject({ method: "POST", url: `/jobs/${id}/stages/${stage}/signals/${name}`, payload: { attempt } });
+    const a = await create(worker, config({ auth: { mode: "sign-in-once" } }));
+    const b = await create(worker, config({ auth: { mode: "sign-in-once" } }));
+    await until(worker, a.id, () => contexts.has(a.id));
+    await until(worker, b.id, () => contexts.has(b.id));
+    expect((await signal("job_missing")).statusCode).toBe(404);
+    expect((await signal(a.id, 1, "discover")).statusCode).toBe(400);
+    expect((await signal(a.id, 1, "auth", "anything")).statusCode).toBe(400);
+    expect((await signal(a.id, 2)).statusCode).toBe(409);
+    expect((await worker.app.inject({ method: "POST", url: `/jobs/${a.id}/stages/auth/signals/signed-in`, payload: {} })).statusCode).toBe(400);
+    expect((await signal(a.id)).statusCode).toBe(202);
+    expect((await signal(a.id)).statusCode).toBe(202);
+    release();
+    await until(worker, a.id, waitingAt("gate-flows"));
+    expect((await worker.orchestrator.get(b.id))?.stages.auth.status).toBe("running");
+    expect((await signal(a.id)).statusCode).toBe(409);
+    await worker.orchestrator.cancel(b.id);
+    expect((await signal(b.id)).statusCode).toBe(409);
+    await expect(contexts.get(b.id)!.when("signed-in")).rejects.toThrow();
+  });
+
+  test("public jobs and attempts without a registered waiter reject completion", async () => {
+    const worker = startWith({ auth: async (ctx) => {
+      await new Promise<void>((resolve) => ctx.signal.addEventListener("abort", () => resolve(), { once: true }));
+    } });
+    for (const auth of [{ mode: "public" }, { mode: "sign-in-once" }] as const) {
+      const { id } = await create(worker, config({ auth }));
+      const response = await worker.app.inject({ method: "POST", url: `/jobs/${id}/stages/auth/signals/signed-in`, payload: { attempt: 1 } });
+      expect(response.statusCode).toBe(409);
+      await worker.orchestrator.cancel(id);
+    }
+  });
+
+  test("a worker restart requires a new completion signal for the new auth attempt", async () => {
+    let observed!: StageContext;
+    const auth = async (ctx: StageContext) => { observed = ctx; await ctx.when("signed-in"); };
+    const first = startWith({ auth });
+    const { id } = await create(first, config({ auth: { mode: "sign-in-once" } }));
+    await until(first, id, () => Boolean(observed));
+    const old = observed;
+    await first.close();
+    const next = startWith({ auth });
+    await next.orchestrator.resumeAll();
+    await until(next, id, (job) => job.stages.auth.attempts === 2 && observed !== old);
+    const signal = (attempt: number) => next.app.inject({ method: "POST", url: `/jobs/${id}/stages/auth/signals/signed-in`, payload: { attempt } });
+    expect((await signal(1)).statusCode).toBe(409);
+    expect((await signal(2)).statusCode).toBe(202);
+    await until(next, id, waitingAt("gate-flows"));
+    expect((await next.orchestrator.get(id))?.stages.auth.status).toBe("done");
+  });
+
+  test("a stage that fails or finishes by window closure clears its unused signal", async () => {
+    for (const fail of [false, true]) {
+      let context!: StageContext;
+      const worker = startWith({ auth: async (ctx) => {
+        context = ctx;
+        void ctx.when("signed-in");
+        if (fail) throw new Error("window could not open");
+      } });
+      const { id } = await create(worker, config({ auth: { mode: "sign-in-once" } }));
+      await until(worker, id, (job) => job.stages.auth.status === (fail ? "failed" : "done"));
+      await expect(context.when("signed-in")).rejects.toThrow("not running");
+      const res = await worker.app.inject({ method: "POST", url: `/jobs/${id}/stages/auth/signals/signed-in`, payload: { attempt: 1 } });
+      expect(res.statusCode).toBe(409);
+    }
+  });
+
   test("cancel aborts active work before replying, persists it, and suppresses late activity", async () => {
     let stageContext!: StageContext;
     let stopped = false;
