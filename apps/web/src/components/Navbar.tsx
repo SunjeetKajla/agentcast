@@ -31,16 +31,6 @@ export default function Navbar() {
       >
         {/* Left: Logo */}
         <div className="flex items-center gap-3">
-          {!isHome && (
-            <Link
-              href="/"
-              className="mr-2 hidden items-center gap-1.5 text-xs text-white/70 transition-colors hover:text-white sm:flex"
-            >
-              <span>←</span>
-              <span>Home</span>
-            </Link>
-          )}
-
           <Link href="/" className="flex items-center gap-2.5 text-base font-medium tracking-tight text-white group">
             <span className="text-xl transition-transform duration-300 group-hover:scale-110">🎬</span>
             <span className="font-semibold tracking-tight text-white font-serif italic text-lg">
@@ -49,8 +39,16 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Center: Navigation Links (sections of the home page) */}
+        {/* Center: Navigation Links */}
         <div className="hidden md:flex items-center gap-8 text-xs font-medium text-white/60">
+          <Link
+            href="/"
+            className={`transition-colors hover:text-white ${
+              isHome ? "text-white" : ""
+            }`}
+          >
+            Home
+          </Link>
           <Link href="/#how-it-works" className="hover:text-white transition-colors">
             How it works
           </Link>
