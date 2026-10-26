@@ -8,9 +8,9 @@ import { MOTION_OK, gsap, useGSAP, settle } from "@/lib/motion";
 // The five cards that frame the hero. Each floats on its own loop (framer-motion), and a GSAP layer
 // around it drifts at its own depth as the hero scrolls away, so the cards part like a camera pushing in.
 const CARDS = [
-  { src: "photo-1618005182384-a83a8bd57fbe", pos: "left-[8%] top-[10%]", box: "w-44 h-64 -rotate-12", float: -12, dur: 7, delay: 0, depth: 1.1, x: -60 },
-  { src: "photo-1550745165-9bc0b252726f", pos: "left-[3%] top-[38%]", box: "w-60 h-36 -rotate-6", float: 10, dur: 6, delay: 1, depth: 0.6, x: -90 },
-  { src: "photo-1507238691740-187a5b1d37b8", pos: "left-[10%] bottom-[12%]", box: "w-40 h-56 rotate-6", float: -8, dur: 8, delay: 0.5, depth: 0.9, x: -50 },
+  { src: "photo-1526374965328-7f61d4dc18c5", pos: "left-[8%] top-[10%]", box: "w-44 h-64 -rotate-12", float: -12, dur: 7, delay: 0, depth: 1.1, x: -60 },
+  { src: "photo-1629654297299-c8506221ca97", pos: "left-[3%] top-[38%]", box: "w-60 h-36 -rotate-6", float: 10, dur: 6, delay: 1, depth: 0.6, x: -90 },
+  { src: "photo-1518770660439-4636190af475", pos: "left-[10%] bottom-[12%]", box: "w-40 h-56 rotate-6", float: -8, dur: 8, delay: 0.5, depth: 0.9, x: -50 },
   { src: "photo-1555066931-4365d14bab8c", pos: "right-[8%] top-[12%]", box: "w-44 h-64 rotate-12", float: 12, dur: 7.5, delay: 1.5, depth: 1.2, x: 60 },
   { src: "photo-1558494949-ef010cbdcc31", pos: "right-[6%] bottom-[16%]", box: "w-64 h-40 -rotate-6", float: -10, dur: 6.5, delay: 2, depth: 0.7, x: 90 },
 ];

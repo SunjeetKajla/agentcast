@@ -201,7 +201,7 @@ export default function FlowReview({
                   disabled={!replayed || sending || working}
                   onChange={(e) => update(i, { selected: e.target.checked })}
                   aria-label={`Film "${row.title}"`}
-                  className="mt-1.5 h-4 w-4 cursor-pointer accent-[#8B5CF6]"
+                  className="mt-1.5 h-4 w-4 cursor-pointer accent-[#38BDF8]"
                 />
                 <div className="min-w-0 flex-1 space-y-2">
                   <input
