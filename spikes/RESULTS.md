@@ -27,3 +27,21 @@ The saved public `Exploring Fashion` flow from `job_mvmtzozp39d7a5` replayed suc
 ### Integration with main
 
 Local integration preserves main's full `recordFlow` compiler, semantic replay format, AI director/still review/revisions, voiceover setting and gate-action UI/API. It adds the branch's cancellation cleanup, bounded inspection/evaluation recovery, failed-rehearsal approval protection and reusable successful-take checkpoints. Validation includes the full offline suite, workspace typechecks, production web build, 52 installed-Chrome integration checks (including actual recordings and overlay recovery), and a short real Remotion H.264 render. These fixture checks spend no TinyFish/ElevenLabs quota and do not imply arbitrary live sites always succeed.
+
+## S8: launch film teardown (2026-10-28)
+
+Question: what makes the best SaaS launch films feel designed, and how far is our output from them?
+We measured 17 official launch films (Raycast, Lovable, Linear, v0, Notion, Framer, Attio, Superhuman, Arc, Dia,
+Cursor, LangEase, and a Linear concept film) and two of our renders with ffmpeg/ffprobe (`spikes/s8-teardown/`),
+and read each one frame by frame.
+
+- 12 of 16 product films have no voice-over; music and on-screen type carry them.
+- They use one of two grammars: rapid-fire (4–8 scene changes per 10 s, ≤ 3% still time) or a one-take glide
+  over rebuilt UI. Ours sits between them: 1.4–2.7 changes per 10 s with 16–35% still time.
+- In the best films, UI events land on sound effects at 2–3× chance. Ours land at chance.
+- Their music builds to a plateau at 50–75% of the film. Ours swings ±10 dB every 2 s because of voice ducking.
+- Their subject fills 30–90% of the frame width. Our acted element is about 0.1–0.2% of the frame.
+
+Outcome: proposals in `docs/LAUNCH_FILM_TEARDOWN.md` §6 and `docs/ARCHITECTURE_REVIEW.md` §3. These include
+UI captured as layers, motion primitives, music-led launch mode, a sound engine bound to the timeline, and a film lint.
+They are not adopted yet, so the PRD is unchanged.

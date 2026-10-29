@@ -1,0 +1,361 @@
+{
+ "name": "cursor-3",
+ "duration": 90.4,
+ "fps": 23.98,
+ "size": "1920x1080",
+ "cuts": 22,
+ "cuts_per_10s": 2.43,
+ "shot_median": 3.46,
+ "shot_mean": 3.93,
+ "shot_p10": 1.29,
+ "shot_p90": 5.9,
+ "cut_times": [
+  13.6,
+  14.81,
+  21.98,
+  26.61,
+  29.11,
+  30.78,
+  35.29,
+  36.91,
+  40.37,
+  45.0,
+  51.01,
+  54.3,
+  56.81,
+  62.27,
+  63.44,
+  68.23,
+  71.11,
+  75.33,
+  80.29,
+  84.04,
+  86.29,
+  89.3
+ ],
+ "soft_transitions": 0,
+ "scene_changes_per_10s": 2.43,
+ "scene_median": 3.46,
+ "soft_times": [],
+ "still_runs": [
+  [
+   14.81,
+   2.63
+  ],
+  [
+   17.93,
+   0.63
+  ],
+  [
+   20.52,
+   0.96
+  ],
+  [
+   23.19,
+   0.96
+  ],
+  [
+   33.74,
+   1.04
+  ],
+  [
+   36.91,
+   1.63
+  ],
+  [
+   39.04,
+   0.83
+  ],
+  [
+   45.0,
+   0.67
+  ],
+  [
+   46.17,
+   1.5
+  ],
+  [
+   48.38,
+   1.67
+  ],
+  [
+   56.81,
+   0.5
+  ],
+  [
+   57.81,
+   1.21
+  ],
+  [
+   59.64,
+   1.0
+  ],
+  [
+   61.14,
+   0.63
+  ],
+  [
+   69.61,
+   1.0
+  ],
+  [
+   88.17,
+   0.63
+  ],
+  [
+   89.3,
+   0.54
+  ]
+ ],
+ "still_pct": 19.9,
+ "moving_frames_pct": 52.6,
+ "motion_mean": 2.15,
+ "motion_per_sec": [
+  0.5,
+  0.7,
+  0.6,
+  0.4,
+  0.4,
+  2.9,
+  3.0,
+  2.3,
+  1.4,
+  3.3,
+  0.3,
+  0.4,
+  0.4,
+  4.2,
+  5.0,
+  0.0,
+  0.0,
+  0.5,
+  0.0,
+  0.8,
+  0.6,
+  5.3,
+  0.6,
+  0.2,
+  0.4,
+  0.2,
+  3.2,
+  1.9,
+  1.3,
+  2.9,
+  5.6,
+  8.9,
+  6.1,
+  10.5,
+  0.0,
+  5.1,
+  5.5,
+  0.0,
+  0.0,
+  0.1,
+  5.7,
+  0.3,
+  0.4,
+  0.4,
+  0.3,
+  4.9,
+  0.7,
+  0.0,
+  0.7,
+  0.1,
+  0.2,
+  6.5,
+  2.5,
+  1.9,
+  3.2,
+  0.3,
+  5.3,
+  0.3,
+  0.0,
+  0.2,
+  0.0,
+  0.2,
+  9.5,
+  5.4,
+  0.5,
+  0.6,
+  0.4,
+  0.6,
+  5.9,
+  0.2,
+  0.0,
+  6.9,
+  2.9,
+  2.4,
+  1.3,
+  3.1,
+  0.7,
+  1.0,
+  0.9,
+  0.6,
+  4.2,
+  2.6,
+  2.4,
+  1.6,
+  3.0,
+  0.6,
+  6.3,
+  0.4,
+  0.3,
+  10.1
+ ],
+ "luma_mean": 157.9,
+ "dark_pct": 1.2,
+ "light_pct": 36.0,
+ "sat_mean": 0.219,
+ "lufs": -27.3,
+ "lra": 7.3,
+ "truePeak": -5.2,
+ "bpm": 101.3,
+ "beat_strength": 0.213,
+ "hits_per_10s": 2.32,
+ "big_hits": [
+  17.33,
+  35.89,
+  55.02,
+  68.8,
+  84.11
+ ],
+ "audio_drops": [
+  [
+   5.4,
+   0.34
+  ],
+  [
+   7.59,
+   0.36
+  ],
+  [
+   12.23,
+   0.31
+  ],
+  [
+   13.8,
+   0.41
+  ],
+  [
+   18.95,
+   0.21
+  ],
+  [
+   26.38,
+   0.33
+  ],
+  [
+   30.85,
+   0.35
+  ],
+  [
+   33.31,
+   0.22
+  ],
+  [
+   37.09,
+   0.28
+  ],
+  [
+   38.1,
+   0.28
+  ],
+  [
+   40.16,
+   0.37
+  ],
+  [
+   41.62,
+   0.3
+  ],
+  [
+   42.25,
+   0.21
+  ],
+  [
+   44.28,
+   0.3
+  ],
+  [
+   44.86,
+   0.29
+  ],
+  [
+   45.99,
+   0.56
+  ],
+  [
+   47.45,
+   0.26
+  ],
+  [
+   50.86,
+   0.34
+  ],
+  [
+   52.64,
+   0.29
+  ],
+  [
+   54.14,
+   0.24
+  ],
+  [
+   54.76,
+   0.23
+  ],
+  [
+   57.31,
+   0.3
+  ],
+  [
+   61.2,
+   0.92
+  ],
+  [
+   63.07,
+   0.37
+  ],
+  [
+   67.28,
+   0.23
+  ],
+  [
+   81.76,
+   0.23
+  ],
+  [
+   86.26,
+   0.46
+  ],
+  [
+   86.78,
+   0.52
+  ],
+  [
+   87.4,
+   0.21
+  ],
+  [
+   87.95,
+   0.53
+  ],
+  [
+   88.56,
+   0.5
+  ]
+ ],
+ "cuts_on_beat": 0.14,
+ "cuts_on_beat_chance": 0.21,
+ "cuts_on_hit": 0.0,
+ "cuts_on_hit_chance": 0.03,
+ "cuts_on_bighit": 0.0,
+ "cuts_on_bighit_chance": 0.01,
+ "voiceover": {
+  "words": 337,
+  "wps_over_film": 3.73,
+  "first": 0.0,
+  "last": 85.6,
+  "text": "Coding is changing and it's changing for the better. The gap between imagination and reality is shrinking to an instant and it's because coding agents are getting so good. They're getting smarter, they're getting faster and so that's why we're excited to announce Cursor 3. It's a home for your agents and it combines the power of a professional development environment, language servers, files, remote SSH with all of the models and the ability to run as many agents as you want anywhere. Either quickly on your computer or you can hand off entire projects to agents that run in the cloud. >> In the"
+ }
+}

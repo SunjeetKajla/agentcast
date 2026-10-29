@@ -1,0 +1,129 @@
+{
+ "name": "raycast-2026",
+ "duration": 38.59,
+ "fps": 30.0,
+ "size": "1920x1080",
+ "cuts": 4,
+ "cuts_per_10s": 1.04,
+ "shot_median": 8.9,
+ "shot_mean": 7.72,
+ "shot_p10": 3.66,
+ "shot_p90": 10.93,
+ "cut_times": [
+  8.9,
+  20.23,
+  22.47,
+  28.27
+ ],
+ "soft_transitions": 0,
+ "scene_changes_per_10s": 1.04,
+ "scene_median": 8.9,
+ "soft_times": [],
+ "still_runs": [
+  [
+   4.07,
+   1.1
+  ],
+  [
+   6.53,
+   1.13
+  ],
+  [
+   26.17,
+   1.6
+  ],
+  [
+   28.27,
+   9.77
+  ]
+ ],
+ "still_pct": 35.2,
+ "moving_frames_pct": 33.9,
+ "motion_mean": 1.43,
+ "motion_per_sec": [
+  0.5,
+  0.1,
+  0.5,
+  1.5,
+  0.4,
+  1.2,
+  0.1,
+  0.0,
+  1.9,
+  1.5,
+  6.2,
+  8.3,
+  2.8,
+  1.2,
+  1.1,
+  8.3,
+  5.5,
+  2.3,
+  0.3,
+  0.2,
+  1.7,
+  0.1,
+  4.0,
+  0.5,
+  1.2,
+  0.2,
+  1.4,
+  0.0,
+  1.7,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.1,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "luma_mean": 23.7,
+ "dark_pct": 99.9,
+ "light_pct": 0.0,
+ "sat_mean": 0.01,
+ "lufs": -13.2,
+ "lra": 13.4,
+ "truePeak": -0.0,
+ "bpm": 129.2,
+ "beat_strength": 0.129,
+ "hits_per_10s": 5.18,
+ "big_hits": [
+  0.88,
+  7.49,
+  7.98,
+  8.44,
+  15.72
+ ],
+ "audio_drops": [
+  [
+   34.19,
+   0.22
+  ],
+  [
+   34.44,
+   0.41
+  ],
+  [
+   34.89,
+   0.48
+  ],
+  [
+   35.62,
+   0.39
+  ],
+  [
+   36.21,
+   0.21
+  ]
+ ],
+ "cuts_on_beat": 0.25,
+ "cuts_on_beat_chance": 0.22,
+ "cuts_on_hit": 0.25,
+ "cuts_on_hit_chance": 0.05,
+ "cuts_on_bighit": 0.0,
+ "cuts_on_bighit_chance": 0.01,
+ "voiceover": null
+}

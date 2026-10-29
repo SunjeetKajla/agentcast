@@ -1,0 +1,137 @@
+{
+ "name": "linear-for-agents",
+ "duration": 32.69,
+ "fps": 30.0,
+ "size": "1920x1080",
+ "cuts": 1,
+ "cuts_per_10s": 0.31,
+ "shot_median": 16.35,
+ "shot_mean": 16.35,
+ "shot_p10": 7.3,
+ "shot_p90": 25.4,
+ "cut_times": [
+  5.03
+ ],
+ "soft_transitions": 1,
+ "scene_changes_per_10s": 0.61,
+ "scene_median": 5.03,
+ "soft_times": [
+  7.88
+ ],
+ "still_runs": [
+  [
+   0.3,
+   0.7
+  ],
+  [
+   3.13,
+   1.13
+  ],
+  [
+   5.03,
+   1.9
+  ],
+  [
+   8.4,
+   0.53
+  ],
+  [
+   10.17,
+   1.0
+  ],
+  [
+   13.37,
+   0.7
+  ],
+  [
+   19.27,
+   2.63
+  ],
+  [
+   22.1,
+   1.53
+  ],
+  [
+   24.27,
+   0.9
+  ],
+  [
+   26.93,
+   1.6
+  ],
+  [
+   29.03,
+   3.1
+  ]
+ ],
+ "still_pct": 48.1,
+ "moving_frames_pct": 16.1,
+ "motion_mean": 0.41,
+ "motion_per_sec": [
+  0.1,
+  2.1,
+  0.7,
+  0.2,
+  0.3,
+  0.3,
+  0.0,
+  0.5,
+  0.4,
+  0.0,
+  0.1,
+  1.4,
+  1.3,
+  0.1,
+  0.3,
+  3.0,
+  0.1,
+  0.4,
+  0.7,
+  0.3,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.4,
+  0.3,
+  0.1,
+  0.0,
+  0.0,
+  0.1,
+  0.0,
+  0.0
+ ],
+ "luma_mean": 20.6,
+ "dark_pct": 100.0,
+ "light_pct": 0.0,
+ "sat_mean": 0.136,
+ "lufs": -17.4,
+ "lra": 6.8,
+ "truePeak": -4.3,
+ "bpm": 143.6,
+ "beat_strength": 0.497,
+ "hits_per_10s": 10.71,
+ "big_hits": [
+  11.9,
+  13.98,
+  15.5,
+  16.32,
+  20.76,
+  22.84,
+  24.36,
+  25.19
+ ],
+ "audio_drops": [
+  [
+   30.96,
+   0.21
+  ]
+ ],
+ "cuts_on_beat": 0.0,
+ "cuts_on_beat_chance": 0.27,
+ "cuts_on_hit": 0.0,
+ "cuts_on_hit_chance": 0.1,
+ "cuts_on_bighit": 0.0,
+ "cuts_on_bighit_chance": 0.02,
+ "voiceover": null
+}

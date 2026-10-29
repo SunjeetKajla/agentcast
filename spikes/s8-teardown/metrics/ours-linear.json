@@ -1,0 +1,116 @@
+{
+ "name": "ours-linear",
+ "duration": 29.5,
+ "fps": 30.0,
+ "size": "1920x1080",
+ "cuts": 0,
+ "cuts_per_10s": 0.0,
+ "shot_median": 29.5,
+ "shot_mean": 29.5,
+ "shot_p10": 29.5,
+ "shot_p90": 29.5,
+ "cut_times": [],
+ "soft_transitions": 4,
+ "scene_changes_per_10s": 1.36,
+ "scene_median": 4.23,
+ "soft_times": [
+  7.98,
+  12.22,
+  15.48,
+  18.62
+ ],
+ "still_runs": [
+  [
+   1.83,
+   0.9
+  ],
+  [
+   6.47,
+   0.67
+  ],
+  [
+   25.93,
+   3.0
+  ]
+ ],
+ "still_pct": 15.5,
+ "moving_frames_pct": 45.2,
+ "motion_mean": 1.83,
+ "motion_per_sec": [
+  0.5,
+  0.3,
+  0.0,
+  4.2,
+  1.1,
+  1.8,
+  1.2,
+  1.9,
+  7.5,
+  0.3,
+  1.0,
+  1.4,
+  7.3,
+  1.5,
+  0.7,
+  8.2,
+  0.5,
+  0.5,
+  7.7,
+  0.2,
+  2.8,
+  1.0,
+  0.4,
+  0.5,
+  0.7,
+  0.4,
+  0.1,
+  0.1,
+  0.1
+ ],
+ "luma_mean": 61.4,
+ "dark_pct": 75.8,
+ "light_pct": 22.2,
+ "sat_mean": 0.273,
+ "lufs": -15.0,
+ "lra": 4.6,
+ "truePeak": -0.8,
+ "bpm": 120.2,
+ "beat_strength": 0.321,
+ "hits_per_10s": 7.8,
+ "big_hits": [
+  4.4,
+  5.13,
+  13.22,
+  20.81,
+  25.18
+ ],
+ "audio_drops": [
+  [
+   2.37,
+   0.82
+  ],
+  [
+   7.37,
+   0.21
+  ],
+  [
+   7.62,
+   0.22
+  ],
+  [
+   10.47,
+   0.24
+  ],
+  [
+   23.23,
+   0.35
+  ]
+ ],
+ "cuts_on_beat": 0.0,
+ "cuts_on_beat_chance": 0.0,
+ "cuts_on_hit": 0.0,
+ "cuts_on_hit_chance": 0.0,
+ "cuts_on_bighit": 0.0,
+ "cuts_on_bighit_chance": 0.0,
+ "voiceover": null
+}
