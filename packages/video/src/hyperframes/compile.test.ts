@@ -1,4 +1,4 @@
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -98,3 +98,49 @@ describe("helpers", () => {
   });
 });
 
+describe("a music-led edit", () => {
+  const ledInput = () => {
+    const edl2: Edl = {
+      ...edl,
+      schemaVersion: 7,
+      style: { ...edl.style, timing: "music", sfx: "none", music: { mood: "none", bpm: 120, duckDb: -6 } },
+      intro: { component: "Opener", props: { line: { en: "Plan and navigate from idea to launch" } }, seconds: 4 },
+      outro: { component: "EndCard", props: { line: { en: "Get started" } }, seconds: 4 },
+      segments: [
+        { kind: "primitive", id: "first", primitive: { type: "label", text: { en: "Plan it" }, ground: "invert", open: "iris" }, seconds: 1, transitionIn: "cut" },
+        { kind: "primitive", id: "second", primitive: { type: "proof", flowId: "f", in: 0, out: 2, frame: [100, 100, 800, 500], tilt: "soft", hops: [[120, 120, 700, 50]] }, seconds: 3, transitionIn: "cut" },
+        { kind: "primitive", id: "third", primitive: { type: "build", flowId: "f", at: 1, items: [[0, 0, 200, 400], [200, 0, 200, 400], [400, 0, 200, 400]], reveal: "rise", lift: [200, 0, 200, 100] }, seconds: 3, transitionIn: "cut" },
+        { kind: "primitive", id: "fourth", primitive: { type: "swap", lead: { en: "See it as a" }, words: [{ en: "list" }, { en: "board" }], style: "swap" }, seconds: 2, transitionIn: "cut" },
+        { kind: "primitive", id: "fifth", primitive: { type: "ticker", terms: [{ en: "Issues" }, { en: "Cycles" }, { en: "Projects" }] }, seconds: 2, transitionIn: "cut" },
+        { kind: "primitive", id: "sixth", primitive: { type: "prompt", flowId: "f", in: 0, out: 2, input: [200, 200, 400, 40], frame: [100, 100, 800, 500] }, seconds: 3, transitionIn: "cut" },
+      ],
+    };
+    return input("16x9", 540, { edl: Edl.parse(edl2), captions: [] });
+  };
+
+  it("draws each move as a scene file, on a plain ground", async () => {
+    const out = join(root, "led-composition");
+    const { scenes } = await compileComposition({ input: ledInput(), root, out });
+    expect(scenes.map((s) => s.kind)).toEqual(["opener", "label", "proof", "build", "swap", "ticker", "prompt", "endcard"]);
+    // Parts sit on the grid: each starts as the last one ends.
+    scenes.slice(1).forEach((s, i) => expect(s.start).toBeCloseTo(scenes[i]!.start + scenes[i]!.duration, 3));
+    const ground = await readFile(join(out, "compositions", "ground.html"), "utf8");
+    expect(ground).toContain("--ac-lift");
+    const build = await readFile(join(out, "compositions", "third.html"), "utf8");
+    expect(build).toContain("assets/still-third.png");
+    await expect(stat(join(out, "assets", "still-third.png"))).resolves.toBeTruthy();
+    const proof = await readFile(join(out, "compositions", "second.html"), "utf8");
+    expect(proof).toContain('data-media-start="0"');
+    expect(proof).not.toMatch(/Math\.random|Date\.now|setTimeout/);
+  });
+
+  it("fits a tall canvas", async () => {
+    const out = join(root, "led-tall");
+    const made = ledInput();
+    const { scenes } = await compileComposition({ input: { ...made, aspect: "9x16", height: 1080 }, root, out });
+    expect(scenes).toHaveLength(8);
+    const proof = await readFile(join(out, "compositions", "second.html"), "utf8");
+    const width = Number(/#second-win \{ left: [\d.-]+px; top: [\d.-]+px; width: ([\d.]+)px/.exec(proof)![1]);
+    expect(width).toBeLessThanOrEqual(1080);
+  });
+});

@@ -4,12 +4,16 @@ import {
   Brand,
   CreativeBrief,
   Edl,
+  MusicLibrary,
+  MusicPlan,
   ProductBrief,
   Script,
   Storyboard,
   Timeline,
   Voiceover,
   jobPaths,
+  musicLed,
+  voiced,
 } from "@agentcast/shared";
 import { fixtureStages } from "@agentcast/explore";
 import {
@@ -17,7 +21,23 @@ import {
   runDirector,
   type DirectorOptions,
 } from "@agentcast/director";
-import { baselineEdl, loadMusicLibrary, MUSIC_LEVEL, musicDir, pickTrack, renderStills, stillMoments } from "@agentcast/video";
+import {
+  baselineEdl,
+  beatsOf,
+  filmSeconds,
+  ledEdl,
+  ledStyle,
+  loadMusicLibrary,
+  musicDir,
+  musicStyle,
+  pickTrack,
+  planMusic,
+  premixMusic,
+  renderStills,
+  shotContent,
+  snapToGrid,
+  stillMoments,
+} from "@agentcast/video";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
 import { optional, videoInput } from "./preview.ts";
@@ -148,6 +168,13 @@ export function makeDirect(
         edl = await ctx.read(jobPaths.edl, Edl);
       }
     }
+    if (musicLed(ctx.config) && edl.style.music.bpm) {
+      // The director may have changed lengths: back onto the grid, then the music to match the film.
+      const snapped = snapToGrid(edl);
+      if (snapped.moved) ctx.log(`Moved ${snapped.moved} part(s) back onto the beat.`, "warn");
+      edl = snapped.edl;
+      await premixLedMusic(ctx, edl);
+    }
     await ctx.write(jobPaths.edl, Edl, edl);
     const count = (kind: string) =>
       edl.segments.filter((s) => s.kind === kind).length;
@@ -157,6 +184,18 @@ export function makeDirect(
   };
 }
 export const direct = makeDirect();
+
+/** The music as this film plays it: entered at a strong bar, leaving through the track's own ending. */
+async function premixLedMusic(ctx: StageContext, edl: Edl) {
+  const library = await loadMusicLibrary().catch(() => undefined);
+  const track = (library as MusicLibrary | undefined)?.tracks.find((t) => t.id === edl.style.music.trackId);
+  if (!track) return;
+  const plan = planMusic(track, filmSeconds(edl), edl.outro.seconds);
+  await ctx.write(jobPaths.musicPlan, MusicPlan, plan);
+  await mkdir(ctx.path("render/audio"), { recursive: true });
+  await premixMusic(plan, `${musicDir().replace(/\/$/, "")}/${track.file}`, ctx.path(MUSIC_FILE), ctx.signal);
+  ctx.artifact(MUSIC_FILE);
+}
 
 /** Frames of an edit for the director to look at: 540p, 16:9, the first language. */
 async function stillsOf(ctx: StageContext, edl: Edl): Promise<string[]> {
@@ -186,7 +225,8 @@ async function workspaceFor(ctx: StageContext) {
   const scripts = await Promise.all(
     langs.map((lang) => ctx.read(jobPaths.script(lang), Script)),
   );
-  const voices = ctx.config.voiceover
+  const hasVoice = voiced(ctx.config);
+  const voices = hasVoice
     ? (
         await Promise.all(
           langs.map((lang) =>
@@ -195,44 +235,56 @@ async function workspaceFor(ctx: StageContext) {
         )
       ).filter((voice) => voice !== undefined)
     : [];
-  if (ctx.config.voiceover && voices.length < langs.length)
+  if (hasVoice && voices.length < langs.length)
     ctx.log(
       "Some languages have no voice; their shots keep the footage's length.",
       "warn",
     );
-  const baseline = baselineEdl({
-    timeline,
-    storyboard,
-    scripts: Object.fromEntries(scripts.map((s) => [s.lang, s])),
-    voices,
+  const library = await loadMusicLibrary().catch(() => undefined);
+  const led = musicLed(ctx.config);
+  // The music bed (PRD §9.7.2): the library's best fit for the personality and grammar. A music-led
+  // film needs it first: the track's grid sets every length. No library, no music.
+  const track = pickTrack(library, {
     personality: creative.personality,
-    ...(brand ? { brand } : {}),
-  });
-  // The music bed (PRD §9.7.2): the library's best fit for the personality and grammar, copied into
-  // the job so renders read it like any other job file. No library, no music.
-  const track = pickTrack(await loadMusicLibrary().catch(() => undefined), {
-    personality: creative.personality,
-    edit: baseline.style.edit,
+    edit: led ? "trailer" : storyboard.edit,
     seconds: creative.targetSeconds,
     seed: ctx.jobId,
+    led,
   });
-  if (track) {
+  const scriptsByLang = Object.fromEntries(scripts.map((s) => [s.lang, s]));
+  const content = led ? await shotContent(ctx.path(jobPaths.recording("desktop")), storyboard, timeline, ctx.signal) : undefined;
+  const baseline = led
+    ? ledEdl({
+        ...(content ? { content } : {}),
+        timeline,
+        storyboard,
+        scripts: scriptsByLang,
+        personality: creative.personality,
+        targetSeconds: creative.targetSeconds,
+        ...(track ? { music: ledStyle(track), grid: beatsOf(track) } : {}),
+        ...(product?.keyTerms ? { terms: product.keyTerms } : {}),
+        ...(brand ? { brand } : {}),
+      })
+    : baselineEdl({
+        timeline,
+        storyboard,
+        scripts: scriptsByLang,
+        voices,
+        personality: creative.personality,
+        ...(brand ? { brand } : {}),
+      });
+  if (track && !led) {
     await mkdir(ctx.path("render/audio"), { recursive: true });
     const copied = await copyFile(`${musicDir().replace(/\/$/, "")}/${track.file}`, ctx.path(MUSIC_FILE)).then(
       () => true,
       (error: Error) => (ctx.log(`Music "${track.title}" is in tags.json but its file isn't there (${error.message}); no music.`, "warn"), false),
     );
-    if (copied) {
-      baseline.style.music = { mood: track.mood[0] ?? baseline.style.music.mood, trackId: track.id, bpm: track.bpm, firstBeat: track.firstBeat, ...MUSIC_LEVEL[baseline.style.edit] };
-      ctx.log(`Music: "${track.title}" by ${track.artist ?? "unknown"} (${track.license}).`);
-    }
+    if (copied) baseline.style.music = musicStyle(track, baseline.style.edit);
   }
+  if (track) ctx.log(`Music: "${track.title}" by ${track.artist ?? "unknown"} (${track.license}).`);
+  if (!track && led) ctx.log("No track with a dependable beat in the music library, so this film has no music.", "warn");
   // The preview's render input, so the workspace gets the composition the director edits (§9.7.5).
-  // The legacy renderer has no composition.
-  const render =
-    process.env.AGENTCAST_RENDERER === "remotion"
-      ? undefined
-      : await videoInput(ctx, "16x9", langs[0] ?? "en", 540, baseline).then(({ edl: _edl, ...rest }) => rest);
+  const render = await videoInput(ctx, "16x9", langs[0] ?? "en", 540, baseline).then(({ edl: _edl, ...rest }) => rest);
   // The script stage saved a frame of each footage beat, by its place in the storyboard.
   const frames: Record<string, string> = {};
   for (const [i, beat] of storyboard.beats.entries()) {

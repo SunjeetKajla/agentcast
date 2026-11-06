@@ -46,6 +46,8 @@ const Draft = z.object({ beats: z.array(DraftBeat).min(2).max(12) });
 type Draft = z.infer<typeof Draft>;
 
 export type StoryboardInput = {
+  /** No voice: the music and on-screen type carry the film. */
+  led?: boolean;
   mode: VideoMode;
   creative: CreativeBrief;
   product?: ProductBrief;
@@ -57,11 +59,14 @@ export type StoryboardInput = {
 };
 
 /** Problems with a draft, in words the model can fix. Empty when it's usable. */
+const words = (text: string) => text.split(/\s+/).filter(Boolean).length;
+
 export function checkDraft(
   d: Draft,
   spans: CandidateSpan[],
   target: number,
   mode: VideoMode = "launch",
+  led = false,
 ): string[] {
   const problems: string[] = [];
   const byId = new Map(spans.map((s) => [s.id, s]));
@@ -120,8 +125,15 @@ export function checkDraft(
         `beat ${i + 1}'s focusStepId "${b.motion.focusStepId}" isn't a step in span ${span.id}`,
       );
   });
-  if (trailer && d.beats.filter((_, i) => headline(i)).length > 3)
-    problems.push("use at most 3 headline beats; the footage is the proof");
+  if (trailer && d.beats.filter((_, i) => headline(i)).length > (led ? 1 : 3))
+    problems.push(led ? "use at most 1 headline beat: every shot already has its own title" : "use at most 3 headline beats; the footage is the proof");
+  if (led)
+    d.beats.forEach((b, i) => {
+      if (!b.spanId) return;
+      const title = b.onScreen.find((o) => o.kind === "title");
+      if (!title) problems.push(`beat ${i + 1} needs an onScreen title of at most 4 words: there's no voice, so the type carries the film`);
+      else if (words(title.text) > 4) problems.push(`beat ${i + 1}'s title "${title.text}" is over 4 words`);
+    });
   // Footage from one flow must play in recorded order, or the product would jump back in time.
   const lastIndex = new Map<string, number>();
   for (const b of d.beats) {
@@ -138,7 +150,8 @@ export function checkDraft(
     (t, b) => t + (b.spanId ? (byId.get(b.spanId)?.seconds ?? 0) : 0),
     0,
   );
-  if (footage > target * 1.3)
+  // A music-led film speeds its footage up to fit its bars.
+  if (!led && footage > target * 1.3)
     problems.push(
       `the chosen footage runs ${Math.round(footage)} s, well over the ${target} s target; drop the least important spans`,
     );
@@ -205,11 +218,15 @@ export async function writeStoryboard(
       `Arc for this video type: ${ARCS[input.mode]}.`,
       "Return beats in playing order. For each beat:",
       "- role: hook, problem, setup, core, payoff or cta. Exactly one hook first and one cta last. The hook and cta may omit spanId (they then play over the title and outro cards).",
-      editFor(input.mode) === "trailer"
+      input.led
+        ? '- This film has no narration: the music and big on-screen type carry it. Every beat with footage needs exactly one onScreen title of at most 4 words saying what its shot proves ("Plan every quarter"), and no callouts or lower thirds. Prefer spans where something visibly changes: a result appears, a dashboard fills with data, a panel opens. Skip plain navigation. Use at most one headline beat.'
+        : editFor(input.mode) === "trailer"
         ? '- This video is cut like a launch trailer, not a tutorial: alternate big ideas with proof. Add 1 to 3 headline beats (no spanId) between shots, each stating one outcome or benefit the next shot proves ("Checkout, tested end to end"). A headline beat needs exactly one onScreen title (≤ 6 words) and no other onScreen text; never two headline beats in a row. Every other beat uses a span.'
         : "- Every beat other than the hook and cta must use a span: this is a how-to, so the steps are the story.",
       "- spanId: one span from spans.json, each used at most once. Spans of the same flow must keep their order. Choose spans so the footage adds up to about the target length; leave out weak or repetitive ones (a sign-in shown twice, for example).",
-      "- intent: what the narration over this beat must get across, one sentence (not the narration itself).",
+      input.led
+        ? "- intent: what this beat must get across, one sentence."
+        : "- intent: what the narration over this beat must get across, one sentence (not the narration itself).",
       "- onScreen: at most 2 short texts (≤ 6 words): a title, a callout on an element (give its stepId), or a lower third. Most beats need none.",
       `- motion: kind (reveal: something new appears; emphasis: draw attention to an element; transition: move between ideas; hold: let a result sink in), emotion (one word that fits the ${input.creative.personality} personality), and focusStepId (a stepId from the span) when one element matters most.`,
     ]
@@ -230,6 +247,7 @@ export async function writeStoryboard(
       input.spans,
       input.creative.targetSeconds,
       input.mode,
+      input.led,
     );
     if (problems.length) {
       await writeFile(
@@ -250,6 +268,7 @@ export async function writeStoryboard(
         input.spans,
         input.creative.targetSeconds,
         input.mode,
+        input.led,
       );
       if (problems.length)
         throw new Error(

@@ -199,6 +199,14 @@ export function joinTimelines(
       events.push({
         ...event,
         t: at(event.t),
+        ...(event.layout
+          ? {
+              layout: {
+                ...event.layout,
+                ...(event.layout.at === undefined ? {} : { at: at(event.layout.at) }),
+              },
+            }
+          : {}),
         ...(event.cursor
           ? {
               cursor: {
@@ -213,7 +221,7 @@ export function joinTimelines(
     offset = at(timeline.duration);
   }
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     recordingId,
     formFactor: "desktop",
     viewport: recorded[0]!.take.timeline.viewport,

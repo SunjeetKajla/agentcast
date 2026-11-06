@@ -74,12 +74,18 @@ export const JobConfig = z.object({
     })
     .default({ aspects: ["16x9"], langs: ["en"], formFactors: ["desktop"] }),
   autopilot: z.boolean().default(false),
-  /** Narrate the video (ElevenLabs). Off: a silent edit with the script as captions. */
-  voiceover: z.boolean().default(true),
+  /** Narrate the video (ElevenLabs). Tutorials are by default; launches and sales films are music-led. */
+  voiceover: z.boolean().optional(),
   /** A re-run of job `of` (§9.8.1). */
   rerun: z.object({ of: z.string(), skipIfUnchanged: z.boolean() }).optional(),
 });
 export type JobConfig = z.infer<typeof JobConfig>;
+
+/** Whether the job has a voice: as asked, else only a tutorial. A job saved before this default chose already. */
+export const voiced = (config: Pick<JobConfig, "voiceover" | "mode">) => config.voiceover ?? config.mode === "tutorial";
+
+/** A film without a voice and not a how-to takes its timing from its music (PRD §9.7.2). */
+export const musicLed = (config: Pick<JobConfig, "voiceover" | "mode">) => !voiced(config) && config.mode !== "tutorial";
 export type JobConfigInput = z.input<typeof JobConfig>;
 
 export const StageStatus = z.enum(["pending", "running", "waiting", "done", "failed", "skipped", "cancelled"]);

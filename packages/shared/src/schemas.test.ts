@@ -13,6 +13,8 @@ import {
   StageName,
   StoredJob,
   variantMatrix,
+  musicLed,
+  voiced,
 } from "./index.ts";
 
 describe("stages", () => {
@@ -40,7 +42,6 @@ describe("JobConfig", () => {
       mode: "launch",
       variants: { aspects: ["16x9"], langs: ["en"], formFactors: ["desktop"] },
       autopilot: false,
-      voiceover: true,
     });
   });
 
@@ -105,5 +106,17 @@ describe("Job versions", () => {
     const old = { ...current, schemaVersion: 2, config };
     expect(() => Job.parse(old)).toThrow();
     expect(StoredJob.parse(old)).toEqual(current);
+  });
+});
+
+describe("voice and music", () => {
+  test("only a tutorial is narrated by default, and an explicit choice wins", () => {
+    expect(voiced({ mode: "tutorial" })).toBe(true);
+    expect(voiced({ mode: "launch" })).toBe(false);
+    expect(voiced({ mode: "launch", voiceover: true })).toBe(true);
+    expect(musicLed({ mode: "launch" })).toBe(true);
+    expect(musicLed({ mode: "sales" })).toBe(true);
+    expect(musicLed({ mode: "tutorial", voiceover: false })).toBe(false);
+    expect(musicLed({ mode: "launch", voiceover: true })).toBe(false);
   });
 });

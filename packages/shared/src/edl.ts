@@ -96,12 +96,76 @@ export const SceneSegment = z.object({
   transitionIn: TransitionKind,
 });
 
+/** v7: a designed move with typed settings, drawn by the motion-primitive library. */
+export const Primitive = z.discriminatedUnion("type", [
+  /** A short line filling the frame between proofs. */
+  z.object({
+    type: z.literal("label"),
+    text: TextByLang,
+    accent: TextByLang.optional(),
+    ground: z.enum(["base", "invert", "field"]),
+    open: z.enum(["rise", "slit", "iris"]),
+  }),
+  /** A fixed lead with its last word changing on the beat. */
+  z.object({
+    type: z.literal("swap"),
+    lead: TextByLang,
+    words: z.array(TextByLang).min(2).max(6),
+    style: z.enum(["swap", "rolodex"]),
+  }),
+  /** The product's real terms riding a ruled line across the frame. */
+  z.object({ type: z.literal("ticker"), terms: z.array(TextByLang).min(3).max(10) }),
+  /** Footage lifted out of its page: a region as a tilted window, with a highlight hopping down rows. */
+  z.object({
+    type: z.literal("proof"),
+    flowId: z.string(),
+    in: Seconds,
+    out: Seconds,
+    /** The region of the page to show, in CSS pixels. */
+    frame: Rect,
+    tilt: z.enum(["none", "soft", "strong"]),
+    hops: z.array(Rect).max(8).optional(),
+    ground: z.enum(["base", "field"]).optional(),
+  }),
+  /** The page at one moment, built piece by piece, with one piece lifted out to the middle. */
+  z.object({
+    type: z.literal("build"),
+    flowId: z.string(),
+    /** The source second to take the page from. */
+    at: Seconds,
+    items: z.array(Rect).min(2).max(24),
+    reveal: z.enum(["rise", "wireframe"]),
+    lift: Rect.optional(),
+  }),
+  /** A close-up of typing into a field, pulling back to the page around it. */
+  z.object({
+    type: z.literal("prompt"),
+    flowId: z.string(),
+    in: Seconds,
+    out: Seconds,
+    input: Rect,
+    frame: Rect,
+  }),
+]);
+export type Primitive = z.infer<typeof Primitive>;
+
+export const PrimitiveSegment = z.object({
+  kind: z.literal("primitive"),
+  id: z.string().regex(/^[a-z][a-z0-9-]*$/),
+  beatId: z.string().optional(),
+  primitive: Primitive,
+  seconds: Seconds,
+  transitionIn: TransitionKind,
+});
+export type PrimitiveSegment = z.infer<typeof PrimitiveSegment>;
+
 export const Segment = z.discriminatedUnion("kind", [
   ShotSegment,
   StatementSegment,
   MontageSegment,
   StatSegment,
   SceneSegment,
+  PrimitiveSegment,
 ]);
 export type Segment = z.infer<typeof Segment>;
 
@@ -110,6 +174,10 @@ export const Card = z.object({
   props: z.record(z.string(), z.unknown()),
   seconds: Seconds,
 });
+
+/** v7: the title card and end card of a music-led film. */
+export const OpenerProps = z.object({ line: TextByLang });
+export const EndCardProps = z.object({ line: TextByLang });
 
 export const EdlStyle = z.object({
   palette: z.object({
@@ -142,6 +210,8 @@ export const EdlStyle = z.object({
     duckDb: z.number(),
   }),
   sfx: z.enum(["auto", "none"]),
+  /** v7: what sets the film's clock. Without it, the voice. */
+  timing: z.enum(["voice", "music"]).optional(),
   /** 16:9 shots: browser window, tilted window, or full bleed. */
   frame: z.enum(["window", "tilt", "none"]),
   motion: MotionTokens,
@@ -149,8 +219,8 @@ export const EdlStyle = z.object({
 export type EdlStyle = z.infer<typeof EdlStyle>;
 
 export const Edl = z.object({
-  /** v6 is additive, so a v5 edit still reads; writers emit 6. */
-  schemaVersion: z.union([z.literal(5), z.literal(6)]),
+  /** Each version is additive, so older edits still read. A music-led edit is 7. */
+  schemaVersion: z.union([z.literal(5), z.literal(6), z.literal(7)]),
   fps: z.literal(30),
   style: EdlStyle,
   intro: Card,

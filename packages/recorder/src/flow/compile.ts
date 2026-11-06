@@ -3,6 +3,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import {
   Flow,
   Timeline,
+  type Layout,
   type ReplayEntry,
   type TimelineEvent,
 } from "@agentcast/shared";
@@ -33,6 +34,7 @@ import {
   verifyOutcome,
   type OutcomeState,
 } from "./outcome.ts";
+import { pageLayout } from "./layout.ts";
 import { cachedLocator, replayKey, saveReplayEntries } from "./replay.ts";
 import { trackSettle, waitForSettle } from "./settle.ts";
 import { selectMatch } from "./select.ts";
@@ -231,7 +233,14 @@ export async function recordFlow(
           },
           async (controls) => {
             const { page, signal, now } = controls;
+            // The page as an action finds it: what the action does next may cover this up.
+            let found: Layout | undefined;
             const actuator = createActuator(page, {
+              onReady: async () => {
+                const at = now() / 1000;
+                const layout = await abortable(pageLayout(page), signal);
+                if (layout) found = { ...layout, at };
+              },
               signal,
               now,
               motion: controls.motion,
@@ -290,6 +299,7 @@ export async function recordFlow(
                 if (options.locate?.heal)
                   beforeImage = await maskedScreenshot(page, secrets, signal);
                 const url = redact(page.url());
+                found = undefined;
                 const action = await actuator.run(step, target);
                 const waitStart = now();
                 const immediate = await abortable(
@@ -352,6 +362,7 @@ export async function recordFlow(
                   label,
                   url,
                   ...action,
+                  ...(found ? { layout: found } : {}),
                   value:
                     step.value === undefined
                       ? undefined
@@ -359,14 +370,17 @@ export async function recordFlow(
                         ? { redacted: true }
                         : step.value,
                 });
+                const settledAt = now() / 1000;
+                const layout = await abortable(pageLayout(page, action.bbox), signal);
                 events.push({
-                  t: now() / 1000,
+                  t: settledAt,
                   flowId: flow.id,
                   stepId: step.id,
                   kind: "settled",
                   label,
                   url: outcome.after.url,
                   bbox: action.bbox,
+                  ...(layout ? { layout } : {}),
                 });
                 const entry =
                   target?.entry ??
@@ -415,7 +429,7 @@ export async function recordFlow(
         options.signal?.throwIfAborted();
         const duration = recording.duration;
         const timeline = Timeline.parse({
-          schemaVersion: 1,
+          schemaVersion: 2,
           recordingId,
           formFactor,
           viewport,

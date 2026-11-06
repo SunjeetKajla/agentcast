@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { MusicLibrary as MusicLibrarySchema } from "@agentcast/shared";
+import { BED_LUFS, DUCK_DB } from "./audio.ts";
 import type { Edl, MusicLibrary, MusicTrack, Personality } from "./compat";
 
 /** The music library folder: assets/music/ in the repo, or AGENTCAST_MUSIC_DIR. */
@@ -12,11 +13,14 @@ export async function loadMusicLibrary(dir = musicDir()): Promise<MusicLibrary |
   return text ? MusicLibrarySchema.parse(JSON.parse(text)) : undefined;
 }
 
-/** Levels by grammar (PRD §9.7.2): music up front in a trailer, a quiet bed under a guide. */
-export const MUSIC_LEVEL: Record<Edl["style"]["edit"], { gainDb: number; duckDb: number }> = {
-  trailer: { gainDb: -6, duckDb: -13 },
-  guide: { gainDb: -18, duckDb: -10 },
-};
+/**
+ * `style.music` for a picked track: its own gain brings it to the grammar's bed level (tracks differ
+ * by 10 dB or more), kept under −1 dBTP.
+ */
+export function musicStyle(track: MusicTrack, edit: Edl["style"]["edit"]): Edl["style"]["music"] {
+  const gainDb = Math.round(Math.min(BED_LUFS[edit] - track.lufs, -1 - track.truePeak) * 10) / 10;
+  return { mood: track.mood[0] ?? "none", trackId: track.id, bpm: track.bpm, firstBeat: track.firstBeat, gainDb, duckDb: DUCK_DB };
+}
 
 /** Moods that suit each motion personality, best first. */
 const MOODS: Record<Personality, string[]> = {
@@ -48,9 +52,11 @@ export function pickTrack(
     edit: Edl["style"]["edit"];
     seconds: number;
     seed: string;
+    /** A music-led edit needs a grid it can trust. */
+    led?: boolean;
   },
 ): MusicTrack | undefined {
-  const tracks = library?.tracks ?? [];
+  const tracks = (library?.tracks ?? []).filter((t) => !o.led || t.analysis.confidence !== "low");
   if (!tracks.length) return undefined;
   const wanted = MOODS[o.personality];
   const energy = ENERGY[o.edit][o.personality];

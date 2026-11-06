@@ -12,6 +12,9 @@
     "@agentcast/recorder": "workspace:*"
   },
   "scripts": {
+    "bench": "tsx s9-bench/bench.ts",
+    "checkpoint": "tsx s10-checkpoint/film.ts",
+    "e2e": "tsx s11-e2e/run.ts",
     "hf": "tsx kaustav-hyperframes/render-job.ts",
     "hf-director": "tsx kaustav-hyperframes/director-workspace.ts"
   }

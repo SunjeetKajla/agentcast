@@ -32,9 +32,38 @@ const hasNvenc = () =>
     () => false,
   ));
 
+/** The mix's target (FR-81), and the limiter's ceiling: −2.5 dBFS keeps AAC's overshoot under −1 dBTP. */
+export const TARGET_LUFS = -14;
+const LIMIT = 0.75;
+/** A limited mix gains less than the gain put in, so the gain is corrected this many times. */
+const ROUNDS = 3;
+
+/** The one gain for the whole mix, so the mix's own dynamics (the music's build, the ducking) survive. */
+export const masteringGainDb = (lufs: number) => (Number.isFinite(lufs) ? Math.round((TARGET_LUFS - lufs) * 100) / 100 : 0);
+
+const masterFilter = (gain: number) => `volume=${gain}dB,alimiter=limit=${LIMIT}:level=false`;
+
+/** A file's integrated loudness, through `filter` if given. */
+async function integratedLufs(file: string, filter: string | undefined, signal?: AbortSignal) {
+  const graph = `${filter ? `${filter},` : ""}ebur128`;
+  const out = await run("ffmpeg", ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", graph, "-f", "null", "-"], signal);
+  return Number(/I:\s+(-?[\d.]+) LUFS/.exec(out.slice(out.lastIndexOf("Summary:")))?.[1]);
+}
+
+/** The gain that puts the mix on target once limited. */
+async function masteringGain(file: string, signal?: AbortSignal) {
+  let gain = masteringGainDb(await integratedLufs(file, undefined, signal));
+  for (let round = 0; round < ROUNDS; round++) {
+    const off = masteringGainDb(await integratedLufs(file, masterFilter(gain), signal));
+    if (Math.abs(off) < 0.2) break;
+    gain = Math.round((gain + off) * 100) / 100;
+  }
+  return gain;
+}
+
 /**
- * Renders the composition in `dir` to `out` (.mp4), then normalises loudness to −14 LUFS / −1.5 dBTP
- * with the picture copied (FR-81). `draft` for previews.
+ * Renders the composition in `dir` to `out` (.mp4), then brings the mix to −14 LUFS with the picture
+ * copied (FR-81). `draft` for previews.
  */
 export async function renderComposition(o: {
   dir: string;
@@ -59,13 +88,15 @@ export async function renderComposition(o: {
   );
   try {
     const probe = await run("ffprobe", ["-v", "error", "-select_streams", "a", "-show_entries", "stream=index", "-of", "csv=p=0", raw], o.signal);
-    if (probe.trim())
+    if (probe.trim()) {
+      // Measured first, then one gain: loudnorm's single pass rides the level and flattens the mix.
+      const gain = await masteringGain(raw, o.signal);
       await run(
         "ffmpeg",
-        ["-v", "error", "-y", "-i", raw, "-map", "0", "-c:v", "copy", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", o.out],
+        ["-v", "error", "-y", "-i", raw, "-map", "0", "-c:v", "copy", "-af", masterFilter(gain), "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", o.out],
         o.signal,
       );
-    else await rename(raw, o.out);
+    } else await rename(raw, o.out);
   } finally {
     await rm(raw, { force: true });
   }

@@ -1,6 +1,6 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { Edl, Script, Storyboard, type CameraKey, type ShotSegment, type Timeline } from "@agentcast/shared";
+import { Edl, Script, Storyboard, type CameraKey, type PrimitiveSegment, type Rect, type ShotSegment, type Timeline } from "@agentcast/shared";
 import { calloutSeconds, cropFor, inView, moveSeconds, readSeconds } from "@agentcast/video";
 import { checkRender, checkScenes, savedInput } from "./composition.ts";
 
@@ -67,7 +67,7 @@ export async function checkWorkspace(dir: string, o: CheckOptions = {}): Promise
 }
 
 /** The style fields the director doesn't own. */
-const FIXED = ["palette", "fonts", "music", "edit", "pacing"] as const;
+const FIXED = ["palette", "fonts", "music", "edit", "pacing", "timing"] as const;
 
 /** Puts the baseline's fixed style fields (and look.theme) back into `raw`; returns what changed. */
 function restoreFixed(raw: unknown, baseline: { style: Record<string, unknown> }): string[] {
@@ -158,8 +158,45 @@ export function lint(
       if (segment.text) fullText(at, "the line", segment.text);
       return;
     }
+    if (segment.kind === "primitive") return primitiveIssues(segment, at);
     shotIssues(segment, at);
   });
+
+  // A music-led film keeps moving: the same treatment twice running reads as a template.
+  edl.segments.forEach((segment, i) => {
+    const next = edl.segments[i + 1];
+    if (segment.kind === "primitive" && next?.kind === "primitive" && segment.primitive.type !== "label" && segment.primitive.type === next.primitive.type)
+      issues.push(warn(`segments[${i + 1}] (${next.id})`, `follows another ${next.primitive.type}: vary the move`));
+  });
+
+  function primitiveIssues(segment: PrimitiveSegment, at: string) {
+    const p = segment.primitive;
+    const beat = 60 / (edl.style.music.bpm ?? 120);
+    if (Math.abs(segment.seconds / beat - Math.round(segment.seconds / beat)) > 0.1)
+      issues.push(warn(at, `${segment.seconds} s isn't a whole number of ${Math.round(beat * 1000)} ms beats; it will be moved onto the grid`));
+    if (segment.seconds < beat) issues.push(error(at, "lasts less than a beat"));
+    if (p.type === "label") fullText(at, "the label", p.text);
+    if (p.type === "swap") {
+      fullText(at, "the lead", p.lead);
+      p.words.forEach((w) => fullText(at, "a word", w));
+    }
+    if (p.type === "ticker") p.terms.forEach((t) => fullText(at, "a term", t));
+    const box = (name: string, r: Rect) => {
+      if (r[0] < -1 || r[1] < -1 || r[0] + r[2] > view.w + 1 || r[1] + r[3] > view.h + 1 || r[2] <= 0 || r[3] <= 0)
+        issues.push(error(at, `${name} [${r.join(", ")}] isn't inside the ${view.w}×${view.h} recording`));
+    };
+    if (p.type === "proof" || p.type === "prompt") {
+      if (p.in < 0 || p.out > timeline.duration || p.out <= p.in) issues.push(error(at, `footage ${p.in}–${p.out} s isn't inside the recording (0–${timeline.duration} s)`));
+      box("frame", p.frame);
+    }
+    if (p.type === "prompt") box("input", p.input);
+    if (p.type === "proof") p.hops?.forEach((h) => box("a hop", h));
+    if (p.type === "build") {
+      if (p.at < 0 || p.at > timeline.duration) issues.push(error(at, `at ${p.at} s isn't inside the recording`));
+      p.items.forEach((r) => box("an item", r));
+      if (p.lift) box("lift", p.lift);
+    }
+  }
 
   function shotIssues(shot: ShotSegment, at: string) {
     const beat = shot.beatId ? beats.get(shot.beatId) : undefined;

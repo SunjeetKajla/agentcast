@@ -34,7 +34,7 @@ export const DEFAULT_CHOICES: ComposerChoices = {
   langs: ["en"],
   auth: "public",
   autopilot: false,
-  voiceover: true,
+  voiceover: false,
 };
 
 export function toJobConfig(url: string, prompt: string, c: ComposerChoices): JobConfigInput {
@@ -63,6 +63,6 @@ export function readBack(c: ComposerChoices, prompt: string): string {
   const langs = c.langs.map((l) => LANG_WORDS[l] ?? l).join(" and ");
   const length = seconds ? `about ${seconds} s, ` : "";
   const review = c.autopilot ? "straight through on autopilot" : "with your review of flows, script and preview";
-  const voice = c.voiceover ? "" : " without voiceover";
+  const voice = c.voiceover === (c.mode === "tutorial") ? "" : c.voiceover ? " with a voiceover" : " without voiceover";
   return `A ${MODE_WORDS[c.mode]}, ${length}${formats} in ${langs}${voice}, ${review}.`;
 }

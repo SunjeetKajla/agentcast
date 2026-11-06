@@ -35,8 +35,8 @@ export type VideoInput = {
   copy: { title?: string; cta?: string };
   /** 540 for the preview, 1080 for finals; the width follows the aspect. */
   height: number;
-  /** The generated sound effects, when the edit has any, and the music bed (style.music's track). */
-  audio?: { sfx: Partial<Record<SfxKind, string>>; music?: string };
+  /** Each sound effect's takes, when the edit has any, and the music bed (style.music's track). */
+  audio?: { sfx: Partial<Record<SfxKind, string[]>>; music?: string };
 };
 
 export const outputSize = (aspect: Aspect, height: number) => {
@@ -138,7 +138,8 @@ export function planParts(edl: Edl, narration: Narration[] = []) {
       id: "outro",
       kind: "outro" as const,
       base: Math.round(edl.outro.seconds * fps),
-      enter: "fade" as const,
+      // A music-led film's parts sit on its grid, so nothing overlaps.
+      enter: edl.style.timing === "music" ? ("cut" as const) : ("fade" as const),
       shot: false,
     },
   ];

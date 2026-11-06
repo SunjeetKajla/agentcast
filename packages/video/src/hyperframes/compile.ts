@@ -3,14 +3,16 @@ import { copyFile, link, mkdir, readdir, readFile, rm, stat, writeFile } from "n
 import { createRequire } from "node:module";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Edl, ShotSegment, TimelineEvent } from "@agentcast/shared";
-import { sfxCues } from "../audio.ts";
+import { EndCardProps, OpenerProps, type Edl, type ShotSegment, type TimelineEvent } from "@agentcast/shared";
+import { musicAutomation, sfxCues, type SfxKind, type Sounds } from "../audio.ts";
 import { voiceCaptions } from "../captions.ts";
 import { cameraAt, project, zoomOf, type Size } from "../camera.ts";
 import { contrastOf, ink, luminanceOf, mixHex, readableOn } from "../ink.ts";
 import { calloutSeconds, eased } from "../motion.ts";
 import { cursorAt, planParts, type Part, type VideoInput } from "../plan.ts";
 import { clockOf } from "../retime.ts";
+import { soundShape } from "../sound.ts";
+import { endCardScene, openerScene, openerSlot, phrasesOf, primitiveScene, stillFile } from "../primitives/index.ts";
 import { localFonts } from "./fonts.ts";
 import { run } from "./render.ts";
 import {
@@ -19,6 +21,7 @@ import {
   esc,
   groundScene,
   kineticScene,
+  plainGroundScene,
   montageScene,
   outroScene,
   shotScene,
@@ -119,6 +122,8 @@ function themeOf(edl: Edl) {
       "--ac-radius": `${Math.min(edl.style.look.radius, 28)}px`,
       // A hairline rim keeps a window's edge readable on its own colour (dark UI on a dark brand).
       "--ac-rim": dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.08)",
+      "--ac-lift": mixHex(bg, fg, dark ? 0.035 : 0),
+      "--ac-shade": dark ? "rgba(0,0,0,0.75)" : "rgba(0,0,0,0.22)",
     } as Record<string, string>,
   };
 }
@@ -303,6 +308,7 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
   const { parts, clips, frames } = planParts(edl, input.narration);
   const duration = frames / fps;
   const theme = themeOf(edl);
+  const beat = 60 / (edl.style.music.bpm ?? 120);
   const personality = edl.style.motion.personality;
   const lively = personality === "energetic" || personality === "playful";
 
@@ -356,7 +362,17 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
     let kind: string;
     let vars: Vars;
     let file: string | undefined;
-    if (part.kind === "intro") {
+    if (part.kind === "intro" && edl.intro.component === "Opener") {
+      kind = "opener";
+      const line = textIn((OpenerProps.parse(edl.intro.props)).line, lang);
+      const phrases = phrasesOf(line);
+      vars = { ...common, phrases: JSON.stringify(phrases), beat: r3(beat), slot: r3(openerSlot(phrases.length, dur, beat)) };
+      file = openerScene(id, size, vars);
+    } else if (part.kind === "outro" && edl.outro.component === "EndCard") {
+      kind = "endcard";
+      vars = { ...common, line: textIn(EndCardProps.parse(edl.outro.props).line, lang), site: input.brand.site, name: input.brand.name, logoWidth: logo?.width ?? 0, logoHeight: logo?.height ?? 0, beat: r3(beat) };
+      file = endCardScene(id, size, vars, { logo: Boolean(logo) });
+    } else if (part.kind === "intro") {
       kind = "title";
       const title = input.copy.title && input.copy.title.trim() !== input.brand.name.trim() ? input.copy.title : "";
       // The split layout needs the hero and a wide frame; 9:16 centres.
@@ -390,7 +406,14 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
     } else {
       const segment = edl.segments[part.index]!;
       kind = segment.kind;
-      if (segment.kind === "shot") {
+      if (segment.kind === "primitive") {
+        const made = primitiveScene(segment, { id, size, canvas, common, dur, beat, lang, viewport: input.footage.timeline.viewport, dark: edl.style.look.theme === "dark" });
+        kind = segment.primitive.type;
+        vars = made.vars;
+        file = made.file;
+        if (segment.primitive.type === "build")
+          await run("ffmpeg", ["-v", "error", "-y", "-ss", String(segment.primitive.at), "-i", join(o.root, input.footage.src), "-frames:v", "1", join(o.out, "assets", stillFile(id))], o.signal);
+      } else if (segment.kind === "shot") {
         const shot = shotVars(input, segment, part, canvas);
         vars = { ...common, ...shot.vars };
         file = shotScene(id, size, vars, { clips: shot.clips, src: shot.src });
@@ -443,7 +466,7 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
 
   // The ambient ground under everything, for the whole video.
   const groundVars: Vars = { dur: r3(duration), enter: "cut", enterSecs: 0, exit: "cut", exitSecs: 0 };
-  const groundFile = groundScene("ground", size, groundVars);
+  const groundFile = (edl.style.timing === "music" ? plainGroundScene : groundScene)("ground", size, groundVars);
   await writeFile(join(o.out, "compositions", "ground.html"), custom.get("ground") ?? groundFile);
   if (!custom.has("ground")) written.ground = sha(groundFile);
   hosts.unshift(
@@ -496,39 +519,35 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
     );
   }
   const sfx = input.audio?.sfx ?? {};
-  const cues = sfxCues(edl, parts, input.footage.timeline, frames).filter((cue) => sfx[cue.kind]);
-  const sfxSeconds = new Map<string, number>();
-  for (const kind of new Set(cues.map((c) => c.kind))) {
-    const file = join(o.out, "assets", "sfx", basename(sfx[kind]!));
-    await place(join(o.root, sfx[kind]!), file);
-    const probed = await run("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file]).catch(() => "1.5");
-    sfxSeconds.set(kind, Number(probed.trim()) || 1.5);
-  }
-  cues.forEach((cue, i) =>
+  const sounds: Sounds = {};
+  const fileSeconds = new Map<string, number>();
+  for (const [kind, takes] of Object.entries(sfx) as [SfxKind, string[]][])
+    sounds[kind] = await Promise.all(
+      takes.map(async (rel) => {
+        const shape = await soundShape(join(o.root, rel), o.signal);
+        fileSeconds.set(rel, shape.seconds);
+        return shape;
+      }),
+    );
+  const cues = sfxCues(edl, parts, input.footage.timeline, frames, { sounds, voiced: clips.length > 0, lang }).filter((cue) => sfx[cue.kind]?.[cue.take]);
+  for (const rel of new Set(cues.map((cue) => sfx[cue.kind]![cue.take]!)))
+    await place(join(o.root, rel), join(o.out, "assets", "sfx", basename(rel)));
+  cues.forEach((cue, i) => {
+    const rel = sfx[cue.kind]![cue.take]!;
     audio.push(
-      `<audio id="sfx-${i + 1}" src="assets/sfx/${basename(sfx[cue.kind]!)}" data-start="${r3(cue.frame / fps)}" data-duration="${r3(Math.min(sfxSeconds.get(cue.kind) ?? 1.5, duration - cue.frame / fps))}" data-volume="${r3(cue.gain)}" data-track-index="${lane++}"></audio>`,
-    ),
-  );
+      `<audio id="sfx-${i + 1}" src="assets/sfx/${basename(rel)}" data-start="${r3(cue.frame / fps)}" data-duration="${r3(Math.min(fileSeconds.get(rel) ?? 1.5, duration - cue.frame / fps))}" data-volume="${r3(cue.gain)}" data-track-index="${lane++}"></audio>`,
+    );
+  });
   if (input.audio?.music) {
     await place(join(o.root, input.audio.music), join(o.out, "assets", "music.mp3"));
     const music = edl.style.music;
-    const level = 10 ** ((music.gainDb ?? -6) / 20);
-    const ducked = 10 ** (((music.gainDb ?? -6) + music.duckDb) / 20);
-    // Down 0.15 s before each line, back up 0.3 s after (PRD §9.7.2); lines closer than that stay
-    // ducked between them. A full-level point at 0, since a lane holds its first value back.
-    const spans: [number, number][] = [];
-    for (const clip of clips) {
-      const [s, e] = [Math.max(0, clip.from / fps - 0.15), Math.min(duration, (clip.from + clip.frames) / fps + 0.3)];
-      const prev = spans.at(-1);
-      if (prev && s <= prev[1]) prev[1] = Math.max(prev[1], e);
-      else spans.push([s, e]);
-    }
-    const points = [{ t: 0, v: r3(level) }];
-    for (const [s, e] of spans)
-      points.push({ t: r3(s), v: r3(level) }, { t: r3(s + 0.15), v: r3(ducked) }, { t: r3(e - 0.3), v: r3(ducked) }, { t: r3(e), v: r3(level) });
-    const automation = { version: 1, lanes: [{ target: "volume", points: points.slice(0, 512) }] };
+    const points = musicAutomation(music, edl.style.edit, clips, fps, duration);
+    const automation = { version: 1, lanes: [{ target: "volume", points }] };
+    // The bed falls away under the end card (or as much of it as there is).
+    const outro = parts.at(-1)!;
+    const fadeOut = r3(Math.min(3, Math.max(1.6, (outro.frames - outro.enter.frames) / fps)));
     audio.push(
-      `<audio id="music" data-timeline-role="music" src="assets/music.mp3" data-start="0" data-duration="${r3(duration)}" data-media-start="${r3(music.firstBeat ?? 0)}" data-fade-in="0.5" data-fade-out="1.6" data-automation='${esc(JSON.stringify(automation))}' data-track-index="${lane++}"></audio>`,
+      `<audio id="music" data-timeline-role="music" src="assets/music.mp3" data-start="0" data-duration="${r3(duration)}" data-media-start="${r3(music.firstBeat ?? 0)}" data-fade-in="0.5" data-fade-out="${fadeOut}" data-automation='${esc(JSON.stringify(automation))}' data-track-index="${lane++}"></audio>`,
     );
   }
 

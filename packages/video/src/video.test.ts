@@ -10,13 +10,26 @@ import {
   Timeline,
   Voiceover,
   jobPaths,
+  type Layout,
+  type PrimitiveSegment,
+  type Rect,
+  type ShotSegment,
+  type TimelineEvent,
 } from "@agentcast/shared";
 import { FIXTURE_JOB_DIR, readArtifact } from "@agentcast/shared/node";
 import { baselineEdl } from "./baseline.ts";
 import { cameraAt, cropFor, project } from "./camera.ts";
 import { scriptCaptions, voiceCaptions } from "./captions.ts";
 import { bezier, moveSeconds } from "./motion.ts";
-import { sfxCues } from "./audio.ts";
+import { BED_LUFS, DUCK_DB, musicAutomation, sfxCues, type Sounds } from "./audio.ts";
+import { masteringGainDb } from "./hyperframes/render.ts";
+import { musicStyle } from "./music.ts";
+import { entriesOf, regularGrid } from "./musicanalysis.ts";
+import { beatsOf, ledStyle, planMusic } from "./musicplan.ts";
+import { shapeOf } from "./sound.ts";
+import { contentBox, pixelColumns } from "./content.ts";
+import { cardCues, openerSlot, phrasesOf, primitiveCues } from "./primitives/index.ts";
+import { filmSeconds, ledEdl, snapToGrid } from "./template.ts";
 import { chooseLook, DEFAULT_LOOK } from "./look.ts";
 import { clockOf, speedAt } from "./retime.ts";
 import { assignNarration, beatParts, cursorAt, outputSize, planParts, VOICE_SPACING } from "./plan.ts";
@@ -31,6 +44,10 @@ const fixture = async () => ({
   brand: await read(jobPaths.brand, Brand),
   personality: (await read(jobPaths.creativeBrief, CreativeBrief)).personality,
 });
+const editAndTimeline = async () => {
+  const f = await fixture();
+  return { edl: baselineEdl(f), timeline: f.timeline };
+};
 const motion = MOTION_PRESETS.corporate;
 const src = { w: 1440, h: 900 };
 
@@ -241,6 +258,431 @@ describe("a trailer baseline", () => {
     if (f.timeline.events.some((e) => e.kind === "click")) expect(kinds).toContain("click");
     for (const c of cues) expect(c.frame).toBeLessThan(frames);
     expect(sfxCues({ ...edl, style: { ...edl.style, sfx: "none" } }, parts, f.timeline, frames)).toEqual([]);
+  });
+});
+
+describe("the sound effects", () => {
+  const measured: Sounds = {
+    whoosh: [{ peak: 0.3, levelDb: -12 }, { peak: 0.28, levelDb: -12 }],
+    click: [{ peak: 0.002, levelDb: -18 }, { peak: 0.003, levelDb: -18 }, { peak: 0.002, levelDb: -18 }],
+    pop: [{ peak: 0.02, levelDb: -14 }],
+    riser: [{ peak: 1.1, levelDb: -8 }],
+    hit: [{ peak: 0.01, levelDb: -8 }],
+    tick: [{ peak: 0.001, levelDb: -24 }],
+  };
+  const shot = (over: Partial<ShotSegment>): ShotSegment => ({
+    kind: "shot",
+    id: "s",
+    flowId: "f",
+    in: 0,
+    out: 6,
+    camera: [],
+    cursor: "auto",
+    transitionIn: "cut",
+    ...over,
+  });
+  const event = (over: Partial<TimelineEvent> & Pick<TimelineEvent, "t" | "kind">): TimelineEvent => ({ flowId: "f", stepId: "s1", label: "x", ...over }) as TimelineEvent;
+  async function cuesFor(segment: ShotSegment, events: TimelineEvent[], mix = {}) {
+    const { edl: base, timeline } = await editAndTimeline();
+    const edl = { ...base, segments: [segment] };
+    const { parts, frames } = planParts(edl, []);
+    return { cues: sfxCues(edl, parts, { ...timeline, events }, frames, mix), parts, edl };
+  }
+
+  it("ticks once per typed word, never for a secret", async () => {
+    const typed = await cuesFor(shot({}), [event({ t: 1, kind: "type", value: "plan the launch" })]);
+    expect(typed.cues.filter((c) => c.kind === "tick")).toHaveLength(3);
+    const secret = await cuesFor(shot({}), [event({ t: 1, kind: "type", value: { redacted: true } })]);
+    expect(secret.cues.filter((c) => c.kind === "tick")).toHaveLength(0);
+  });
+
+  it("lands a measured take's peak one frame after the picture", async () => {
+    const { cues, parts, edl } = await cuesFor(shot({}), [event({ t: 2, kind: "click" })], { sounds: measured });
+    const click = cues.find((c) => c.kind === "click")!;
+    expect(click.frame).toBe(Math.round((parts[1]!.from / edl.fps + 2 - measured.click![0]!.peak) * edl.fps) + 1);
+  });
+
+  it("rotates takes, and keeps a kind's cues apart", async () => {
+    const clicks = [1, 2, 3, 3.05].map((t) => event({ t, kind: "click" }));
+    const { cues } = await cuesFor(shot({}), clicks, { sounds: measured });
+    const played = cues.filter((c) => c.kind === "click");
+    expect(played.map((c) => c.take)).toEqual([0, 1, 2]);
+  });
+
+  it("plays one riser, into the hit on the outro, with a pop as the title lands", async () => {
+    const { cues, parts } = await cuesFor(shot({}), [], { sounds: measured });
+    const outro = parts.at(-1)!;
+    expect(cues.filter((c) => c.kind === "riser")).toHaveLength(1);
+    const hit = cues.find((c) => c.kind === "hit")!;
+    const riser = cues.find((c) => c.kind === "riser")!;
+    expect(hit.frame).toBeGreaterThanOrEqual(outro.from);
+    expect((hit.frame - riser.frame) / 30).toBeCloseTo(measured.riser![0]!.peak, 0);
+    expect(cues.some((c) => c.kind === "pop")).toBe(true);
+  });
+
+  it("whooshes on big camera moves only", async () => {
+    const small = shot({ camera: [{ t: 2, target: "full", zoom: 1.2, ease: "smooth" }] });
+    const big = shot({ camera: [{ t: 2, target: [10, 10, 100, 40], zoom: 1.8, ease: "spring" }] });
+    const count = async (s: ShotSegment) => (await cuesFor(s, [])).cues.filter((c) => c.kind === "whoosh").length;
+    expect(await count(big)).toBe((await count(small)) + 1);
+  });
+
+  it("sets measured levels from the bed, lower under a voice, and never above unity", async () => {
+    const free = (await cuesFor(shot({}), [event({ t: 2, kind: "click" })], { sounds: measured })).cues.find((c) => c.kind === "click")!;
+    const voiced = (await cuesFor(shot({}), [event({ t: 2, kind: "click" })], { sounds: measured, voiced: true })).cues.find((c) => c.kind === "click")!;
+    expect(free.gain).toBeCloseTo(10 ** ((BED_LUFS.trailer + 3 - -18) / 20), 3);
+    expect(voiced.gain).toBeLessThan(free.gain);
+    const quiet = { ...measured, click: [{ peak: 0, levelDb: -60 }] };
+    expect((await cuesFor(shot({}), [event({ t: 2, kind: "click" })], { sounds: quiet })).cues.find((c) => c.kind === "click")!.gain).toBe(1);
+  });
+
+  it("keeps a shot's own cues whatever the limits", async () => {
+    const own = shot({ sfx: [{ t: 1, kind: "hit" }, { t: 1.1, kind: "hit" }] });
+    const { cues } = await cuesFor(own, []);
+    expect(cues.filter((c) => c.kind === "hit").length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("the music's volume", () => {
+  const db = (v: number) => 20 * Math.log10(v);
+  const music = { gainDb: -4, duckDb: DUCK_DB };
+  const line = (from: number, seconds: number) => ({ from: from * 30, frames: seconds * 30 });
+  const at = (points: { t: number; v: number }[], t: number) => points.find((p) => p.t === t)!.v;
+
+  it("builds a trailer to its plateau, and never goes down without a voice", () => {
+    const points = musicAutomation(music, "trailer", [], 30, 30);
+    expect(db(at(points, 0))).toBeCloseTo(-14, 0);
+    expect(db(points.at(-1)!.v)).toBeCloseTo(-4, 0);
+    for (const [i, p] of points.entries()) if (i) expect(p.v).toBeGreaterThanOrEqual(points[i - 1]!.v);
+    expect(new Set(points.filter((p) => p.t >= 18).map((p) => p.v)).size).toBe(1);
+  });
+
+  it("keeps a guide flat", () => {
+    const points = musicAutomation({ gainDb: -16, duckDb: DUCK_DB }, "guide", [], 30, 30);
+    expect(new Set(points.map((p) => p.v)).size).toBe(1);
+  });
+
+  it("ducks a line by no more than the duck, down before it starts and back up after it", () => {
+    const points = musicAutomation(music, "trailer", [line(20, 3)], 30, 30);
+    expect(db(at(points, 20))).toBeCloseTo(-10, 0);
+    expect(db(at(points, 23))).toBeCloseTo(-10, 0);
+    expect(db(at(points, 19.85))).toBeCloseTo(-4, 0);
+    expect(db(at(points, 23.5))).toBeCloseTo(-4, 0);
+  });
+
+  it("doesn't bob between close lines", () => {
+    const points = musicAutomation(music, "trailer", [line(20, 2), line(23, 2)], 30, 30);
+    expect(points.some((p) => p.t === 22.5)).toBe(false);
+    expect(db(at(points, 25))).toBeCloseTo(-10, 0);
+    const apart = musicAutomation(music, "trailer", [line(20, 2), line(25, 2)], 30, 60);
+    expect(db(at(apart, 22.5))).toBeGreaterThan(-13);
+  });
+
+  it("doesn't push a line near the start lower than the duck", () => {
+    const points = musicAutomation(music, "trailer", [line(1, 2)], 30, 30);
+    for (const p of points) if (p.t >= 1 && p.t <= 3) expect(db(p.v)).toBeGreaterThanOrEqual(-14.1);
+  });
+
+  it("stays inside the lane's limit, even with hundreds of lines", () => {
+    const many = Array.from({ length: 600 }, (_, i) => line(i * 3, 1));
+    expect(musicAutomation(music, "guide", many, 30, 1800).length).toBeLessThanOrEqual(512);
+  });
+
+  it("levels tracks of different loudness to the same bed, under −1 dBTP", () => {
+    const track = { id: "t", file: "t.mp3", title: "t", source: "https://x.example", license: "CC0", mood: ["fun"], energy: 3, bpm: 120, firstBeat: 0, seconds: 100, analysis: { confidence: "high" as const, entries: [0], tailEnd: 100 } };
+    expect(musicStyle({ ...track, lufs: -19.8, truePeak: -0.7 }, "trailer").gainDb).toBe(-4.2);
+    expect(musicStyle({ ...track, lufs: -9.2, truePeak: 1.1 }, "trailer").gainDb).toBe(-14.8);
+    expect(musicStyle({ ...track, lufs: -30, truePeak: -3 }, "trailer").gainDb).toBe(2);
+  });
+});
+
+describe("the music's grid", () => {
+  it("fits jittery beats to one tempo", () => {
+    const beats = Array.from({ length: 80 }, (_, i) => 0.025 + i * 0.5 + (i % 3 === 0 ? 0.012 : i % 3 === 1 ? -0.012 : 0));
+    beats[12] = beats[12]! - 0.11;
+    const grid = regularGrid(beats, 119.7);
+    expect(grid.bpm).toBeCloseTo(120, 1);
+    expect(grid.firstBeat).toBeCloseTo(0.025, 1);
+    expect(grid.fit).toBeGreaterThan(0.9);
+  });
+
+  it("sees when beats don't fit", () => {
+    let t = 0;
+    const beats = Array.from({ length: 40 }, (_, i) => (t += [0.75, 0.88, 0.62, 0.81, 0.97][i % 5]!));
+    expect(regularGrid(beats, 80).fit).toBeLessThan(0.6);
+  });
+
+  it("enters at a section start only when the music holds up after it", () => {
+    const bars = Array.from({ length: 40 }, (_, i) => i * 2);
+    const quietThenFull = bars.map((_, i) => (i < 12 ? -24 : -16));
+    expect(entriesOf(bars, quietThenFull, [8, 24.4, 60])[0]).toBe(24);
+    expect(entriesOf(bars, quietThenFull, [8])[0]).toBe(24);
+    expect(entriesOf(bars.slice(0, 3), [-20, -20, -20], [])).toEqual([0]);
+  });
+});
+
+describe("the music's plan", () => {
+  const track = {
+    id: "t",
+    file: "t.mp3",
+    title: "t",
+    source: "https://x.example",
+    license: "CC0",
+    mood: ["fun"],
+    energy: 3,
+    bpm: 120,
+    firstBeat: 0.025,
+    seconds: 188,
+    lufs: -18,
+    truePeak: -1,
+    analysis: { confidence: "high" as const, entries: [24.025, 60.025], tailEnd: 183.7 },
+  };
+
+  it("enters at a strong bar and leaves through the track's ending, on bar lines", () => {
+    const plan = planMusic(track, 20, 4);
+    expect(plan.spans).toEqual([
+      { at: 0, mediaStart: 24.025, seconds: 16 },
+      { at: 16, mediaStart: 178.025, seconds: 4 },
+    ]);
+    expect((plan.spans[1]!.mediaStart - track.firstBeat) % plan.bar).toBeCloseTo(0, 3);
+  });
+
+  it("plays straight through a track too short to join", () => {
+    const plan = planMusic({ ...track, seconds: 30, analysis: { ...track.analysis, entries: [2.025], tailEnd: 29 } }, 28, 4);
+    expect(plan.spans).toHaveLength(1);
+  });
+
+  it("gives a led film's music its premix to play from the start", () => {
+    expect(ledStyle(track).firstBeat).toBe(0);
+    expect(beatsOf(track)).toEqual({ beat: 0.5, bar: 2 });
+  });
+});
+
+describe("a music-led edit", () => {
+  const view = { w: 1440, h: 900, dpr: 2 };
+  const timeline = (events: Partial<TimelineEvent>[], duration = 20): Timeline => ({
+    schemaVersion: 2,
+    recordingId: "r",
+    formFactor: "desktop",
+    viewport: view,
+    fps: 30,
+    duration,
+    flows: [{ flowId: "f", in: 0, out: duration }],
+    events: events.map((e) => ({ flowId: "f", stepId: "s", kind: "settled", label: "x", url: "https://x.example", t: 1, ...e }) as TimelineEvent),
+    dead: [],
+  });
+  const beat = (id: string, from: number, to: number, title?: string): Storyboard["beats"][number] => ({
+    id,
+    role: "core",
+    flowId: "f",
+    in: from,
+    out: to,
+    onScreen: title ? [{ kind: "title", text: title }] : [],
+    motion: { kind: "reveal", emotion: "calm" },
+    intent: "x",
+    maxSeconds: 3,
+  });
+  const script = (beats: Storyboard["beats"]): Script => ({
+    schemaVersion: 2,
+    lang: "en",
+    hook: "Plan and ship",
+    titleCard: "Plan and ship",
+    cta: "Try it",
+    posting: { title: "t", description: "d", hashtags: [] },
+    segments: beats.map((b) => ({ beatId: b.id, text: "", onScreen: b.onScreen.map((o) => o.text), maxSeconds: 3 })),
+  });
+  const led = (beats: Storyboard["beats"], t: Timeline, over = {}) =>
+    ledEdl({
+      timeline: t,
+      storyboard: { schemaVersion: 1, arc: "launch", edit: "trailer", beats },
+      scripts: { en: script(beats) },
+      personality: "energetic",
+      targetSeconds: 30,
+      ...over,
+    });
+  const columns: Layout["groups"][number] = {
+    kind: "columns",
+    box: [100, 200, 1200, 600],
+    items: [
+      [100, 200, 280, 600],
+      [400, 200, 280, 600],
+      [700, 200, 280, 600],
+      [1000, 200, 280, 600],
+    ],
+  };
+  const moves = (edl: Edl) => edl.segments.map((s) => (s.kind === "primitive" ? s.primitive.type : s.kind));
+
+  it("opens, plays a label then a proof per shot, and closes, each a whole number of beats", () => {
+    const beats = [beat("a", 0, 5, "Plan it"), beat("b", 5, 10, "Ship it")];
+    const edl = led(beats, timeline([{ t: 2, layout: { groups: [columns] } }, { t: 7, layout: { panel: [800, 20, 600, 860], groups: [] } }]));
+    expect(edl.schemaVersion).toBe(7);
+    expect(edl.style.timing).toBe("music");
+    expect(edl.intro.component).toBe("Opener");
+    expect(edl.outro.component).toBe("EndCard");
+    expect(moves(edl)).toEqual(["label", "build", "label", "proof"]);
+    for (const seconds of [edl.intro.seconds, edl.outro.seconds, ...edl.segments.map((s) => ("seconds" in s ? s.seconds : 0))])
+      expect((seconds / 0.5) % 1).toBeCloseTo(0, 5);
+    const { parts } = planParts(edl, []);
+    // Nothing overlaps: every part starts as the last one ends, on the grid.
+    parts.slice(1).forEach((p, i) => expect(p.from).toBe(parts[i]!.from + parts[i]!.frames));
+    expect(parts.every((p) => p.enter.frames === 0)).toBe(true);
+  });
+
+  it("builds a page from its columns, lifting a piece from the middle", () => {
+    const cards: Layout["groups"][number] = { kind: "rows", box: [400, 300, 280, 300], items: [[400, 300, 280, 96], [400, 410, 280, 96], [400, 520, 280, 96]] };
+    const edl = led([beat("a", 0, 5)], timeline([{ t: 2, layout: { groups: [columns, cards] } }]));
+    const p = (edl.segments[0] as PrimitiveSegment).primitive;
+    expect(p).toMatchObject({ type: "build", at: 2, reveal: "rise", lift: [400, 410, 280, 96] });
+    expect(p.type === "build" && p.items).toHaveLength(4);
+  });
+
+  it("takes a page's structure as an action found it", () => {
+    const edl = led([beat("a", 0, 5)], timeline([{ t: 3, kind: "click", layout: { at: 2.5, groups: [columns] } }]));
+    expect((edl.segments[0] as PrimitiveSegment).primitive).toMatchObject({ type: "build", at: 2.5 });
+  });
+
+  it("hops down a list only while the page is still", () => {
+    const rows: Layout["groups"][number] = { kind: "rows", box: [800, 100, 500, 400], items: [0, 1, 2, 3, 4, 5].map((i) => [800, 100 + i * 60, 500, 52] as Rect) };
+    const layout = { panel: [780, 20, 640, 860] as Rect, groups: [rows] };
+    const still = led([beat("a", 0, 10)], timeline([{ t: 4, layout }]));
+    expect((still.segments[0] as PrimitiveSegment).primitive).toMatchObject({ type: "proof", frame: [780, 20, 640, 860] });
+    const hops = (still.segments[0] as PrimitiveSegment).primitive;
+    expect(hops.type === "proof" && hops.hops).toHaveLength(3);
+    const moved = led([beat("a", 0, 10)], timeline([{ t: 4, layout }, { t: 4.6, kind: "click" }]));
+    const few = (moved.segments[0] as PrimitiveSegment).primitive;
+    expect(few.type === "proof" && (few.hops ?? []).length).toBeLessThanOrEqual(1);
+  });
+
+  it("closes in on typing", () => {
+    const edl = led([beat("a", 0, 6)], timeline([{ t: 1, kind: "type", value: "plan the launch", bbox: [300, 300, 500, 44] }, { t: 3, layout: { component: [200, 200, 800, 400], groups: [] } }]));
+    expect((edl.segments[0] as PrimitiveSegment).primitive).toMatchObject({ type: "prompt", input: [300, 300, 500, 44], frame: [200, 200, 800, 400] });
+  });
+
+  it("never shows a secret being typed as a close-up", () => {
+    const edl = led([beat("a", 0, 6)], timeline([{ t: 1, kind: "type", value: { redacted: true }, bbox: [300, 300, 500, 44] }]));
+    expect(moves(edl)).not.toContain("prompt");
+  });
+
+  it("doesn't repeat a move when it has a choice", () => {
+    const layout = { panel: [780, 20, 640, 860] as Rect, groups: [columns] };
+    const edl = led([beat("a", 0, 5), beat("b", 5, 10)], timeline([{ t: 2, layout }, { t: 7, layout }]));
+    expect(moves(edl)).toEqual(["build", "proof"]);
+  });
+
+  it("leaves out a shot with nothing on screen, and reads a drawn board from its pixels", () => {
+    const empty = { t: 2, box: [0, 0, 100, 100] as Rect, fill: 0.02 };
+    const beats = [beat("a", 0, 5), beat("b", 5, 10)];
+    const t = timeline([{ t: 7, layout: { panel: [800, 20, 600, 860], groups: [] } }]);
+    expect(moves(led(beats, t, { content: { a: empty } }))).toEqual(["proof"]);
+    const board = { ...empty, board: { t: 2, columns: columns.items, cards: [[400, 300, 280, 96] as Rect] } };
+    expect(moves(led(beats, t, { content: { a: board } }))).toEqual(["build", "proof"]);
+  });
+
+  it("still has a proof if every shot looks empty", () => {
+    const empty = { t: 2, box: [0, 0, 100, 100] as Rect, fill: 0.02 };
+    expect(moves(led([beat("a", 0, 5)], timeline([]), { content: { a: empty } }))).toEqual(["proof"]);
+  });
+
+  it("flips the frame around the middle of a longer film", () => {
+    const beats = [beat("a", 0, 5, "One"), beat("b", 5, 10, "Two"), beat("c", 10, 15, "Three")];
+    const edl = led(beats, timeline([{ t: 2, layout: { groups: [columns] } }]));
+    const labels = edl.segments.flatMap((s) => (s.kind === "primitive" && s.primitive.type === "label" ? [s.primitive] : []));
+    expect(labels.map((l) => l.ground)).toEqual(["base", "invert", "base"]);
+    expect(labels[0]!.open).toBe("slit");
+  });
+
+  it("uses the track's beat, and fits the film to the target", () => {
+    const beats = Array.from({ length: 9 }, (_, i) => beat(`b${i}`, i, i + 1, "Go"));
+    const edl = led(beats, timeline([]), { grid: { beat: 0.75, bar: 3 }, targetSeconds: 20 });
+    expect(filmSeconds(edl)).toBeLessThanOrEqual(24);
+    for (const s of edl.segments) if (s.kind === "primitive") expect((s.seconds / 0.75) % 1).toBeCloseTo(0, 5);
+  });
+
+  it("sends a director's edit back onto the grid, and says how much moved", () => {
+    const edl = led([beat("a", 0, 5, "Go")], timeline([]));
+    const label = edl.segments[0] as PrimitiveSegment;
+    const off = { ...edl, segments: [{ ...label, seconds: 1.3 }, ...edl.segments.slice(1)] };
+    const { edl: snapped } = snapToGrid(off);
+    expect((snapped.segments[0] as PrimitiveSegment).seconds).toBe(1.5);
+    expect(snapToGrid({ ...edl, segments: [{ ...label, seconds: 3.1 }] }).moved).toBe(0);
+    expect(snapToGrid({ ...edl, segments: [{ ...label, seconds: 0.1 }] }).edl.segments[0]).toMatchObject({ seconds: 0.5 });
+  });
+});
+
+describe("the moves' sounds", () => {
+  const t = { events: [] } as unknown as Timeline;
+  it("land when the moves do", () => {
+    const items = [[0, 0, 10, 10], [20, 0, 10, 10], [40, 0, 10, 10], [60, 0, 10, 10]] as Rect[];
+    const build = primitiveCues({ type: "build", flowId: "f", at: 1, items, reveal: "rise", lift: items[1]! }, 3, 0.5, t, "en");
+    expect(build.map((c) => [c.kind, c.at])).toEqual([["pop", 0], ["pop", 0.25], ["pop", 0.5], ["pop", 0.75], ["pop", 1.55]]);
+    const hop = primitiveCues({ type: "proof", flowId: "f", in: 0, out: 3, frame: [0, 0, 10, 10], tilt: "soft", hops: items.slice(0, 2) }, 3, 0.5, t, "en");
+    expect(hop.filter((c) => c.kind === "click").map((c) => c.at)).toEqual([2, 2.5]);
+    expect(primitiveCues({ type: "label", text: { en: "x" }, ground: "invert", open: "iris" }, 1, 0.5, t, "en")[0]!.kind).toBe("hit");
+  });
+
+  it("put a riser into the hit on the end card, once", () => {
+    const cues = cardCues({ component: "EndCard", props: { line: { en: "Go" } }, seconds: 4 }, 4, 0.5, "en")!;
+    expect(cues.map((c) => c.kind)).toEqual(["riser", "hit"]);
+    expect(cardCues({ component: "TitleCard", props: {}, seconds: 4 }, 4, 0.5, "en")).toBeUndefined();
+    const opener = cardCues({ component: "Opener", props: { line: { en: "Plan and navigate from idea to launch" } }, seconds: 4 }, 4, 0.5, "en")!;
+    expect(opener.at(-1)).toMatchObject({ kind: "whoosh", at: 3.55 });
+  });
+
+  it("split a line into phrases and share time out on whole beats", () => {
+    expect(phrasesOf("Plan and navigate from idea to launch")).toEqual(["Plan and navigate", "from idea to", "launch"]);
+    expect(openerSlot(2, 4, 0.5)).toBe(1.5);
+    expect(openerSlot(8, 4, 0.5)).toBe(0.5);
+  });
+});
+
+describe("reading a page's pixels", () => {
+  const frame = (w: number, h: number, paint: (x: number, y: number) => number) => Uint8Array.from({ length: w * h }, (_, i) => paint(i % w, Math.floor(i / w)));
+
+  it("finds the region with content, and how much there is", () => {
+    const { box, fill } = contentBox(frame(144, 90, (x, y) => (x >= 72 && y >= 45 ? 200 : 10)), 144, 90);
+    expect(box[0]).toBeCloseTo(0.5, 1);
+    expect(box[1]).toBeCloseTo(0.5, 1);
+    expect(fill).toBeGreaterThan(0.2);
+  });
+
+  it("finds a board's columns from evenly spaced gutters, even if the outer ones fade", () => {
+    const paint = (x: number, y: number) => {
+      if (y < 100 || y > 380) return 10;
+      if ((x > 200 && x < 206) || (x > 356 && x < 362) || (x > 512 && x < 518)) return 10;
+      if (x < 142 || x > 577) return 10; // the outer columns fade out
+      return (y - 100) % 90 < 80 ? 22 : 10; // cards with gaps between
+    };
+    const found = pixelColumns(frame(720, 450, paint), 720, 450);
+    expect(found?.columns).toHaveLength(4);
+    expect(found!.columns[1]![0]).toBeCloseTo(206 / 720, 2);
+    expect(found!.columns[1]![2]).toBeCloseTo(150 / 720, 1);
+    expect(found!.cards.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("doesn't see a board in ordinary pages", () => {
+    expect(pixelColumns(frame(720, 450, (x, y) => (y > 100 && y < 300 && x > 100 && x < 600 ? 150 : 10)), 720, 450)).toBeUndefined();
+    expect(pixelColumns(frame(720, 450, () => 10), 720, 450)).toBeUndefined();
+  });
+});
+
+describe("the master", () => {
+  it("is one gain to the target, none for silence", () => {
+    expect(masteringGainDb(-20.5)).toBe(6.5);
+    expect(masteringGainDb(Number.NEGATIVE_INFINITY)).toBe(0);
+    expect(masteringGainDb(Number.NaN)).toBe(0);
+  });
+});
+
+describe("a sound's shape", () => {
+  it("finds the peak and the level", () => {
+    const rate = 48000;
+    const samples = new Float32Array(rate);
+    for (let i = rate / 2; i < rate / 2 + 480; i++) samples[i] = 0.5;
+    const shape = shapeOf(samples, rate);
+    expect(shape.seconds).toBe(1);
+    expect(shape.peak).toBeCloseTo(0.505, 2);
+    // 10 ms of sound over the 400 ms window.
+    expect(shape.levelDb).toBeCloseTo(20 * Math.log10(0.5 * Math.sqrt(480 / 19200)), 1);
   });
 });
 

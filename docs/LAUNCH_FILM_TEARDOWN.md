@@ -109,8 +109,10 @@ ours-amazon      0 -4 -14 -2 -5 -3 -9 -10  0 -24
    - **UI events:** pops, clicks and arrivals land on a sound 2–3× above chance in Attio, Notion,
      the Linear films, Raycast and v0. That is designed sound effects: a click on every click, a
      tick per typed word, a whoosh per move, a pop per reveal.
-   - **Ours:** at chance (0.17 vs 0.16; 0.08 vs 0.13). Our click sound effects are either missing
-     or not on the frame of the visual event.
+   - **Ours:** at chance (0.17 vs 0.16; 0.08 vs 0.13). Clicks, transitions and headlines do have
+     frame-placed cues (`packages/video/src/audio.ts`; 16 in the Linear render). But typing, callouts,
+     camera moves and montage clips have none, and a soft click under the voice may not register
+     as an onset.
 4. **The soundtrack builds; ours pumps.**
    - **Shape:** every reference has an arc. It starts 10–15 dB down, builds steadily to a plateau
      at 50–75% of the film, then a hit or a sting on the logo and a decay to silence in the final

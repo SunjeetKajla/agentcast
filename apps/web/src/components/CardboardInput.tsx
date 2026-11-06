@@ -51,12 +51,14 @@ export default function CardboardInput({ onSubmit, isLoading = false, error }: C
 
   const cycleMode = () => {
     const i = MODES.findIndex((m) => m.mode === choices.mode);
-    set({ mode: MODES[(i + 1) % MODES.length]!.mode });
+    const mode = MODES[(i + 1) % MODES.length]!.mode;
+    // A how-to is narrated; launches and sales films are cut to their music.
+    set({ mode, voiceover: mode === "tutorial" });
   };
 
   const applyPreset = (preset: (typeof PRESETS)[number]) => {
     setSelectedPreset(preset.label);
-    set({ mode: preset.mode });
+    set({ mode: preset.mode, voiceover: preset.mode === "tutorial" });
     // Keep the link, replace the description.
     setInput(url ? `${url} ${preset.prompt}` : `${preset.prompt} `);
   };
@@ -121,7 +123,7 @@ export default function CardboardInput({ onSubmit, isLoading = false, error }: C
                 aria-pressed={choices.voiceover}
                 onClick={() => set({ voiceover: !choices.voiceover })}
                 className={pill(choices.voiceover)}
-                title="Voiceover: a narrator reads the script. Off: a silent video with the script as captions"
+                title="Voiceover: a narrator reads the script. Off: cut to the music, with big on-screen type (launches and sales)"
               >
                 {choices.voiceover ? "Voiceover" : "No voiceover"}
               </button>

@@ -53,6 +53,15 @@ export type BaselineInput = {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
+/** The brand's look, shared by both kinds of edit. */
+export function brandStyle(brand: Brand | undefined, personality: Personality) {
+  return {
+    palette: brand ? brand.palette : DEFAULT_PALETTE,
+    fonts: { display: brand?.fonts.display.family ?? "Inter", text: brand?.fonts.text.family ?? "Inter" },
+    look: chooseLook(brand, personality, brand ? new URL(brand.url).host : "agentcast"),
+  };
+}
+
 /**
  * One segment per storyboard beat with footage, trimmed to its span, plus a headline scene for each
  * headline beat. The camera starts toward each clicked element early enough to land as the click
@@ -159,9 +168,7 @@ export function baselineEdl(o: BaselineInput): Edl {
     schemaVersion: 6,
     fps: 30,
     style: {
-      palette: brand ? brand.palette : DEFAULT_PALETTE,
-      fonts: { display: brand?.fonts.display.family ?? "Inter", text: brand?.fonts.text.family ?? "Inter" },
-      look: chooseLook(brand, o.personality, brand ? new URL(brand.url).host : "agentcast"),
+      ...brandStyle(brand, o.personality),
       pacing: PACING[o.personality],
       edit: storyboard.edit,
       captionStyle: trailer ? "minimal" : o.voices?.length ? "karaoke" : "block",

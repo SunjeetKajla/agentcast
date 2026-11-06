@@ -75,13 +75,14 @@ export async function prepareWorkspace(w: WorkspaceInput): Promise<void> {
     duration,
     flows,
     dead,
-    events: events.map(({ t, flowId, stepId, kind, label, bbox, cursor }) => ({
+    events: events.map(({ t, flowId, stepId, kind, label, bbox, cursor, layout }) => ({
       t,
       flowId,
       stepId,
       kind,
       label,
       ...(bbox ? { bbox } : {}),
+      ...(layout ? { layout } : {}),
       ...(cursor ? { cursor: { t0: cursor.t0, t1: cursor.t1 } } : {}),
     })),
   });
@@ -108,6 +109,7 @@ export async function prepareWorkspace(w: WorkspaceInput): Promise<void> {
       if (name.endsWith(".md") && !["plugin-installation.md", "skill-lifecycle.md"].includes(name))
         await copyFile(join(skill, "references", name), join(guide, "references", name));
     await copyFile(here("../guides/reference-look.md"), join(w.dir, "guides", "reference-look.md"));
+    await copyFile(here("../guides/primitives.md"), join(w.dir, "guides", "primitives.md"));
     // What an agent without a shell isn't shown (packages/llm reads this): vendored libraries, fonts and
     // the compiler's bookkeeping.
     await writeFile(
@@ -182,8 +184,8 @@ type Edl = {
       chrome: 'browser' | 'minimal' | 'none';                  // the frame around footage when wide
       radius: number };                                        // corner radius at 1080p, 0–48
     pacing, music, edit ('${w.baseline.style.edit}'): leave them (music is the worker's pick, rendered under the voice);
-    sfx: 'auto' | 'none';        // auto: whooshes through transitions, clicks on clicks, a riser into the
-                                 // title, pops as headlines land, a hit on the outro
+    sfx: 'auto' | 'none';        // auto: whooshes through transitions and big camera moves, clicks on clicks,
+                                 // a tick per typed word, pops as text lands, a riser into a hit on the outro
     captionStyle: 'karaoke' | 'block' | 'minimal';    // karaoke needs the voice's word timings
     frame: 'window' | 'tilt' | 'none';   // 16:9 shots: 'window' sits the footage in a frame on the brand
                                  // backdrop and opens it to full screen as the camera zooms in; 'tilt'
@@ -256,7 +258,7 @@ ambient layer, and \`captions\`). Those files are yours: rewrite any of them, or
 with a new file, when a beat deserves better than the catalogue's version. The worker keeps the files you
 changed for every language, both aspects and re-runs, so write them to fit any of those.
 
-**The look to reach** is \`guides/reference-look.md\`: two launch films (LangEase, Lovable 2.0), shot by shot,
+${w.baseline.style.timing === "music" ? "**This film is music-led.** It has no voice: the music's beats set every length, and on-screen type carries the words. It's built from the moves in `guides/primitives.md`. Keep to them, and write a scene only when a beat truly earns it. Improve it by choosing better moves, regions and words, not by slowing it down.\n\n" : ""}**The look to reach** is \`guides/reference-look.md\`: two launch films (LangEase, Lovable 2.0), shot by shot,
 with the motion numbers to copy. Read it before you touch a scene. **How HyperFrames works** is
 \`guides/hyperframes/hyperframes/SKILL.md\` and its \`references/\` (format, motion, look). Ignore what they
 say about init, preview, render, publish, capture, skills or the desktop app: here you only edit files, run

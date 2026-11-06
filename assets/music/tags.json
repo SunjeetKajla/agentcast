@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "tracks": [
     {
       "id": "enter-the-party",
@@ -8,11 +8,29 @@
       "artist": "Kevin MacLeod",
       "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100240",
       "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/): credit \"Enter the Party\" Kevin MacLeod (incompetech.com)",
-      "mood": ["energetic", "upbeat", "driving", "playful", "fun", "bright"],
+      "mood": [
+        "energetic",
+        "upbeat",
+        "driving",
+        "playful",
+        "fun",
+        "bright"
+      ],
       "energy": 5,
       "bpm": 120,
-      "firstBeat": 0.025,
-      "seconds": 188.056
+      "firstBeat": 0.034,
+      "seconds": 188.056,
+      "lufs": -19.8,
+      "truePeak": -0.7,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          24.034,
+          40.034,
+          56.034
+        ],
+        "tailEnd": 183.685
+      }
     },
     {
       "id": "electrodoodle",
@@ -21,11 +39,33 @@
       "artist": "Kevin MacLeod",
       "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200079",
       "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/): credit \"Electrodoodle\" Kevin MacLeod (incompetech.com)",
-      "mood": ["playful", "quirky", "tech", "electronic", "bright", "corporate"],
+      "mood": [
+        "playful",
+        "quirky",
+        "tech",
+        "electronic",
+        "bright",
+        "corporate"
+      ],
       "energy": 3,
-      "bpm": 79.8,
-      "firstBeat": 0.035,
-      "seconds": 166.06
+      "bpm": 79.81,
+      "firstBeat": 0.701,
+      "seconds": 166.06,
+      "lufs": -9.2,
+      "truePeak": 1.1,
+      "analysis": {
+        "confidence": "low",
+        "entries": [
+          0.701,
+          24.758,
+          33.78,
+          87.91,
+          96.931,
+          120.989,
+          130.011
+        ],
+        "tailEnd": 165.612
+      }
     }
   ]
 }

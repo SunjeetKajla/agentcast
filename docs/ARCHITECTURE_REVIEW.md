@@ -235,7 +235,8 @@ parameterised primitives taken from the teardown (§5 and §6.2 there):
 - **Guide mode:** voice-led, as today.
 - **Effect:** removes the voice stage and the per-language voice cost from the default launch path.
   Languages become text-only re-typesets, which is also why rendering gets cheaper (§4).
-- **Music source:** the library is empty today (`assets/music/`). For production either license
+- **Music source:** the library has two CC BY tracks (`assets/music/tags.json`; the audio files
+  aren't committed), and CC BY requires a credit wherever a video is published. For production either license
   a catalogue (an API-licensed stock library), or generate per video with a music-generation
   model that grants commercial rights. Check the provider terms; the tracks must be cleared
   for customers' commercial use.

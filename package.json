@@ -10,6 +10,7 @@
     "dev:web": "pnpm --filter @agentcast/web dev",
     "build:web": "pnpm --filter agentcast-frontend build",
     "dev:worker": "pnpm --filter @agentcast/worker dev",
+    "agentcast": "tsx packages/cli/src/index.ts",
     "typecheck": "pnpm -r --parallel --if-present typecheck",
     "test": "vitest run",
     "test:watch": "vitest",

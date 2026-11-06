@@ -37,6 +37,7 @@ beforeEach(async () => {
     ...io,
     dir,
     config: JobConfig.parse({
+      voiceover: true,
       url: "https://demoboard.vercel.app/",
       variants: {
         aspects: ["16x9"],

@@ -1,4 +1,4 @@
-// @agentcast/video: the edit, rendered by HyperFrames (Remotion legacy behind AGENTCAST_RENDERER). Camera, timing and the baseline edit are pure; renderVideo() renders a variant.
+// @agentcast/video: the edit, rendered by HyperFrames. Camera, timing and the baseline edit are pure; renderVideo() renders a variant.
 export { baselineEdl, type BaselineInput } from "./baseline.ts";
 export { cameraAt, cropFor, inView, onPage, project, zoomOf, type Crop, type Size } from "./camera.ts";
 export { scriptCaptions, voiceCaptions } from "./captions.ts";
@@ -18,12 +18,16 @@ export {
 } from "./plan.ts";
 export { renderStills, renderVideo, stillMoments, variantDir, type RenderOptions } from "./render.ts";
 export * from "./hyperframes/index.ts";
-export { sfxCues, type SfxCue, type SfxKind } from "./audio.ts";
+export { BED_LUFS, DUCK_DB, musicAutomation, sfxCues, type SfxCue, type SfxKind, type Sound, type Sounds } from "./audio.ts";
 export { chooseLook, DEFAULT_LOOK, type Look } from "./look.ts";
 export { clockOf, speedAt, type Clock, type Ramp } from "./retime.ts";
-export { ensureSfx } from "./sound.ts";
+export { ensureSfx, sfxDir, shapeOf, soundShape } from "./sound.ts";
 
-export { loadMusicLibrary, MUSIC_LEVEL, musicDir, pickTrack } from "./music.ts";
+export { analyzeTrack, barStarts, entriesOf, regularGrid } from "./musicanalysis.ts";
+export { beatsOf, ledStyle, planMusic, premixMusic } from "./musicplan.ts";
+export { contentBox, pixelColumns, shotContent } from "./content.ts";
+export { filmSeconds, ledEdl, snapToGrid, type LedInput, type ShotContent } from "./template.ts";
+export { loadMusicLibrary, musicDir, musicStyle, pickTrack } from "./music.ts";
 export { ink, readableOn, contrastOf, luminanceOf, mixHex } from "./ink.ts";
 export { timeMap, boxMap, remapEdl, remapStoryboard, type Retake } from "./remap.ts";
 export { measureVideo, type VideoMeasure } from "./measure.ts";

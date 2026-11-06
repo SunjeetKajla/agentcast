@@ -1,5 +1,5 @@
 import { access, copyFile, mkdir, rename } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import {
   Brand,
   Edl,
@@ -8,6 +8,8 @@ import {
   Storyboard,
   Timeline,
   Voiceover,
+  musicLed,
+  voiced,
   jobPaths,
   type Aspect,
 } from "@agentcast/shared";
@@ -57,7 +59,7 @@ export async function videoInput(
       ctx.read(jobPaths.storyboard, Storyboard),
       ctx.read(jobPaths.script(lang), Script),
       ctx.read(jobPaths.productBrief, ProductBrief),
-      ctx.config.voiceover
+      voiced(ctx.config)
         ? optional(ctx.read(jobPaths.voice(lang), Voiceover))
         : undefined,
       optional(ctx.read(jobPaths.brand, Brand)),
@@ -85,9 +87,12 @@ export async function videoInput(
     lang,
     footage: { src: jobPaths.recording("desktop"), timeline },
     narration,
-    captions: voice
-      ? voiceCaptions(plan.clips)
-      : scriptCaptions(plan.parts, edl, storyboard, script),
+    // A music-led film's type is its narration.
+    captions: musicLed(ctx.config)
+      ? []
+      : voice
+        ? voiceCaptions(plan.clips)
+        : scriptCaptions(plan.parts, edl, storyboard, script),
     brand: {
       name: product.name,
       tagline: product.oneLiner,
@@ -113,20 +118,23 @@ export async function videoInput(
 }
 
 /**
- * The sound effects, made once per machine in $AGENTCAST_HOME/sfx and copied into the job's
- * render/audio/sfx/ so renders read them like any other job file.
+ * The sound effects' takes, from the pack or made once per machine in $AGENTCAST_HOME/sfx, copied
+ * into the job's render/audio/sfx/ so renders read them like any other job file.
  */
 async function soundEffects(
   ctx: StageContext,
-): Promise<Partial<Record<SfxKind, string>>> {
+): Promise<Partial<Record<SfxKind, string[]>>> {
   const made = await ensureSfx(join(agentcastHome(), "sfx"), ctx.signal);
   await mkdir(ctx.path("render/audio/sfx"), { recursive: true });
-  const files: Partial<Record<SfxKind, string>> = {};
-  for (const [kind, file] of Object.entries(made) as [SfxKind, string][]) {
-    const rel = `render/audio/sfx/${kind}.wav`;
-    await copyFile(file, ctx.path(rel));
-    files[kind] = rel;
-  }
+  const files: Partial<Record<SfxKind, string[]>> = {};
+  for (const [kind, takes] of Object.entries(made) as [SfxKind, string[]][])
+    files[kind] = await Promise.all(
+      takes.map(async (file, i) => {
+        const rel = `render/audio/sfx/${kind}-${i + 1}${extname(file)}`;
+        await copyFile(file, ctx.path(rel));
+        return rel;
+      }),
+    );
   return files;
 }
 

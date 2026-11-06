@@ -41,7 +41,7 @@ test("readBack says what will be made", () => {
   expect(readBack({ ...DEFAULT_CHOICES, langs: ["en", "hi"] }, "Punchy Product Hunt launch, 30 s")).toBe(
     "A launch video, about 30 s, 16:9 and 9:16 in English and Hindi, with your review of flows, script and preview.",
   );
-  expect(readBack({ ...DEFAULT_CHOICES, mode: "tutorial", aspects: ["9x16"], autopilot: true }, "")).toBe(
+  expect(readBack({ ...DEFAULT_CHOICES, mode: "tutorial", voiceover: true, aspects: ["9x16"], autopilot: true }, "")).toBe(
     "A step-by-step tutorial, 9:16 in English, straight through on autopilot.",
   );
 });

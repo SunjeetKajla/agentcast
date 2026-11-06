@@ -33,7 +33,7 @@ export default function Outputs({ job, versions }: { job: Job; versions: Record<
           Your videos are ready
         </h2>
         <p className="text-sm text-white/60">
-          {variants.length} video{variants.length === 1 ? "" : "s"}, each timed to its own voiceover.
+          {variants.length} video{variants.length === 1 ? "" : "s"}.
         </p>
       </div>
 

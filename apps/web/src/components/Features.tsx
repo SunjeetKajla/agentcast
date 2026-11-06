@@ -9,7 +9,7 @@ const features = [
   { title: "Real footage only", desc: "Every product pixel comes from a real browser session. Overlays annotate; they never fabricate." },
   { title: "It finds the flows itself", desc: "Parallel agents propose and try flows, and a scoring rubric picks the ones that show value." },
   { title: "No misclicks on camera", desc: "Elements are found by what people see, each step's outcome is checked, and a bad take is redone." },
-  { title: "Every variant from one run", desc: "16:9 and 9:16, English and Hindi, each retimed to its own voiceover." },
+  { title: "Every variant from one run", desc: "16:9 and 9:16, English and Hindi, each cut to the music." },
   { title: "You stay in the loop", desc: "Review the flows, the script and a preview you can revise with a sentence. Or go on autopilot." },
   { title: "Re-run on every release", desc: "Saved flows and self-healing element lookups regenerate the video after a UI change." },
 ];

@@ -15,6 +15,7 @@
     "@agentcast/llm": "workspace:*",
     "@agentcast/tinyfish": "workspace:*",
     "@agentcast/recorder": "workspace:*",
-    "@agentcast/worker": "workspace:*"
+    "@agentcast/worker": "workspace:*",
+    "@agentcast/video": "workspace:*"
   }
 }

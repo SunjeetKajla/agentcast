@@ -359,6 +359,10 @@ Why: our Remotion output measured 57–69% still frames, sentence headlines, the
 
 ---
 
+### Phase 11: music-led films and motion primitives
+
+`docs/MOTION_SOUND_MUSIC_PLAN.md`, from the teardown in `docs/LAUNCH_FILM_TEARDOWN.md`. Replaces Remotion with HyperFrames alone. PRD §9.7.6.
+
 ## 3. Timeline (36 h reference schedule)
 
 | Hours | Track A (agent)                                           | Track B (recorder)                  | Track C (video)                                               | Track D (product)                                                         |

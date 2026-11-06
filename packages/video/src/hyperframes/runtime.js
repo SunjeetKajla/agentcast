@@ -290,5 +290,20 @@
     tl.fromTo(el, { scale: 1 - a * 0.25, y: 6 * AC.u() }, { scale: 1 + a, y: -6 * AC.u(), duration: dur, ease: "none" }, 0);
   };
 
+  /** A line or word landing: starts just before its moment, so it reads as on the beat. */
+  AC.land = function (tl, el, at) {
+    tl.fromTo(el, { opacity: 0, scale: 1.18, filter: "blur(22px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.34, ease: "expo.out" }, Math.max(0, at - 0.04));
+  };
+
+  /** A line or word leaving, finished by `at`. */
+  AC.leave = function (tl, el, at) {
+    tl.to(el, { opacity: 0, scale: 0.94, filter: "blur(12px)", duration: 0.16, ease: "power2.in" }, at - 0.16);
+  };
+
+  /** Keeps growing while it's up, so landed type never stands still. Goes on a wrapper around what lands. */
+  AC.grow = function (tl, el, at, secs) {
+    tl.fromTo(el, { scale: 1 }, { scale: 1.06, duration: secs, ease: "none" }, at);
+  };
+
   window.AC = AC;
 })();

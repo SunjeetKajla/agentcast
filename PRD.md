@@ -291,7 +291,7 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | FR-82 | **Virtual camera**: smart zoom and 9:16 reframing are the same primitive, a smoothed crop window following camera keyframes, clamped to frame                                                                                                                                                                                                  | P0  |
 | FR-83 | Synthetic cursor rendered from `timeline.json` cursor paths (headless screencast has no cursor), with click ripple, eased motion and a hide-when-idle option                                                                                                                                                                                   | P0  |
 | FR-84 | Word-level captions from TTS alignment, styled per EDL. Noto Sans Devanagari for Hindi.                                                                                                                                                                                                                                                        | P0  |
-| FR-85 | Music from a local royalty-free library tagged by mood/BPM, ducked under VO (−18 dB, 200 ms attack/release), fade in/out. See §9.7.2: `assets/music/` with `agentcast music add`, picked by personality and grammar, ducked under the voice, cuts on the beat in trailers; plus generated sound effects. | P0  |
+| FR-85 | Music from a local royalty-free library tagged by mood/BPM, ducked under VO (−6 dB, 150 ms attack, 500 ms release), fade in/out. See §9.7.2: `assets/music/` with `agentcast music add`, picked by personality and grammar, ducked under the voice, cuts on the beat in trailers; plus generated sound effects. | P0  |
 | FR-86 | Sidecar exports: SRT/VTT per language, poster thumbnail, 6 s GIF teaser, chapters (tutorial mode)                                                                                                                                                                                                                                              | P1  |
 | FR-88 | **Reference look** (§9.7.4): a trailer passes the reference targets: still time ≤ 10% (end card excluded), 0.6–1.2 on-screen words a second, kinetic type 30–50% of screen time, lifted components ≥ 15%, full UI ≤ 40%, median scene 1.5–3 s, −14 ± 1 LUFS. `measureVideo()` in `packages/video` reports them (today: `pnpm --filter @agentcast/spikes hf --measure <video>`; `agentcast measure` when the CLI lands). | P0  |
 | FR-87 | **Editing grammar** (§9.7.2): launch and sales videos are cut as trailers (headline scenes between proof shots, outcome-led narration, montage, speed ramps, tilt, lifted callouts, music up front with cuts on the beat, sound effects, minimal captions); tutorials as guides.                                                    | P0  |
@@ -336,7 +336,7 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | 9   | Record in TinyFish Browser API cloud browsers                         | Record in a **local Chromium** on the worker. TinyFish Browser API sessions become the **fallback recorder**, captured state by state.                                                                                                                                                                                 | TinyFish browsers run in AWS San Jose, about 305 ms round trip from Delhi. The screencast waits for an acknowledgement per frame, so we expect only 4–6 fps and much slower typing; local Chromium should reach 60 fps. There's no region setting, the proxy country doesn't move the browser, and TinyFish has no local or self-hosted mode. Spike S1 confirms the numbers. |
 | 10  | One discovery run performs every flow                                 | **Short entrance scout, then up to three focused flow runs**, two at a time, each rehearsed in fresh local Chrome. Save run IDs and results incrementally.                                                                                                                                                             | Broad exploration loops, mismatched browser access and lost completion responses cost more than the extra agent startup. Focused tasks bound wasted work; durable polling avoids duplicate paid starts.                                                                                                                                     |
 | 11  | A style prompt shapes the director's edit                             | An optional **video prompt** becomes a **creative brief**, then a **storyboard** (beats with narration and motion intent). The director plans motion with the **motion design skill** as its rulebook, writes **motion tokens** every primitive obeys, and is held to the skill's critical rules by a **motion lint**. | A free-text style prompt gives the director taste but no discipline, so edit quality varies. The skill turns taste into checkable rules (one personality, directional easing, the 1/3 rules, three layers), and the brief lets the user's intent reach every stage, not just the edit.                                                                                                         |
-| 12  | Remotion renders the EDL against a fixed primitives library (Oct 2026: our outputs measured 57–69% still frames against 2–13% in the reference films) | **HyperFrames** renders a composition compiled from the EDL; the director edits its HTML scenes free-form under checked contracts (§9.7.5) | The look we want (§9.7.4) is GSAP-on-DOM motion design; HyperFrames is built for agents editing HTML (no build step, `check --json` with selectors and boxes, snapshots), it's Apache 2.0, and the pure edit math (`plan`, `camera`, `retime`, `captions`, `audio`) carries over. Remotion stays selectable (`AGENTCAST_RENDERER=remotion`) until parity, then goes. |
+| 12  | Remotion renders the EDL against a fixed primitives library (Oct 2026: our outputs measured 57–69% still frames against 2–13% in the reference films) | **HyperFrames** renders a composition compiled from the EDL; the director edits its HTML scenes free-form under checked contracts (§9.7.5) | The look we want (§9.7.4) is GSAP-on-DOM motion design; HyperFrames is built for agents editing HTML (no build step, `check --json` with selectors and boxes, snapshots), it's Apache 2.0, and the pure edit math (`plan`, `camera`, `retime`, `captions`, `audio`) carries over. Remotion was removed once HyperFrames was the only path in use. |
 
 ### 7.2 Component diagram
 
@@ -873,7 +873,7 @@ video type: **launch and sales videos are cut as trailers, tutorials as guides**
 | Scenes    | shots only                                                             | `statement` (a headline in big kinetic type, its line voiced over it), a closing `montage` of the payoffs in tilted windows, `stat` (a counting number, only for real numbers)                                                           |
 | Picture   | browser window opening on zoom                                         | tilted window (perspective, drifting, flattening as it opens), harder zooms (≥ 1.65×), speed ramps, lifted callouts on emphasis shots (the element rises out of the screen as a card), light sweep and motion blur on moving transitions |
 | Pace      | as recorded                                                            | cuts on the beat: with a tempo, each part runs on (under a beat) so the next cut lands on one; music starts on a downbeat at frame 0                                                                                                     |
-| Sound     | voice; a quiet music bed if there is one (−18 dB, −10 under the voice) | music up front (−6 dB, −13 under the voice), sound effects (`style.sfx: 'auto'`)                                                                                                                                                         |
+| Sound     | voice; a quiet music bed if there is one (−36 LUFS, −6 dB under the voice) | music up front (−24 LUFS, −6 dB under the voice), building to full level 60% through; sound effects (`style.sfx: 'auto'`)                                                                                                                                                         |
 | Captions  | karaoke box                                                            | minimal: no box, a soft shadow                                                                                                                                                                                                           |
 
 **Headlines.** The storyboard writer adds them in trailer modes (its check enforces the title, the count
@@ -882,20 +882,28 @@ props. Each script translates the title; the statement scene shows it while its 
 edit leaves out falls back to a card for its narration (`beatParts`).
 
 **Music library** (`assets/music/`, FR-85). `tags.json` (`MusicLibrary`) lists each track: file, title,
-artist, source, licence (required), moods, energy 1–5, BPM, first downbeat, length. `agentcast music add`
+artist, source, licence (required), moods, energy 1–5, BPM, first downbeat, length, loudness, true peak. `agentcast music add`
 copies a file in and measures tempo and first beat (onset envelope, autocorrelation over 70–180 BPM weighted
 toward 120, then a joint tempo-and-phase search; target accuracy 0.1 BPM and 10 ms on test tracks). Audio files aren't
 committed; `tags.json` is. The direct stage picks a track by personality moods and grammar energy, preferring
 tracks long enough not to loop (seeded by job id), and copies it into the job (`render/audio/`). With an empty
-library the video simply has no music. Ducking: the bed eases down 0.15 s before each line and back up 0.3 s
-after; fades in over 0.5 s and out over 1.6 s.
+library the video simply has no music. Levels: each track's gain brings it to the grammar's bed (trailer −24 LUFS,
+guide −36 LUFS), under −1 dBTP. A trailer's bed starts 10 dB down and builds to full level 60% through the film.
+Ducking: the bed eases down 6 dB over 0.15 s before each line and back up over 0.5 s after, stays down between lines
+under 1.5 s apart, and is never pushed below that duck by the build. Fades in over 0.5 s, and out over the end card
+(1.6–3 s).
 
-**Sound effects** are synthesised with ffmpeg (`ensureSfx`: whoosh, click, pop, riser, hit), so there's no
-licence to track; made once per machine in `~/.agentcast/sfx/` and copied into the job. With `sfx: 'auto'`:
-a riser peaking as the product name lands, a whoosh centred on each transition, a pop as each headline or
-stat lands, a soft click on each recorded click, a hit on the CTA. Shots may add their own cues.
+**Sound effects** come from the pack in `assets/sfx/` (`tags.json`, `SfxPack`: licence required) where it has the
+kind, else from three takes synthesised with ffmpeg (`ensureSfx`: whoosh, click, pop, riser, hit, tick), made once per
+machine in `~/.agentcast/sfx/`; copied into the job. With `sfx: 'auto'`: a pop as the title lands, a whoosh through each
+transition and big camera move, a soft click on each recorded click, a tick per typed word, a pop as each headline,
+stat, callout, lower third or montage clip lands, and one riser into a hit on the CTA. Shots may add their own cues.
+Takes rotate by cue. Each file is measured, so its peak lands one frame after its picture and its level is set from the
+bed (hits 3–6 dB over, ticks under, 3 dB lower under a voice). Kinds keep minimum gaps, and a film has at most 1.2 auto
+effects a second, the less important dropped first.
 
-**Loudness.** Previews and finals are normalised to −14 LUFS / −1.5 dBTP with `loudnorm`, the picture copied.
+**Loudness.** Previews and finals are measured, then brought to −14 LUFS with one gain and a −2 dBFS limiter, the picture
+copied, so the mix's build and ducking survive.
 
 **Director.** `DIRECTOR.md` documents EDL v4 and the grammar; trailers also get `guides/trailer.md` (how a
 launch trailer is cut: shape, pace, picture, sound). Its time limit is 8 minutes. The check requires the
@@ -967,6 +975,23 @@ The scene contract (FR-79), checked by the worker before preview:
 - Text stays inside the 80% title-safe box at 1920×1080 and 1080×1920 (`hyperframes check` at both sizes).
 
 A scene that fails after the repair rounds is replaced by its compiled version; if the EDL itself fails, the job falls back to the baseline edit. `hyperframes snapshot --describe` is always passed `false`, so no other model sees the frames.
+
+#### 9.7.6 Music-led films and motion primitives
+
+Launch and sales films have no voice by default (`voiced()`, `musicLed()`): most of the best launch films we measured are music and type (`docs/LAUNCH_FILM_TEARDOWN.md`). The music is the clock.
+
+- **The track comes first.** `agentcast music analyze` fits the beat tracker's output to one tempo and finds the strong bars. A `low` confidence track is never picked for a led film. With none available the film keeps time at 120 BPM in silence, and says so.
+- **The template compiler** (`ledEdl`) writes the edit without an LLM: an opener, a `label` then a proof per storyboard shot, and an end card, every part a whole number of beats, with no overlaps. It chooses each proof from what the page was doing when it was recorded, and never the same move twice running when it has a choice:
+  1. typing long enough to read: `prompt`;
+  2. columns or cards filling the screen: `build`, lifting the piece nearest the middle;
+  3. a board drawn as an image or canvas, read from the footage's pixels (`pixelColumns`): `build`;
+  4. a list, with hops only for as long as the page stays still: `proof`;
+  5. a panel that stays open for at least a second: `proof`;
+  6. what's actually on screen around the action (`shotContent`). A shot with too little on screen is left out, so a thin recording makes a shorter film, not a held one.
+- **The element map.** The recorder keeps the page's structure at two moments per step: as an action is about to happen, and once it has settled (`Layout` on timeline events). Boxes only, never text.
+- **The music plan** (`render/music-plan.json`) follows the finished film: in at a strong bar, out through the track's real ending for the end card, joined on bar lines, premixed to one file. The film sets the length, in whole bars.
+- **The director** chooses and tunes moves (`guides/primitives.md`) and may still write a scene. The worker snaps its lengths back to the beat and warns if one moved more than half a beat. With `AGENTCAST_DIRECTOR=off` the compiler's edit stands.
+- **Sound** comes from each move's own timing (`primitives/cues.ts`), so it lands exactly with the picture. See §9.7.2.
 
 ### 9.8 Render and fan-out
 
@@ -1158,7 +1183,7 @@ type ReplayPlan = {
 
 // record/<formFactor>/timeline.json  (the edit timeline; times are seconds of recording.mp4 beside it)
 type Timeline = {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2; // v2 adds layout to events
   recordingId: string;
   formFactor: "desktop" | "mobile";
   viewport: { w: number; h: number; dpr: number };
@@ -1182,6 +1207,12 @@ type TimelineEvent = {
     t1: number;
   };
   value?: string | { redacted: true };
+  layout?: { // the element map (§9.7.6): boxes only, in CSS px clipped to the viewport
+    at?: number; // when it was taken, if not at t: the page as the action found it
+    panel?: [number, number, number, number]; // a dialog or drawer on top
+    component?: [number, number, number, number]; // the card or section the acted element sits in
+    groups: { kind: "rows" | "cards" | "columns"; box: [number, number, number, number]; items: [number, number, number, number][] }[];
+  };
   url: string;
 };
 
@@ -1275,7 +1306,7 @@ type Voiceover = {
 
 // edl.json — written by the baseline and Claude Code, compiled to a HyperFrames composition (§9.7.5)
 type EDL = {
-  schemaVersion: 5 | 6; // v6 (additive): scene segments, statement accents, blur-zoom and ribbon transitions; writers emit 6
+  schemaVersion: 5 | 6 | 7; // v7 (additive): primitive segments, style.timing, Opener and EndCard cards. v6 (additive): scene segments, statement accents, blur-zoom and ribbon transitions; writers emit 6
   fps: 30;
   style: {
     palette: {
@@ -1390,12 +1421,32 @@ type EDL = {
 //   | { kind: "scene"; id: string; beatId?: string; seconds: number;
 //       copy?: Record<string, Record<string, string>>; // variable → language → text
 //       transitionIn: Transition }
+// v7: a motion primitive (§9.7.6). Rects are [x, y, w, h] in the recording's CSS pixels; times are source seconds.
+//   | { kind: "primitive"; id: string; beatId?: string; seconds: number; transitionIn: Transition; primitive:
+//       | { type: "label"; text: TextByLang; accent?: TextByLang; ground: "base" | "invert" | "field"; open: "rise" | "slit" | "iris" }
+//       | { type: "swap"; lead: TextByLang; words: TextByLang[]; style: "swap" | "rolodex" }
+//       | { type: "ticker"; terms: TextByLang[] }
+//       | { type: "proof"; flowId: string; in: number; out: number; frame: Rect; tilt: "none" | "soft" | "strong"; hops?: Rect[]; ground?: "base" | "field" }
+//       | { type: "build"; flowId: string; at: number; items: Rect[]; reveal: "rise" | "wireframe"; lift?: Rect }
+//       | { type: "prompt"; flowId: string; in: number; out: number; input: Rect; frame: Rect } }
+// v7: intro { component: "Opener", props: { line: TextByLang } }, outro { component: "EndCard", props: { line: TextByLang } }
 // Named kinds only, so every scene can be compiled; v6 adds blur-zoom (Lovable's zoom through a blur) and ribbon (LangEase's colour sweep).
 type Transition = "cut" | "fade" | "slide" | "zoom-through" | "blur-zoom" | "ribbon";
 
-// assets/music/tags.json — the music library (§9.7.2)
-type MusicLibrary = {
+// render/music-plan.json — a music-led film's music (§9.7.6)
+type MusicPlan = {
   schemaVersion: 1;
+  trackId: string;
+  bpm: number;
+  beat: number;
+  bar: number;
+  seconds: number;
+  spans: { at: number; mediaStart: number; seconds: number }[];
+};
+
+// assets/music/tags.json — the music library (§9.7.2). v2 added lufs and truePeak; v3 added analysis, and bpm and firstBeat became a grid whose bars start at firstBeat.
+type MusicLibrary = {
+  schemaVersion: 3;
   tracks: {
     id: string;
     file: string;
@@ -1408,6 +1459,24 @@ type MusicLibrary = {
     bpm: number;
     firstBeat: number;
     seconds: number;
+    lufs: number;
+    truePeak: number;
+    analysis: {
+      confidence: "high" | "medium" | "low"; // low: can't drive a music-led film
+      entries: number[]; // strong bars to enter at
+      tailEnd: number; // where the track's ending has died away
+    };
+  }[];
+};
+
+// assets/sfx/tags.json — the sound effect pack (§9.7.2)
+type SfxPack = {
+  schemaVersion: 1;
+  sounds: {
+    kind: "whoosh" | "click" | "pop" | "riser" | "hit" | "tick";
+    file: string;
+    source: string;
+    license: string; // required: no unlicensed sounds
   }[];
 };
 
@@ -1458,7 +1527,7 @@ type JobConfig = {
     formFactors: ("desktop" | "mobile")[];
   }; // default 16x9 / en / desktop; each list non-empty
   autopilot: boolean; // default false
-  voiceover: boolean; // default true; false: no voice stage, a silent edit captioned from the script
+  voiceover?: boolean; // default: only a tutorial is narrated. Off on a launch or sales film: music-led (§9.7.6). Off on a tutorial: captioned from the script
   rerun?: { of: string; skipIfUnchanged: boolean }; // a re-run of job `of` (§9.8.1)
 };
 type AuthConfig =
@@ -1571,7 +1640,7 @@ Current versions: `Job` 2, `Script` 2, `Brand` 2, `EDL` 5; everything else 1. A 
 | **Prompt injection from the target site** | Page copy, step text and screenshots are _untrusted data_. The coding agent runs in restricted mode (Claude Code `--restricted --strict-mcp-config`, equivalent permission configs for other backends) with no network tools, no MCP servers, a restricted Bash allowlist, a job-scoped cwd and no env secrets. Worst case is a bad video, not exfiltration. The EDL is schema-validated; the director's scene files must pass the scene contract (no network, no remote URLs, no secrets) and `hyperframes check`, and render with the network blocked. Prompts wrap site content in delimiters with instructions to treat it as data. |
 | **Agent doing damage in a real account**  | Guardrails in every goal (FR-23). Recommend test accounts or staging. Domain allowlist. The recorder only executes approved steps. Steps whose labels match destructive keywords (`delete`, `remove`, `pay`, `purchase`, `send`, `invite`) need explicit approval at gate 1 even in autopilot.                                                                                                                                                                                                                                                      |
 | **SSRF via URL intake**                   | Validate scheme and host, block private/loopback/link-local ranges and metadata IPs. TinyFish Fetch also rejects these.                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Third-party content rights**            | Users may only generate videos of products they own or are authorized to show. Music library is royalty-free with each track's source and licence recorded in `assets/music/tags.json` (required by the schema); sound effects are generated, not sourced.                                                                                                                                                                                                                                                                                          |
+| **Third-party content rights**            | Users may only generate videos of products they own or are authorized to show. Music library is royalty-free with each track's source and licence recorded in `assets/music/tags.json` (required by the schema), and likewise each sound effect in `assets/sfx/tags.json`; effects with no pack entry are generated.                                                                                                                                                                                                                                                                                          |
 | **Bot detection / ToS**                   | The local recorder uses Puppeteer Extra's stealth plugin through Playwright Extra by default, with an explicit opt-out. Automate only products the user owns or is authorized to demo. Stealth does not guarantee access; explicit security blocks still stop local replay and follow the existing fallback policy. No CAPTCHA solving. |
 
 ---

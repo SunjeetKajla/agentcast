@@ -24,7 +24,7 @@ export function declare(vars: Vars) {
  * animates, the `out` wrapper the exit animates, and the scene's own markup inside. `script` runs with
  * `S` (AC.scene), `v` (its variables) and `tl` (its paused timeline) in scope.
  */
-function sceneFile(id: string, size: Size, vars: Vars, css: string, body: string, script: string) {
+export function sceneFile(id: string, size: Size, vars: Vars, css: string, body: string, script: string) {
   return `<template>
 <style>
 #root { position: absolute; inset: 0; overflow: hidden; }
@@ -80,6 +80,18 @@ const groundScript = `  var g = S.el("ground");
   if (v.ground === "field") g.className = "ac-fill ac-ground-field";
   else if (v.ground === "dark") g.className = "ac-fill ac-ground-dark";
   if (v.ground === "field" || v.ground === "dark") { S.el("out").classList.add(v.ground === "dark" ? "ac-on-dark" : "ac-on-field"); g.insertAdjacentHTML("beforeend", '<div class="ac-fill ac-grain"></div>'); }`;
+
+/** The ground of a music-led film: the brand's own colour held still, so footage's edges disappear into it. */
+export function plainGroundScene(id: string, size: Size, vars: Vars) {
+  return sceneFile(
+    id,
+    size,
+    vars,
+    `#S-base { position: absolute; inset: 0; background: radial-gradient(70% 60% at 50% 45%, var(--ac-lift) 0%, var(--ac-bg) 70%); }`,
+    `    <div id="S-base"></div>`,
+    "",
+  );
+}
 
 /**
  * The opening (Lovable 0–8.5 s, LangEase 0–3 s): the script's title line as kinetic type, then the
@@ -382,7 +394,8 @@ export function captionsScene(id: string, size: Size, vars: Vars) {
 }
 
 /** The styles every scene shares, on index.html. */
-export const SHARED_CSS = `* { margin: 0; padding: 0; box-sizing: border-box; }
+export const SHARED_CSS = `.ac-window { position: absolute; overflow: hidden; border-radius: var(--ac-radius); background: var(--ac-surface); box-shadow: 0 0 0 1px var(--ac-rim), 0 calc(70 * var(--ac-u)) calc(160 * var(--ac-u)) var(--ac-shade); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: var(--ac-w); height: var(--ac-h); overflow: hidden; background: var(--ac-bg); color: var(--ac-fg); font-family: var(--ac-text); -webkit-font-smoothing: antialiased; }
 .ac-fill { position: absolute; inset: 0; }
 .ac-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
