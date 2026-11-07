@@ -1,0 +1,2088 @@
+{
+ "url": "http://127.0.0.1:8765/agentcast-redesign.html?v=5#job",
+ "at": "2026-11-07T15:49:35.756Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.62,
+    0.7
+   ],
+   "motion": {
+    "elements": 79,
+    "css": 33,
+    "transitions": 8,
+    "scripted": 38,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 1643,
+     "screens": 1.8,
+     "words": 356,
+     "img": 0,
+     "video": 0,
+     "canvas": 4,
+     "svg": 3,
+     "sections": 16,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 12,
+     "uiAbuse": true,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 2,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Trying flows",
+     "words": 2,
+     "chars": 12,
+     "lines": 1,
+     "size": 116,
+     "vw": 8.1,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.05,
+     "leading": 0.9,
+     "top": 392,
+     "tag": "h2",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": null,
+    "headings": [
+     {
+      "text": "todomvc.com",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 72,
+      "vw": 5,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.05,
+      "leading": 0.92,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.49,
+      "top": 102,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Trying flows",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 116,
+      "vw": 8.1,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.9,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.64,
+      "top": 392,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "0:21",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 68,
+      "vw": 4.7,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "right",
+      "position": "right",
+      "widthRatio": 0.13,
+      "top": 469,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 2.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.22,
+      "top": 711,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 2.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.22,
+      "top": 711,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 2.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.22,
+      "top": 711,
+      "tag": "div",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 6,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 3,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Schibsted Grotesk",
+       "share": 0.86,
+       "mono": false
+      },
+      {
+       "family": "Helvetica Neue",
+       "share": 0.14,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      18,
+      20,
+      22,
+      24,
+      68,
+      72,
+      116
+     ],
+     "sizeCount": 11,
+     "notLoaded": [],
+     "body": {
+      "font": "Schibsted Grotesk",
+      "size": 20,
+      "leading": 1.3,
+      "weight": 500,
+      "tracking": -0.02,
+      "contrast": 7.8
+     },
+     "measureChars": 59,
+     "max": {
+      "size": 116,
+      "vw": 8.1,
+      "font": "Schibsted Grotesk",
+      "text": "Trying flows"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.01,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "/ Launch video",
+      "above": "todomvc.com",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 14,
+      "top": 76
+     },
+     {
+      "text": "of 13",
+      "above": "Trying flows",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 15,
+      "top": 300
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#05060f",
+     "bodyBgHsl": {
+      "h": 234,
+      "s": 0.5,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#05060f",
+       "top": 8,
+       "hsl": {
+        "h": 234,
+        "s": 0.5,
+        "l": 0.04
+       }
+      },
+      {
+       "color": "#1423b8",
+       "top": 364,
+       "hsl": {
+        "h": 235,
+        "s": 0.8,
+        "l": 0.4
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.43
+      },
+      {
+       "color": "#a3a9cc",
+       "share": 0.29
+      },
+      {
+       "color": "#c3c9f4",
+       "share": 0.07
+      },
+      {
+       "color": "#f7dd47",
+       "share": 0.06
+      },
+      {
+       "color": "#555555",
+       "share": 0.04
+      }
+     ],
+     "button": {
+      "bg": "#171a33",
+      "hsl": {
+       "h": 234,
+       "s": 0.38,
+       "l": 0.15
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 1,
+     "inHero": 1,
+     "radius": 0,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Cancel job"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 3,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 10,
+     "hairlineSamples": [
+      "li 544px",
+      "li 544px",
+      "li 544px",
+      "li 544px",
+      "li 544px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 1,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 3,
+       "iconTopped": true,
+       "rounded": false,
+       "top": 590
+      }
+     ]
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 0.5
+     }
+    ],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 0,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "schibsted grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 1643,
+    "margins": {
+     "left": 116,
+     "right": 134
+    },
+    "sections": [
+     {
+      "sel": "div.ttl",
+      "tag": "div",
+      "top": 76,
+      "height": 154,
+      "words": 23,
+      "media": 0,
+      "middle": 415,
+      "heading": {
+       "text": "todomvc.com",
+       "size": 72,
+       "tag": "h1"
+      },
+      "left": 116,
+      "right": 116,
+      "textLeft": 116,
+      "textRight": 134,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.air",
+      "tag": "section",
+      "top": 364,
+      "height": 659,
+      "words": 142,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Trying flows",
+       "size": 116,
+       "tag": "h2"
+      },
+      "left": 116,
+      "right": 116,
+      "textLeft": 148,
+      "textRight": 148,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.blk",
+      "tag": "section",
+      "top": 1047,
+      "height": 197,
+      "words": 73,
+      "media": 0,
+      "middle": 34,
+      "heading": {
+       "text": "The run",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 140,
+      "right": 140,
+      "textLeft": 140,
+      "textRight": 140,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lower",
+      "tag": "div",
+      "top": 1268,
+      "height": 311,
+      "words": 90,
+      "media": 0,
+      "middle": 72,
+      "heading": {
+       "text": "Activity",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 140,
+      "right": 140,
+      "textLeft": 140,
+      "textRight": 140,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "todomvc.com",
+      "size": 72,
+      "top": 102,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 140,
+      "n": 4
+     },
+     {
+      "x": 116,
+      "n": 2
+     },
+     {
+      "x": 756,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 14,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.04,
+    "voidBox": {
+     "x": 600,
+     "y": 120,
+     "w": 840,
+     "h": 60
+    }
+   },
+   "app": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "dark": true,
+    "ground": "#05060f",
+    "sidebar": null,
+    "topbar": null,
+    "canvas": {
+     "left": 116,
+     "right": 116
+    },
+    "hero": {
+     "text": "Trying flows",
+     "words": 2,
+     "chars": 12,
+     "lines": 1,
+     "size": 116,
+     "vw": 8.1,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.05,
+     "leading": 0.9,
+     "top": 392,
+     "tag": "h2",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 9,
+     "firstScreen": 6,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 17,
+     "radii": [
+      [
+       0,
+       17
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 2,
+     "softShadows": 2,
+     "shadowSamples": [
+      "rgba(0, 0, 0, 0.15) 0px 12px 24px -8px",
+      "rgba(0, 0, 0, 0.15) 0px 12px 24px -8px"
+     ],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 2,
+     "tabularShare": 1,
+     "kpiMax": 13
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.08,
+     "tiny": 16,
+     "tinySamples": [
+      "2 items left 10px",
+      "All 10px",
+      "Active 10px",
+      "Completed 10px"
+     ],
+     "sizes": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      22,
+      24,
+      26,
+      37,
+      43,
+      52,
+      64,
+      68,
+      72,
+      81,
+      107,
+      116,
+      158,
+      222,
+      262
+     ]
+    },
+    "title": null,
+    "colourShare": 0.34
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.73,
+    0.78
+   ],
+   "motion": {
+    "elements": 73,
+    "css": 27,
+    "transitions": 8,
+    "scripted": 38,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 1799,
+     "screens": 1.8,
+     "words": 292,
+     "img": 0,
+     "video": 0,
+     "canvas": 4,
+     "svg": 3,
+     "sections": 16,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 12,
+     "uiAbuse": true,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Trying flows",
+     "words": 2,
+     "chars": 12,
+     "lines": 1,
+     "size": 63,
+     "vw": 8.2,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.05,
+     "leading": 0.9,
+     "top": 511,
+     "tag": "h2",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": null,
+    "headings": [
+     {
+      "text": "todomvc.com",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 40.6,
+      "vw": 5.3,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.05,
+      "leading": 0.92,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 102,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Trying flows",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 63.2,
+      "vw": 8.2,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.9,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.55,
+      "top": 511,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "0:21",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 37.6,
+      "vw": 4.9,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "right",
+      "position": "right",
+      "widthRatio": 0.24,
+      "top": 597,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 4.9,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.34,
+      "top": 809,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 4.9,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.34,
+      "top": 809,
+      "tag": "div",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 5,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 2,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Schibsted Grotesk",
+       "share": 0.9,
+       "mono": false
+      },
+      {
+       "family": "Helvetica Neue",
+       "share": 0.1,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      18,
+      20,
+      22,
+      24,
+      38,
+      41,
+      63
+     ],
+     "sizeCount": 11,
+     "notLoaded": [],
+     "body": {
+      "font": "Schibsted Grotesk",
+      "size": 20,
+      "leading": 1.3,
+      "weight": 500,
+      "tracking": -0.02,
+      "contrast": 7.8
+     },
+     "measureChars": 42,
+     "max": {
+      "size": 63.2,
+      "vw": 8.2,
+      "font": "Schibsted Grotesk",
+      "text": "Trying flows"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.01,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "/ Launch video",
+      "above": "todomvc.com",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 14,
+      "top": 76
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#05060f",
+     "bodyBgHsl": {
+      "h": 234,
+      "s": 0.5,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#05060f",
+       "top": 8,
+       "hsl": {
+        "h": 234,
+        "s": 0.5,
+        "l": 0.04
+       }
+      },
+      {
+       "color": "#1423b8",
+       "top": 483,
+       "hsl": {
+        "h": 235,
+        "s": 0.8,
+        "l": 0.4
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.47
+      },
+      {
+       "color": "#a3a9cc",
+       "share": 0.3
+      },
+      {
+       "color": "#f7dd47",
+       "share": 0.07
+      },
+      {
+       "color": "#c3c9f4",
+       "share": 0.06
+      },
+      {
+       "color": "#555555",
+       "share": 0.04
+      }
+     ],
+     "button": {
+      "bg": "#171a33",
+      "hsl": {
+       "h": 234,
+       "s": 0.38,
+       "l": 0.15
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 1,
+     "inHero": 1,
+     "radius": 0,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Cancel job"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 2,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 10,
+     "hairlineSamples": [
+      "li 292px",
+      "li 292px",
+      "li 292px",
+      "li 292px",
+      "li 292px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 1,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 0.48
+     }
+    ],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 0,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "schibsted grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 1799,
+    "margins": {
+     "left": 32,
+     "right": 36
+    },
+    "sections": [
+     {
+      "sel": "div.ttl",
+      "tag": "div",
+      "top": 76,
+      "height": 185,
+      "words": 23,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "todomvc.com",
+       "size": 41,
+       "tag": "h1"
+      },
+      "left": 32,
+      "right": 54,
+      "textLeft": 32,
+      "textRight": 54,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "dl.meta",
+      "tag": "dl",
+      "top": 285,
+      "height": 174,
+      "words": 15,
+      "media": 0,
+      "middle": 185,
+      "heading": {
+       "text": "2:31",
+       "size": 24,
+       "tag": "dd"
+      },
+      "left": 52,
+      "right": 152,
+      "textLeft": 52,
+      "textRight": 152,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.air",
+      "tag": "section",
+      "top": 483,
+      "height": 637,
+      "words": 99,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Trying flows",
+       "size": 63,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 32,
+      "textLeft": 64,
+      "textRight": 64,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.blk",
+      "tag": "section",
+      "top": 1144,
+      "height": 197,
+      "words": 52,
+      "media": 0,
+      "middle": 13,
+      "heading": {
+       "text": "The run",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 56,
+      "right": 36,
+      "textLeft": 56,
+      "textRight": 36,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lower",
+      "tag": "div",
+      "top": 1365,
+      "height": 370,
+      "words": 90,
+      "media": 0,
+      "middle": 72,
+      "heading": {
+       "text": "Activity",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 56,
+      "right": 56,
+      "textLeft": 56,
+      "textRight": 56,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "todomvc.com",
+      "size": 41,
+      "top": 102,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 56,
+      "n": 4
+     },
+     {
+      "x": 32,
+      "n": 2
+     },
+     {
+      "x": 420,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 14,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "dark": true,
+    "ground": "#05060f",
+    "sidebar": null,
+    "topbar": null,
+    "canvas": {
+     "left": 32,
+     "right": 36
+    },
+    "hero": {
+     "text": "Trying flows",
+     "words": 2,
+     "chars": 12,
+     "lines": 1,
+     "size": 63,
+     "vw": 8.2,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.05,
+     "leading": 0.9,
+     "top": 511,
+     "tag": "h2",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 9,
+     "firstScreen": 6,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 14,
+     "radii": [
+      [
+       0,
+       14
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 1,
+     "softShadows": 1,
+     "shadowSamples": [
+      "rgba(0, 0, 0, 0.15) 0px 12px 24px -8px"
+     ],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 0,
+     "tabularShare": null,
+     "kpiMax": null
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.08,
+     "tiny": 16,
+     "tinySamples": [
+      "2 items left 10px",
+      "All 10px",
+      "Active 10px",
+      "Completed 10px"
+     ],
+     "sizes": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      22,
+      23,
+      24,
+      28,
+      30,
+      37,
+      38,
+      41,
+      44,
+      45,
+      57,
+      63,
+      65,
+      84,
+      118,
+      262
+     ]
+    },
+    "title": null,
+    "colourShare": 0.353
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 3,
+   "filled": [
+    0.7,
+    0.84,
+    0.78
+   ],
+   "motion": {
+    "elements": 70,
+    "css": 24,
+    "transitions": 8,
+    "scripted": 38,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 2399,
+     "screens": 2.8,
+     "words": 271,
+     "img": 0,
+     "video": 0,
+     "canvas": 4,
+     "svg": 3,
+     "sections": 16,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 12,
+     "uiAbuse": true,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Trying flows",
+     "words": 2,
+     "chars": 12,
+     "lines": 1,
+     "size": 48,
+     "vw": 12.3,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.05,
+     "leading": 0.9,
+     "top": 570,
+     "tag": "h2",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": null,
+    "headings": [
+     {
+      "text": "todomvc.com",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 40,
+      "vw": 10.3,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.05,
+      "leading": 0.92,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 98,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Trying flows",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 48,
+      "vw": 12.3,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.9,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.78,
+      "top": 570,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "0:26",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 36,
+      "vw": 9.2,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.78,
+      "top": 710,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 9.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.66,
+      "top": 912,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "The run",
+      "words": 2,
+      "chars": 7,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Schibsted Grotesk",
+      "weight": 700,
+      "tracking": -0.025,
+      "leading": 1.4,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.21,
+      "top": 1393,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Activity",
+      "words": 1,
+      "chars": 8,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Schibsted Grotesk",
+      "weight": 700,
+      "tracking": -0.025,
+      "leading": 1.4,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.21,
+      "top": 1647,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "This job",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Schibsted Grotesk",
+      "weight": 700,
+      "tracking": -0.025,
+      "leading": 1.4,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.21,
+      "top": 2025,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 7,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Schibsted Grotesk",
+       "share": 0.93,
+       "mono": false
+      },
+      {
+       "family": "Helvetica Neue",
+       "share": 0.07,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      22,
+      36,
+      40,
+      48
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Schibsted Grotesk",
+      "size": 17,
+      "leading": 1.3,
+      "weight": 500,
+      "tracking": -0.02,
+      "contrast": 7.8
+     },
+     "measureChars": 36,
+     "max": {
+      "size": 48,
+      "vw": 12.3,
+      "font": "Schibsted Grotesk",
+      "text": "Trying flows"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.01,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "/ Launch video",
+      "above": "todomvc.com",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 14,
+      "top": 72
+     },
+     {
+      "text": "60 fps",
+      "above": "Trying flows",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 15,
+      "top": 496
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#05060f",
+     "bodyBgHsl": {
+      "h": 234,
+      "s": 0.5,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#05060f",
+       "top": 8,
+       "hsl": {
+        "h": 234,
+        "s": 0.5,
+        "l": 0.04
+       }
+      },
+      {
+       "color": "#1423b8",
+       "top": 550,
+       "hsl": {
+        "h": 235,
+        "s": 0.8,
+        "l": 0.4
+       }
+      },
+      {
+       "color": "#0d198c",
+       "top": 791,
+       "hsl": {
+        "h": 234,
+        "s": 0.83,
+        "l": 0.3
+       }
+      },
+      {
+       "color": "#0d0f1f",
+       "top": 1631,
+       "hsl": {
+        "h": 233,
+        "s": 0.41,
+        "l": 0.09
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.54
+      },
+      {
+       "color": "#a3a9cc",
+       "share": 0.25
+      },
+      {
+       "color": "#f7dd47",
+       "share": 0.08
+      },
+      {
+       "color": "#c3c9f4",
+       "share": 0.07
+      },
+      {
+       "color": "#777777",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#171a33",
+      "hsl": {
+       "h": 234,
+       "s": 0.38,
+       "l": 0.15
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 1,
+     "inHero": 1,
+     "radius": 0,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Cancel job"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 1,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 10,
+     "hairlineSamples": [
+      "li 310px",
+      "li 310px",
+      "li 310px",
+      "li 310px",
+      "li 310px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 1,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 0.31
+     }
+    ],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 0,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "schibsted grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 2399,
+    "margins": {
+     "left": 24,
+     "right": 33
+    },
+    "sections": [
+     {
+      "sel": "div.ttl",
+      "tag": "div",
+      "top": 72,
+      "height": 202,
+      "words": 23,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "todomvc.com",
+       "size": 40,
+       "tag": "h1"
+      },
+      "left": 24,
+      "right": 29,
+      "textLeft": 24,
+      "textRight": 29,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "dl.meta",
+      "tag": "dl",
+      "top": 290,
+      "height": 245,
+      "words": 15,
+      "media": 0,
+      "middle": 87,
+      "heading": null,
+      "left": 44,
+      "right": 99,
+      "textLeft": 44,
+      "textRight": 99,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.air",
+      "tag": "section",
+      "top": 550,
+      "height": 811,
+      "words": 100,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Trying flows",
+       "size": 48,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 42,
+      "textRight": 54,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.blk",
+      "tag": "section",
+      "top": 1377,
+      "height": 237,
+      "words": 37,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "The run",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 33,
+      "textLeft": 40,
+      "textRight": 33,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lower",
+      "tag": "div",
+      "top": 1631,
+      "height": 721,
+      "words": 90,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Activity",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 40,
+      "textLeft": 40,
+      "textRight": 40,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "todomvc.com",
+      "size": 40,
+      "top": 98,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 40,
+      "n": 5
+     },
+     {
+      "x": 24,
+      "n": 2
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 14,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "dark": true,
+    "ground": "#05060f",
+    "sidebar": null,
+    "topbar": null,
+    "canvas": {
+     "left": 24,
+     "right": 29
+    },
+    "hero": {
+     "text": "Trying flows",
+     "words": 2,
+     "chars": 12,
+     "lines": 1,
+     "size": 48,
+     "vw": 12.3,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.05,
+     "leading": 0.9,
+     "top": 570,
+     "tag": "h2",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 9,
+     "firstScreen": 6,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 12,
+     "radii": [
+      [
+       0,
+       12
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 1,
+     "softShadows": 1,
+     "shadowSamples": [
+      "rgba(0, 0, 0, 0.15) 0px 12px 24px -8px"
+     ],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 0,
+     "tabularShare": null,
+     "kpiMax": null
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.09,
+     "tiny": 20,
+     "tinySamples": [
+      "2 items left 10px",
+      "All 10px",
+      "Active 10px",
+      "Completed 10px"
+     ],
+     "sizes": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      22,
+      24,
+      25,
+      30,
+      33,
+      36,
+      37,
+      39,
+      40,
+      48,
+      55,
+      62,
+      67,
+      262
+     ]
+    },
+    "title": null,
+    "colourShare": 0.291
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "ui-wrapper",
+   "width": 1440,
+   "message": "A data-ui element wraps a heading or more than a screen and a half of the page.",
+   "fix": "data-ui marks a cropped interface fragment only. Remove it from page-level wrappers.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "heavy-shadow",
+   "width": 1440,
+   "message": "2 panel shadow(s) heavy enough to read as floating: rgba(0, 0, 0, 0.15) 0px 12px 24px -8px | rgba(0, 0, 0, 0.15) 0px 12px 24px -8px",
+   "fix": "Panels sit on the ground: separate them with a fill one step from the ground or a quiet 1px border. A shadow, if any, is under 8% black with a small blur. Real overlays (menus, dialogs, popovers) may float.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "colour-sprawl",
+   "width": 1440,
+   "message": "34% of the first screen is strongly coloured.",
+   "fix": "Keep the screen neutral and spend colour on data and status: the studied screens sit near 3%, and only tinted styles reach 10–15%, as pale tints rather than saturated fills.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "tiny-text",
+   "width": 1440,
+   "message": "16 text blocks under 11px: 2 items left 10px, All 10px, Active 10px, Completed 10px.",
+   "fix": "Nothing below 11px; secondary text 12px, data 13–14px.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "no-title",
+   "width": 1440,
+   "message": "The screen has no h1.",
+   "fix": "Name the screen in an h1 at the top of the canvas (18–28px): \"Overview\", \"Payouts\", the project's name.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/home/kaustav/hackathon/agentcast/.taste-skill/inspect-app/desktop-fold.jpg",
+   "pages": [
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect-app/desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/home/kaustav/hackathon/agentcast/.taste-skill/inspect-app/tablet-fold.jpg",
+   "pages": [
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect-app/tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/home/kaustav/hackathon/agentcast/.taste-skill/inspect-app/mobile-fold.jpg",
+   "pages": [
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect-app/mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

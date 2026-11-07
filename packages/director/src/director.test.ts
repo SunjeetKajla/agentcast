@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -19,7 +20,8 @@ import { FIXTURE_JOB_DIR, readArtifact } from "@agentcast/shared/node";
 import type { AgentTask } from "@agentcast/llm";
 import { baselineEdl } from "@agentcast/video";
 import { checkWorkspace, errorsOf } from "./check.ts";
-import { runDirector } from "./director.ts";
+import { customScenes } from "./composition.ts";
+import { restoreScene, runDirector } from "./director.ts";
 import { CHECK_COMMAND, prepareWorkspace } from "./workspace.ts";
 
 const read = <S extends Parameters<typeof readArtifact>[1]>(rel: string, schema: S) =>
@@ -214,5 +216,48 @@ describe("runDirector when the agent fails", () => {
     };
     await expect(runDirector({ llm, dir })).rejects.toThrow(/usage limit/);
     expect(JSON.parse(await readFile(join(dir, "edl.json"), "utf8"))).toEqual(baseline);
+  });
+});
+
+describe("runDirector's scene files", () => {
+  const scene = (id: string, body = "") =>
+    `<template><div id="root" data-composition-id="${id}" data-width="960" data-height="540">${body}</div><script>(function () { var S = AC.scene("${id}", window.__hyperframes.getVariables()); S.done(); })();</script></template>`;
+  const hash = (text: string) => createHash("sha1").update(text).digest("hex");
+  const scenes = join("composition", "compositions");
+  const compiled = join("composition", "compiled.json");
+  /** A compiled workspace with two of the compiler's own scene files. */
+  const compose = async () => {
+    await mkdir(join(dir, scenes), { recursive: true });
+    await writeFile(join(dir, scenes, "a.html"), scene("a"));
+    await writeFile(join(dir, scenes, "b.html"), scene("b"));
+    await writeFile(join(dir, compiled), JSON.stringify({ a: hash(scene("a")), b: hash(scene("b")) }));
+  };
+
+  it("puts the compiler's list back with the files when a turn fails, so its files don't read as the director's", async () => {
+    await compose();
+    const llm = {
+      agent: vi.fn(async () => {
+        // The director's check recompiles a changed edit, then the turn times out.
+        await writeFile(join(dir, scenes, "a.html"), scene("a", "newer"));
+        await writeFile(join(dir, scenes, "c.html"), scene("c"));
+        await rm(join(dir, scenes, "b.html"));
+        await writeFile(join(dir, compiled), JSON.stringify({ a: hash(scene("a", "newer")), c: hash(scene("c")) }));
+        throw new Error("llm.timeout");
+      }),
+    };
+    await expect(runDirector({ llm, dir })).rejects.toThrow(/timeout/);
+    expect([...(await customScenes(dir)).keys()]).toEqual([]);
+    expect(await readFile(join(dir, scenes, "a.html"), "utf8")).toBe(scene("a"));
+    await expect(readFile(join(dir, scenes, "c.html"))).rejects.toThrow();
+  });
+
+  it("returns a scene that broke the contract to the compiler, not to the director", async () => {
+    await compose();
+    const before = { files: new Map([["a.html", scene("a")]]), compiled: await readFile(join(dir, compiled), "utf8") };
+    // A recompile keeps the director's file, so it leaves the compiler's list.
+    await writeFile(join(dir, scenes, "a.html"), scene("a", "broken"));
+    await writeFile(join(dir, compiled), JSON.stringify({ b: hash(scene("b")) }));
+    await restoreScene(dir, "a", before);
+    expect([...(await customScenes(dir)).keys()]).toEqual([]);
   });
 });

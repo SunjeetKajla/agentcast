@@ -455,7 +455,8 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
         file = kineticScene(id, size, { ...vars, text: line, accent: accentOf(line), kicker: "" });
       }
     }
-    const own = custom.get(id);
+    // A primitive's file has this canvas's pixels in it, so it's always made for the variant. Its settings are in the EDL.
+    const own = part.kind === "segment" && edl.segments[part.index]!.kind === "primitive" ? undefined : custom.get(id);
     await writeFile(join(o.out, "compositions", `${id}.html`), own ?? file);
     if (!own) written[id] = sha(file);
     scenes.push({ id, kind, start, duration: dur, custom: Boolean(own) });

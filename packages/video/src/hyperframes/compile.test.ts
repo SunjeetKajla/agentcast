@@ -143,4 +143,19 @@ describe("a music-led edit", () => {
     const width = Number(/#second-win \{ left: [\d.-]+px; top: [\d.-]+px; width: ([\d.]+)px/.exec(proof)![1]);
     expect(width).toBeLessThanOrEqual(1080);
   });
+
+  it("makes each move for the variant's size, even over a file from another size", async () => {
+    const out = join(root, "led-resized");
+    const small = ledInput();
+    await compileComposition({ input: small, root, out });
+    const path = join(out, "compositions", "second.html");
+    const widthOf = async () => Number(/#second-win \{ left: [\d.-]+px; top: [\d.-]+px; width: ([\d.]+)px/.exec(await readFile(path, "utf8"))![1]);
+    const at540 = await widthOf();
+    // A file the compiler doesn't recognise, as after a stale list or a director's edit.
+    await writeFile(path, (await readFile(path, "utf8")).replace("<template>", "<template><!-- changed -->"));
+    const { scenes } = await compileComposition({ input: { ...small, height: 1080 }, root, out, scenes: join(out, "compositions") });
+    expect(scenes.find((s) => s.id === "second")!.custom).toBe(false);
+    expect(await readFile(path, "utf8")).not.toContain("<!-- changed -->");
+    expect(await widthOf()).toBeCloseTo(at540 * 2, 0);
+  });
 });

@@ -1,0 +1,17 @@
+- generic [ref=f11e2]:
+  - banner [ref=f11e3]:
+    - generic [ref=f11e4]:
+      - link "AgentCast" [ref=f11e5] [cursor=pointer]:
+        - /url: /
+      - status [ref=f11e6]
+  - main [ref=f11e8]:
+    - generic [ref=f11e10]:
+      - paragraph [ref=f11e11]:
+        - link "Videos" [ref=f11e12] [cursor=pointer]:
+          - /url: /jobs
+        - text: / job_mw6m9ewl0191be
+      - heading "Loading…" [level=1] [ref=f11e13]
+    - region [ref=f11e14]:
+      - generic [ref=f11e17]:
+        - heading "Loading" [level=2] [ref=f11e18]
+        - paragraph [ref=f11e20]: Fetching the job and joining its live event stream.

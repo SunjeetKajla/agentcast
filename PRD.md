@@ -963,7 +963,7 @@ Every scene sits on the ambient backdrop: two or three soft glows drifting on sl
 
 #### 9.7.5 Free-form scenes (the director edits HTML)
 
-The director works on the compiled composition, not only on numbers. It may rewrite any scene file in `composition/compositions/`, change `edl.json` (order, timing, copy, camera, transitions), and add a `scene` segment (EDL v6) with a file of its own for a beat the catalogue can't make (a LangEase-style morph chain, a bespoke reveal). The compiler regenerates `index.html` for every variant from the EDL and keeps the director's scene files, so its work carries to 9:16, to every language and to re-runs.
+The director works on the compiled composition, not only on numbers. It may rewrite any scene file in `composition/compositions/`, change `edl.json` (order, timing, copy, camera, transitions), and add a `scene` segment (EDL v6) with a file of its own for a beat the catalogue can't make (a LangEase-style morph chain, a bespoke reveal). The compiler regenerates `index.html` for every variant from the EDL and keeps the director's scene files, so its work carries to 9:16, to every language and to re-runs. Primitive segments (§9.7.6) are the exception: their files hold one canvas's pixels, so they're always rebuilt from their EDL settings, and a bespoke version of one is a `scene` segment with its own file.
 
 The scene contract (FR-79), checked by the worker before preview:
 

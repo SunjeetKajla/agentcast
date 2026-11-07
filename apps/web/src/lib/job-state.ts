@@ -55,7 +55,8 @@ export function reduceJob(view: JobView, action: JobAction): JobView {
     case "stage": {
       if (view.job.status === "cancelled") break;
       const prev = view.job.stages[e.stage];
-      const running = e.status === "running" && prev.status !== "running";
+      // A stage starts when it first runs or, for a gate, when it begins waiting for you.
+      const running = (e.status === "running" || e.status === "waiting") && prev.status !== "running" && prev.status !== "waiting";
       next.job = {
         ...view.job,
         updatedAt: e.at,

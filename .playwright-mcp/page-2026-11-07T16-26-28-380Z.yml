@@ -1,0 +1,25 @@
+- generic [ref=f9e2]:
+  - banner [ref=f9e3]:
+    - generic [ref=f9e4]:
+      - link "AgentCast" [ref=f9e5] [cursor=pointer]:
+        - /url: /
+      - navigation "App" [ref=f9e6]:
+        - link "New video" [ref=f9e7] [cursor=pointer]:
+          - /url: /#top
+        - link "Videos" [ref=f9e8] [cursor=pointer]:
+          - /url: /jobs
+        - link "Help" [ref=f9e9] [cursor=pointer]:
+          - /url: /#faq
+      - status [ref=f9e10]:
+        - generic [ref=f9e12]: Connecting…
+  - main [ref=f9e13]:
+    - generic [ref=f9e15]:
+      - paragraph [ref=f9e16]:
+        - link "Videos" [ref=f9e17] [cursor=pointer]:
+          - /url: /jobs
+        - text: / job_mw6m546o0389bb
+      - heading "Loading…" [level=1] [ref=f9e18]
+    - region [ref=f9e19]:
+      - generic [ref=f9e22]:
+        - heading "Loading" [level=2] [ref=f9e23]
+        - paragraph [ref=f9e25]: Fetching the job and joining its live event stream.

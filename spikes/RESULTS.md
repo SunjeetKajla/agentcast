@@ -89,3 +89,22 @@ with hand-written scenes, hand-measured positions and hand-placed sounds. It use
 - The automated pacing and sync metrics both misjudge it (see `docs/MOTION_SOUND_MUSIC_PLAN.md` §7).
 - Not proven: nobody has listened yet, including to the music's join from the 16 s mark to the track's real ending. Footage is still marketing-page content, and all
   positions are hand-measured, which Phase 3's element map has to replace.
+
+## S12: music-led films through the real worker (2026-11-07)
+
+Question: do Phases 2 and 3 produce a good film with nothing placed by hand? `pnpm --filter @agentcast/spikes e2e --home <dir> --job <id>` runs Linear through the worker with
+real LLM copy and a live recording, and no TinyFish or ElevenLabs quota.
+
+- **Result:** the job finished at 18.0 s and −14.1 LUFS in both formats, with copy, moves and music chosen automatically. Frames of both formats look right.
+- **Short film:** the third shot ("Progress, always in view") passed script review and was then dropped for too little on screen, against a 30 s target. See `docs/REFERENCE_WORKFLOW.md`.
+- **Director:** it used its full 8 minutes and produced nothing, so the film is the template's edit. `docs/REFERENCE_WORKFLOW.md` proposes replacing this pass.
+- **Bug found and fixed:** the worker's 1080p render came out with tiny shots in the top-left corner. Each recompile rewrites `compiled.json`, and a failed director turn restored the scene
+  files but not that list, so the compiler's old 540p files read as the director's and were reused. `runDirector` now restores both, and a primitive's file is always made for the variant's size.
+  Regression tests cover both changes, and both fail with the fix taken out.
+- **Replay of the fix:** on a copy of the job, a fake director recompiled a changed edit and timed out, then `renderVideo` ran at 1080p with the scene folder. No scene read as the director's. The 16:9 film
+  matches the corrected render (SSIM 0.9999). Renders took 24 s (16:9) and 21 s (9:16).
+- **Second brand (shadcn):** `bench --jobs job_mvmoy4njdfc2fa --led --rerecord --height 1080` passed the stall check on an idle machine, so the earlier failure was load. Both formats came out at 18.0 s, −14.1 LUFS and
+  −1.7 dBFS true peak, and rendered in 22 s each. The light theme, column build and logo work. The bench films only the first flow and reuses the job's older copy, so this tests the moves and not the new copy writer or the film's length.
+- **Weak spots on shadcn:** the second proof shows the whole Components page, against the guide's "a piece of the page" rule, so its text is small, and in 9:16 unreadable. In 9:16 the build shows only 2 columns, then holds for about 3 s
+  (40% still, against 0% in 16:9). In 16:9 the build also finishes early and only drifts for its last 2 s or so.
+- **Not proven:** the fix hasn't had a full run through the worker's render stage. Effects are still the synthesised fallback, and only one track has a dependable grid. `sharpLogo` hasn't run on a real job, so the logo is the old low-res capture.

@@ -1,41 +1,29 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import BackgroundVideo from "@/components/BackgroundVideo";
 
-const inter = Inter({
+// One face for the whole product, from the redesign: Schibsted Grotesk, heavy for display, regular for text.
+const schibsted = Schibsted_Grotesk({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-schibsted",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "AgentCast — link in. video out.",
   description:
-    "Paste your product's URL. Web agents explore it, record the flows worth showing, and edit them into a narrated demo video.",
+    "Paste your product's link. Web agents explore it, film the flows worth showing at 60 fps and cut a narrated demo video.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className={schibsted.variable} suppressHydrationWarning>
       <head>
-        {/* Marks the page as scripted before first paint, so hero motion starts hidden only when it will run. */}
+        {/* Marks the page as scripted before first paint, so entrances start hidden only when they will run. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
       </head>
-      <body
-        className={`${inter.className} min-h-screen bg-[#050505] text-[#FAFAFA] flex flex-col antialiased selection:bg-white/20 selection:text-white relative overflow-x-hidden`}
-      >
-        <BackgroundVideo />
-        <Navbar />
-        <main className="flex-1 flex flex-col items-center relative z-10">
-          {children}
-        </main>
-        <Footer />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

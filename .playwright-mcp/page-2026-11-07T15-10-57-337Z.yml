@@ -1,0 +1,491 @@
+- generic [ref=e2]:
+  - link "Skip to content" [ref=e3] [cursor=pointer]:
+    - /url: "#main"
+  - generic [aria-hidden] [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e8]: EVIDENCE IN
+      - generic [ref=e9]: 01 / 05
+    - paragraph [ref=e11]: Decision set
+  - banner [ref=e13]:
+    - generic [ref=e14]:
+      - link "GroundSet - home" [ref=e15] [cursor=pointer]:
+        - /url: /
+        - img "GroundSet™" [ref=e16]:
+          - generic [ref=e24]: GroundSet
+          - generic [ref=e25]: TM
+      - navigation "Main" [ref=e26]:
+        - link "Home" [ref=e27] [cursor=pointer]:
+          - /url: /
+        - link "Platform" [ref=e28] [cursor=pointer]:
+          - /url: /platform
+        - link "Proof" [ref=e29] [cursor=pointer]:
+          - /url: /proof
+        - link "Trust" [ref=e30] [cursor=pointer]:
+          - /url: /trust
+        - link "Company" [ref=e31] [cursor=pointer]:
+          - /url: /company
+      - link "Request Walkthrough" [ref=e33] [cursor=pointer]:
+        - /url: /walkthrough
+  - main [ref=e37]:
+    - generic [ref=e38]:
+      - generic [ref=e39]: Sovereign decision infrastructure for Regulated operations
+      - generic [ref=e44]:
+        - heading "THE JUDGEMENT LAYER." [level=1] [ref=e45]:
+          - generic [aria-hidden] [ref=e46]:
+            - generic [ref=e47]: T
+            - generic [ref=e48]: H
+            - generic [ref=e49]: E
+          - generic [aria-hidden] [ref=e50]:
+            - generic [ref=e51]: J
+            - generic [ref=e52]: U
+            - generic [ref=e53]: D
+            - generic [ref=e54]: G
+            - generic [ref=e55]: E
+            - generic [ref=e56]: M
+            - generic [ref=e57]: E
+            - generic [ref=e58]: "N"
+            - generic [ref=e59]: T
+          - generic [aria-hidden] [ref=e60]:
+            - generic [ref=e61]: L
+            - generic [ref=e62]: A
+            - generic [ref=e63]: "Y"
+            - generic [ref=e64]: E
+            - generic [ref=e65]: R
+            - generic [ref=e66]: .
+        - generic [ref=e67]:
+          - paragraph [ref=e68]: GroundSet™ is the system of record for enterprise judgement. It reads real-world evidence, applies your rules deterministically, and sets every decision in an immutable audit ledger - inside your environment, on models you own.
+          - generic [ref=e69]:
+            - link "Request a walkthrough" [ref=e70] [cursor=pointer]:
+              - /url: /walkthrough
+            - link "Why it's called GroundSet™ ↓" [ref=e74] [cursor=pointer]:
+              - /url: "#mark"
+    - region "Why it is called GroundSet" [ref=e79]:
+      - generic [ref=e80]:
+        - generic:
+          - generic:
+            - heading "Ground + Set" [level=3]
+            - paragraph: One word, assembled from two.
+            - paragraph: "Ground is what a decision stands on: the evidence in front of you and the rules you wrote. Set is what happens to it next: fixed in the record, where it can be replayed."
+        - generic [aria-hidden]:
+          - generic:
+            - heading [level=3]: Three parts
+            - paragraph: Each one carries part of what GroundSet™ does.
+            - paragraph: "Take the mark apart and there are three pieces: a ground, a point with every possible decision above it, and an arc. None of them is decoration."
+        - generic [aria-hidden]:
+          - generic:
+            - heading [level=3]: Ground
+            - paragraph: Evidence and rules.
+            - paragraph: Evidence · Rules · Deterministic
+            - paragraph: "Every judgement starts grounded. Real-world evidence is read as it arrives, and your rules are applied deterministically: the same evidence and the same rule version give the same outcome."
+        - generic [aria-hidden]:
+          - generic:
+            - heading [level=3]: Set
+            - paragraph: Every possible decision, brought to one.
+            - paragraph: Decided · Set · Replayable
+            - paragraph: The dots above the point are every decision that could be made. Your evidence and your rules bring them to one. That one does not float. It rests on the ground that produced it, and it is set in the decision ledger with its evidence, its rule version and any human override.
+        - generic [aria-hidden]:
+          - generic:
+            - heading [level=3]: Sovereign
+            - paragraph: Yours, and drawn open.
+            - paragraph: Sovereign · Open · Yours
+            - paragraph: "The arc is your environment. GroundSet™ runs inside it, on models you own. It is never drawn closed: a system of record for judgement cannot be a black box, so every decision can be opened and replayed."
+        - generic [aria-hidden]:
+          - generic:
+            - heading [level=3]: Three parts. One judgement.
+            - paragraph: Grounded. Set. Sovereign.
+            - paragraph: Seen from the front, the ground, the point and the perimeter read as a single G. Now you know why it is called GroundSet™.
+        - generic [ref=e85]:
+          - generic [ref=e86]: 01The name
+          - generic [ref=e87]: "02"
+          - generic [ref=e88]: "03"
+          - generic [ref=e89]: "04"
+          - generic [ref=e90]: "05"
+          - generic [ref=e91]: "06"
+          - link "Skip the film" [ref=e92] [cursor=pointer]:
+            - /url: "#proof-strip"
+    - region "Where GroundSet already runs" [ref=e93]:
+      - generic [ref=e95]:
+        - 'figure "Example decision record: EVIDENCE IN: handwritten_ledger_0447.jpg · id_scan.png. UNDERSTOOD: monthly_revenue ₱412,300 · 14 debtors · 2 anomalies. RULE APPLIED: MSME-CREDIT-114.v12 · dscr >= 1.25 · PASS. DECISION: APPROVE · limit ₱180,000 · 47ms. SET TO LEDGER: 0x8f3a…c41d · replayable · immutable." [ref=e97]':
+          - generic [ref=e98]:
+            - generic [ref=e99]: Decision ledger · Replay
+            - generic [ref=e104]: Engine active
+          - list [aria-hidden] [ref=e107]:
+            - listitem [ref=e108]:
+              - generic [ref=e109]: "01"
+              - generic [ref=e110]: EVIDENCE IN
+              - generic [ref=e111]: handwritten_ledger_0447.jpg · id_scan.png
+            - listitem [ref=e112]:
+              - generic [ref=e113]: "02"
+              - generic [ref=e114]: UNDERSTOOD
+              - generic [ref=e115]: monthly_revenue ₱412,300 · 14 debtors · 2 anomalies
+            - listitem [ref=e116]:
+              - generic [ref=e117]: "03"
+              - generic [ref=e118]: RULE APPLIED
+              - generic [ref=e119]: MSME-CREDIT-114.v12 · dscr >= 1.25 · PASS
+            - listitem [ref=e120]:
+              - generic [ref=e121]: "04"
+              - generic [ref=e122]: DECISION
+              - generic [ref=e123]: APPROVE · limit ₱180,000 · 47ms
+            - listitem [ref=e124]:
+              - generic [ref=e125]: "05"
+              - generic [ref=e126]: SET TO LEDGER
+              - generic [ref=e127]: 0x8f3a…c41d · replayable · immutable
+          - generic [aria-hidden] [ref=e135]: 01 / 04
+        - list [ref=e136]:
+          - listitem [ref=e137]:
+            - generic [ref=e138]:
+              - generic [ref=e139]: "01"
+              - text: Banking · BSP-regulated
+            - generic [ref=e140]: In production at the Philippines' largest licensed digital bank
+          - listitem [ref=e141]:
+            - generic [ref=e142]:
+              - generic [ref=e143]: "02"
+              - text: Logistics · Global
+            - generic [ref=e144]: In deployment with the world's largest logistics company - expanding to 2,150 sites
+          - listitem [ref=e145]:
+            - generic [ref=e146]:
+              - generic [ref=e147]: "03"
+              - text: Physical security · India
+            - generic [ref=e148]: Deployed across three of India's ten largest security networks - 1,500+ sites live
+          - listitem [ref=e149]:
+            - generic [ref=e150]:
+              - generic [ref=e151]: "04"
+              - text: Insurance · Pan-Asian
+            - generic [ref=e152]: Signed with a leading pan-Asian insurer - claims decision intelligence
+          - listitem [ref=e153]:
+            - generic [ref=e154]:
+              - generic [ref=e155]: "05"
+              - text: Deployment
+            - generic [ref=e156]: Always inside the customer's VPC. Zero data leaves the perimeter.
+      - generic [ref=e158]:
+        - list [ref=e159]:
+          - listitem [ref=e160]:
+            - generic [ref=e161]: "Designed for:"
+            - generic [ref=e162]: BSP
+            - generic [ref=e163]:
+              - generic [aria-hidden] [ref=e164]: ·
+              - text: IMDA
+            - generic [ref=e165]:
+              - generic [aria-hidden] [ref=e166]: ·
+              - text: DPDP
+            - generic [ref=e167]:
+              - generic [aria-hidden] [ref=e168]: ·
+              - text: SR 26-2
+            - generic [ref=e169]:
+              - generic [aria-hidden] [ref=e170]: ·
+              - text: EU AI Act
+          - listitem [ref=e172]:
+            - generic [ref=e173]: "Built:"
+            - generic [ref=e174]: In-VPC
+            - generic [ref=e175]:
+              - generic [aria-hidden] [ref=e176]: ·
+              - text: Air-gapped
+            - generic [ref=e177]:
+              - generic [aria-hidden] [ref=e178]: ·
+              - text: Zero retention
+            - generic [ref=e179]:
+              - generic [aria-hidden] [ref=e180]: ·
+              - text: Replayable
+        - list [aria-hidden] [ref=e182]:
+          - listitem [ref=e183]:
+            - generic [ref=e184]: "Designed for:"
+            - generic [ref=e185]: BSP
+            - generic [ref=e186]:
+              - generic [aria-hidden] [ref=e187]: ·
+              - text: IMDA
+            - generic [ref=e188]:
+              - generic [aria-hidden] [ref=e189]: ·
+              - text: DPDP
+            - generic [ref=e190]:
+              - generic [aria-hidden] [ref=e191]: ·
+              - text: SR 26-2
+            - generic [ref=e192]:
+              - generic [aria-hidden] [ref=e193]: ·
+              - text: EU AI Act
+          - listitem [ref=e195]:
+            - generic [ref=e196]: "Built:"
+            - generic [ref=e197]: In-VPC
+            - generic [ref=e198]:
+              - generic [aria-hidden] [ref=e199]: ·
+              - text: Air-gapped
+            - generic [ref=e200]:
+              - generic [aria-hidden] [ref=e201]: ·
+              - text: Zero retention
+            - generic [ref=e202]:
+              - generic [aria-hidden] [ref=e203]: ·
+              - text: Replayable
+    - region [ref=e205]:
+      - generic [ref=e206]:
+        - generic [ref=e207]:
+          - generic [ref=e208]:
+            - generic [ref=e209]: "01"
+            - generic [ref=e211]: The problem
+          - heading "Every enterprise records everything - except the thing that matters most." [level=2] [ref=e213]:
+            - generic [ref=e214]: Every enterprise records everything -
+            - generic [ref=e216]: except the thing that matters most.
+        - generic [ref=e220]:
+          - generic "Systems of record and what they hold" [ref=e222]:
+            - generic [ref=e223]:
+              - term [ref=e224]: ERP
+              - definition [ref=e225]: Transactions
+            - generic [ref=e226]:
+              - term [ref=e227]: CRM
+              - definition [ref=e228]: Relationships
+            - generic [ref=e229]:
+              - term [ref=e230]: COREBANK
+              - definition [ref=e231]: Accounts
+            - generic [ref=e232]:
+              - term [ref=e233]: HRMS
+              - definition [ref=e234]: Workforce
+            - generic [ref=e235]:
+              - term [ref=e236]: GROUNDSET™
+              - definition [ref=e239]: Judgement
+          - generic [ref=e240]:
+            - paragraph [ref=e241]: Human judgement - who approved this loan, on what evidence, under which rule, and why - was never recorded anywhere. It lived in people's heads and died in email threads.
+            - paragraph [ref=e242]: "It doesn't scale, either. Every new decision workflow means more headcount, more training, more inconsistency. And the rules engines built to help cannot read the evidence real decisions actually run on: handwritten ledgers, crumpled receipts, scanned IDs, voice logs, camera feeds."
+            - paragraph [ref=e243]: Judgement is the last unclaimed system of record. GroundSet™ claims it.
+    - region [ref=e244]:
+      - generic [ref=e245]:
+        - generic [ref=e246]:
+          - generic [ref=e247]:
+            - generic [ref=e248]: "02"
+            - generic [ref=e250]: Why now
+          - heading "AI made the gap catastrophic. Regulators made it billable." [level=2] [ref=e252]:
+            - generic [ref=e253]: AI made the gap catastrophic.
+            - generic [ref=e255]: Regulators made it billable.
+        - generic [ref=e259]:
+          - generic [ref=e260]:
+            - generic [ref=e261]: 4×
+            - generic [ref=e262]: Rise in enterprise shadow-AI detections in one year - Verizon DBIR 2026
+          - generic [ref=e263]:
+            - generic [ref=e264]: ~1/3
+            - generic [ref=e265]: Of organisations report mature governance for agentic AI - McKinsey 2026
+        - paragraph [ref=e266]: "Agents now act on core systems. The decisions are happening; the record is not. And the people who present the bill have arrived:"
+        - list [ref=e269]:
+          - listitem [ref=e270]:
+            - generic [ref=e273]: Singapore · Jan 2026
+            - article [ref=e274]:
+              - heading "IMDA Agentic AI Framework" [level=3] [ref=e275]
+              - paragraph [ref=e276]: Every agent must carry verifiable identity and an audit trail of who acted under whose authorisation. The first regulator to mandate the category.
+          - listitem [ref=e277]:
+            - generic [ref=e280]: United States · Apr 2026
+            - article [ref=e281]:
+              - heading "SR 26-2" [level=3] [ref=e282]
+              - paragraph [ref=e283]: The Fed, OCC and FDIC replaced fifteen years of model-risk guidance and placed agentic AI outside its scope. Boards must govern it themselves - with an auditable record of every judgement.
+          - listitem [ref=e284]:
+            - generic [ref=e287]: European Union · Dec 2027
+            - article [ref=e288]:
+              - heading "EU AI Act, High-Risk" [level=3] [ref=e289]
+              - paragraph [ref=e290]: High-risk obligations for credit and claims decisioning land December 2027. Penalties and transparency duties are already in force.
+        - paragraph [ref=e292]: "\"The model said so\" is not an answer any auditor accepts. GroundSet™ exists so no institution ever has to give it."
+    - generic [ref=e294]:
+      - generic [ref=e295]:
+        - generic [ref=e296]: Understand
+        - generic [ref=e299]: Decide
+        - generic [ref=e302]: Route
+        - generic [ref=e305]: Set
+        - generic [ref=e308]: Understand
+        - generic [ref=e311]: Decide
+        - generic [ref=e314]: Route
+        - generic [ref=e317]: Set
+        - generic [ref=e320]: Understand
+        - generic [ref=e323]: Decide
+        - generic [ref=e326]: Route
+        - generic [ref=e329]: Set
+      - generic [ref=e332]:
+        - generic [ref=e333]: Route
+        - generic [ref=e336]: Set
+        - generic [ref=e339]: Understand
+        - generic [ref=e342]: Decide
+        - generic [ref=e345]: Route
+        - generic [ref=e348]: Set
+        - generic [ref=e351]: Understand
+        - generic [ref=e354]: Decide
+        - generic [ref=e357]: Route
+        - generic [ref=e360]: Set
+        - generic [ref=e363]: Understand
+        - generic [ref=e366]: Decide
+    - region [ref=e369]:
+      - generic [ref=e370]:
+        - generic [ref=e371]:
+          - generic [ref=e372]:
+            - generic [ref=e373]: "03"
+            - generic [ref=e375]: The platform
+          - generic [ref=e376]:
+            - heading "Understand. Decide. Route. Set." [level=2] [ref=e377]:
+              - generic [ref=e378]: Understand. Decide. Route.
+              - generic [ref=e380]: Set.
+            - paragraph [ref=e383]: One engine, four verbs. Domain-trained models read messy reality; your encoded rules decide deterministically; every outcome routes with justification and is set in the ledger.
+        - region "Understand, decide, route, set" [ref=e384]:
+          - generic [ref=e385]:
+            - generic:
+              - generic:
+                - heading "Understand" [level=3]
+                - paragraph: Read the evidence
+                - paragraph: Domain-trained SLMs and VLMs turn handwritten ledgers, IDs, invoices, voice and video into structured fact. Zero-shot - no template training.
+            - generic [aria-hidden]:
+              - generic:
+                - heading [level=3]: Decide
+                - paragraph: Apply your rules
+                - paragraph: Your policies, thresholds and SOPs execute deterministically. Same input, same output, every time. No temperature. No hallucination risk.
+            - generic [aria-hidden]:
+              - generic:
+                - heading [level=3]: Route
+                - paragraph: Act with justification
+                - paragraph: Auto-approve the clear majority, reject, or escalate to humans with full reasoning attached. People handle true exceptions only.
+            - generic [aria-hidden]:
+              - generic:
+                - heading [level=3]: Set
+                - paragraph: Write the record
+                - paragraph: Evidence, rule version, outcome, override - written to an immutable, replayable audit ledger. The system of record accretes with every decision.
+            - generic [ref=e390]:
+              - generic [ref=e391]: "01"
+              - generic [ref=e392]: "02"
+              - generic [ref=e393]: "03"
+              - generic [ref=e394]: "04"
+        - link "Explore the platform" [ref=e396] [cursor=pointer]:
+          - /url: /platform
+    - region [ref=e399]:
+      - generic [ref=e400]:
+        - generic [ref=e401]:
+          - generic [ref=e402]: "04"
+          - generic [ref=e404]: Sovereign by design
+        - generic [ref=e405]:
+          - generic [ref=e406]:
+            - heading "Your models. Your perimeter. Your record." [level=2] [ref=e407]:
+              - generic [ref=e408]: Your models. Your perimeter.
+              - generic [ref=e410]: Your record.
+            - paragraph [ref=e412]: GroundSet™ runs entirely inside your environment, on open-weight models post-trained in-house and owned by you in deployment. Nothing a vendor - or a foreign government - can switch off.
+          - generic [aria-hidden] [ref=e413]:
+            - generic [ref=e415]: Your perimeter
+            - generic [ref=e416]: Your models
+            - generic [ref=e417]: Your record
+            - generic [ref=e418]: No external calls at inference
+        - generic [ref=e419]:
+          - generic [ref=e420]:
+            - generic [ref=e421]:
+              - generic [ref=e422]: "01"
+              - text: Deployment
+            - paragraph [ref=e423]: In-VPC or fully air-gapped. No external calls at inference. Reviewed and passed by Tier-1 bank InfoSec.
+          - generic [ref=e424]:
+            - generic [ref=e425]:
+              - generic [ref=e426]: "02"
+              - text: Data
+            - paragraph [ref=e427]: Ephemeral processing. Documents handled in-memory and purged. Zero retention, by architecture rather than policy.
+          - generic [ref=e428]:
+            - generic [ref=e429]:
+              - generic [ref=e430]: "03"
+              - text: Record
+            - paragraph [ref=e431]: "Every decision replayable end-to-end: the evidence, the rule version, the outcome, the human override. Designed to support BSP, IMDA, DPDP, SR 26-2 and EU AI Act requirements."
+    - region "What GroundSet™ is not" [ref=e432]:
+      - generic [ref=e433]:
+        - generic [ref=e434]:
+          - generic [ref=e435]: "05"
+          - generic [ref=e437]: What GroundSet™ is not
+        - list [ref=e439]:
+          - listitem [ref=e440]:
+            - generic [ref=e441]: "01"
+            - generic [ref=e442]: OCR extracts.
+            - generic [ref=e443]: It doesn't decide.
+          - listitem [ref=e444]:
+            - generic [ref=e445]: "02"
+            - generic [ref=e446]: Copilots suggest.
+            - generic [ref=e447]: They aren't accountable.
+          - listitem [ref=e448]:
+            - generic [ref=e449]: "03"
+            - generic [ref=e450]: Wrappers rent judgement by the token.
+            - generic [ref=e451]: You never own it.
+          - listitem [ref=e452]:
+            - generic [ref=e453]: "04"
+            - generic [ref=e454]: Data platforms record context.
+            - generic [ref=e455]: Not conclusions.
+          - listitem [ref=e456]:
+            - generic [ref=e457]: "05"
+            - generic [ref=e458]: GroundSet™ decides -
+            - generic [ref=e459]: and remembers why.
+    - region [ref=e462]:
+      - generic [ref=e463]:
+        - generic [ref=e464]:
+          - generic [ref=e465]: "06"
+          - generic [ref=e467]: Next step
+        - generic [ref=e468]:
+          - generic [ref=e469]:
+            - heading "See one real workflow become infrastructure." [level=2] [ref=e470]:
+              - generic [ref=e471]: See one real workflow
+              - generic [ref=e473]: become infrastructure.
+            - paragraph [ref=e475]: We map one decision workflow from your operation and show it running end-to-end - understood, decided, routed, and set in the ledger. Thirty minutes, your data patterns, no slideware.
+          - generic [ref=e478]:
+            - generic [ref=e479]:
+              - generic [ref=e480]:
+                - generic [ref=e481]: "01"
+                - text: Work email
+              - textbox "01 Work email" [ref=e482]:
+                - /placeholder: you@institution.com
+            - generic [ref=e483]:
+              - generic [ref=e484]:
+                - generic [ref=e485]: "02"
+                - text: Phone number
+              - textbox "02 Phone number" [ref=e486]:
+                - /placeholder: +65 …
+            - generic [ref=e487]:
+              - generic [ref=e488]:
+                - generic [ref=e489]: "03"
+                - text: Judgement to be mapped
+              - paragraph [ref=e490]: Or the decision infrastructure required.
+              - textbox "03 Judgement to be mapped" [ref=e491]:
+                - /placeholder: The decision, the evidence it runs on, and who makes it today.
+            - generic [ref=e493]:
+              - text: Website
+              - textbox [ref=e494]
+            - generic [ref=e495] [cursor=pointer]:
+              - checkbox "By proceeding, you agree to GroundSet™'s Terms of Use & Privacy Policy." [ref=e496]
+              - generic [ref=e497]:
+                - text: By proceeding, you agree to GroundSet™'s
+                - link "Terms of Use" [ref=e498]:
+                  - /url: /terms
+                - text: "&"
+                - link "Privacy Policy" [ref=e499]:
+                  - /url: /privacy
+                - text: .
+            - button "Request a walkthrough" [ref=e500] [cursor=pointer]
+  - contentinfo [ref=e505]:
+    - generic [ref=e506]:
+      - generic [ref=e507]:
+        - generic [ref=e508]:
+          - img "GroundSet™" [ref=e509]:
+            - generic [ref=e517]: GroundSet
+            - generic [ref=e518]: TM
+          - paragraph [ref=e519]: GroundSet™ is the system of record for enterprise judgement. It reads real-world evidence, applies your rules deterministically, and sets every decision in an immutable audit ledger - deployed inside your environment, on models you own. Built by BPOptima, Singapore. Live in production at regulated Tier-1 institutions.
+        - navigation "Site" [ref=e520]:
+          - link "Platform" [ref=e522] [cursor=pointer]:
+            - /url: /platform
+          - link "Proof" [ref=e523] [cursor=pointer]:
+            - /url: /proof
+          - link "Trust" [ref=e524] [cursor=pointer]:
+            - /url: /trust
+          - link "Company" [ref=e525] [cursor=pointer]:
+            - /url: /company
+          - link "Request Walkthrough" [ref=e526] [cursor=pointer]:
+            - /url: /walkthrough
+        - generic [ref=e527]:
+          - generic [ref=e528]: Company
+          - paragraph [ref=e529]: BP Optima Pte. Ltd.
+          - paragraph [ref=e530]: "32 Pekin Street, #05-01Singapore 048762"
+          - paragraph [ref=e531]: UEN 202544773H
+          - paragraph [ref=e532]: DUNS® 599660998
+        - generic [ref=e533]:
+          - generic [ref=e534]: Contact
+          - link "sales@groundset.com" [ref=e535] [cursor=pointer]:
+            - /url: mailto:sales@groundset.com
+          - link "dj@bpoptima.com" [ref=e536] [cursor=pointer]:
+            - /url: mailto:dj@bpoptima.com
+          - generic [ref=e537]: Operating across
+          - paragraph [ref=e539]: Philippines · Singapore · India · Indonesia · Vietnam · Thailand · MENA
+      - img "GroundSet™" [ref=e541]
+      - generic [ref=e543]:
+        - generic [ref=e544]: © 2026 BP OPTIMA PTE. LTD. · UEN 202544773H · Headquartered in Singapore
+        - generic [ref=e545]:
+          - link "Privacy" [ref=e546] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e547] [cursor=pointer]:
+            - /url: /terms

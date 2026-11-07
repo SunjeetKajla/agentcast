@@ -1,0 +1,753 @@
+- generic [active] [ref=f1e1]:
+  - link "Skip to content" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main"
+  - navigation "Contact and social links" [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - list "Contact Nakoda AI" [ref=f1e5]:
+        - listitem [ref=f1e6]:
+          - link "WhatsApp" [ref=f1e7] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e10]:
+          - link "Telegram" [ref=f1e11] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e14]:
+          - link "Botim" [ref=f1e15] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e19]:
+          - link "Call +971 XX XXX XXXX" [ref=f1e20] [cursor=pointer]:
+            - /url: tel:+971XXXXXXXXX
+            - generic [aria-hidden] [ref=f1e23]: +971 XX XXX XXXX
+        - listitem [ref=f1e24]:
+          - link "Email hello@nakoda.ai" [ref=f1e25] [cursor=pointer]:
+            - /url: mailto:hello@nakoda.ai
+            - generic [aria-hidden] [ref=f1e29]: hello@nakoda.ai
+      - list "Nakoda AI on social media" [ref=f1e31]:
+        - listitem [ref=f1e32]:
+          - link "Instagram" [ref=f1e33] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e38]:
+          - link "TikTok" [ref=f1e39] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e42]:
+          - link "LinkedIn" [ref=f1e43] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e46]:
+          - link "X" [ref=f1e47] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e50]:
+          - link "YouTube" [ref=f1e51] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e54]:
+          - link "Facebook" [ref=f1e55] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f1e58]:
+          - link "WhatsApp" [ref=f1e59] [cursor=pointer]:
+            - /url: "#"
+  - banner [ref=f1e62]:
+    - generic [ref=f1e63]:
+      - link "NakodaAI" [ref=f1e64] [cursor=pointer]:
+        - /url: /
+      - navigation "Primary" [ref=f1e68]:
+        - link "Home" [ref=f1e69] [cursor=pointer]:
+          - /url: /
+        - button "Brand" [ref=f1e71] [cursor=pointer]
+        - button "Divisions" [ref=f1e74] [cursor=pointer]
+        - button "Ecosystem" [ref=f1e78] [cursor=pointer]
+        - button "Academy" [ref=f1e82] [cursor=pointer]
+        - button "Our sites" [ref=f1e86] [cursor=pointer]
+      - generic [ref=f1e89]:
+        - button "Search the site" [ref=f1e90] [cursor=pointer]
+        - 'button "Language: English. Change language" [ref=f1e95] [cursor=pointer]'
+        - button "Switch to dark mode" [ref=f1e100] [cursor=pointer]
+        - link "Start a conversation" [ref=f1e103] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=f1e105]:
+    - generic:
+      - generic:
+        - link "Strategy" [ref=f1e106] [cursor=pointer]:
+          - /url: /services/ai-strategy
+        - link "Governance" [ref=f1e108] [cursor=pointer]:
+          - /url: /services/ai-governance
+        - link "Audit" [ref=f1e110] [cursor=pointer]:
+          - /url: /services/ai-audit
+        - link "Visibility" [ref=f1e112] [cursor=pointer]:
+          - /url: /services/ai-visibility
+        - link "Community" [ref=f1e114] [cursor=pointer]:
+          - /url: /services/community
+        - link "Learning" [ref=f1e116] [cursor=pointer]:
+          - /url: /services/learning-development
+        - link "Business" [ref=f1e118] [cursor=pointer]:
+          - /url: /services/business-setup
+        - generic: Nakoda AI
+    - generic:
+      - generic [ref=f1e122]:
+        - heading "Navigate the AI Era. With Clarity." [level=1] [ref=f1e123]:
+          - generic [ref=f1e124]: Navigate the AI Era.
+          - generic [ref=f1e125]: With Clarity.
+        - generic [ref=f1e126]:
+          - generic [ref=f1e127]:
+            - paragraph [ref=f1e128]: One connected view of AI decisions, risks and opportunities in the UAE.
+            - paragraph [aria-hidden]: Build it right from the start, whether you are launching or scaling.
+            - paragraph [aria-hidden]: For new ventures and established businesses across the UAE.
+          - group "Hero messages" [ref=f1e129]:
+            - button "Show message 1 of 3" [pressed] [ref=f1e130] [cursor=pointer]
+            - button "Show message 2 of 3" [ref=f1e132] [cursor=pointer]
+            - button "Show message 3 of 3" [ref=f1e134] [cursor=pointer]
+        - generic [ref=f1e136]:
+          - link "Explore Nakoda AI" [ref=f1e137] [cursor=pointer]:
+            - /url: /about
+          - link "Explore Intelligence" [ref=f1e140] [cursor=pointer]:
+            - /url: /intelligence
+      - generic [ref=f1e143]:
+        - generic [ref=f1e146]:
+          - generic [ref=f1e147]:
+            - heading "AI is not one decision." [level=2] [ref=f1e148]
+            - paragraph [ref=f1e149]: It is a system of decisions that keep changing.
+            - generic [ref=f1e150]:
+              - paragraph [ref=f1e151]:
+                - generic [aria-hidden] [ref=f1e152]: ↑
+                - text: Separate advice creates connected risks.
+              - paragraph [ref=f1e153]:
+                - generic [aria-hidden] [ref=f1e154]: ↑
+                - text: The decisions become clearer when the relationships are visible.
+          - list [ref=f1e155]:
+            - listitem [ref=f1e157]:
+              - generic [aria-hidden] [ref=f1e158]: "01"
+              - generic [ref=f1e159]:
+                - generic [ref=f1e160]: Strategy
+                - generic [ref=f1e161]: Where AI should create value.
+            - listitem [ref=f1e162]:
+              - generic [aria-hidden] [ref=f1e163]: "02"
+              - generic [ref=f1e164]:
+                - generic [ref=f1e165]: Governance
+                - generic [ref=f1e166]: Who owns the risk, and the rules.
+            - listitem [ref=f1e167]:
+              - generic [aria-hidden] [ref=f1e168]: "03"
+              - generic [ref=f1e169]:
+                - generic [ref=f1e170]: Visibility
+                - generic [ref=f1e171]: How buyers and AI find you.
+            - listitem [ref=f1e172]:
+              - generic [aria-hidden] [ref=f1e173]: "04"
+              - generic [ref=f1e174]:
+                - generic [ref=f1e175]: Capital
+                - generic [ref=f1e176]: What funds it, and who backs it.
+            - listitem [ref=f1e177]:
+              - generic [aria-hidden] [ref=f1e178]: "05"
+              - generic [ref=f1e179]:
+                - generic [ref=f1e180]: Technology
+                - generic [ref=f1e181]: What you build, buy and run.
+        - generic [ref=f1e182]:
+          - paragraph [ref=f1e183]: Want to see how your own AI decisions connect?
+          - link "Start a conversation" [ref=f1e184] [cursor=pointer]:
+            - /url: /contact
+      - generic [ref=f1e188]:
+        - heading "One system. Many ways in." [level=2] [ref=f1e189]: One system.Many ways in.
+        - generic [ref=f1e190]:
+          - generic [ref=f1e191]:
+            - generic: Nakoda AI
+            - button "Understand Intelligence" [ref=f1e192] [cursor=pointer]:
+              - generic [ref=f1e193]: Understand
+              - generic [ref=f1e194]: Intelligence
+            - button "Act Services" [ref=f1e195] [cursor=pointer]:
+              - generic [ref=f1e196]: Act
+              - generic [ref=f1e197]: Services
+            - button "Apply Industries" [ref=f1e198] [cursor=pointer]:
+              - generic [ref=f1e199]: Apply
+              - generic [ref=f1e200]: Industries
+            - button "Connect Ecosystem" [expanded] [ref=f1e201] [cursor=pointer]:
+              - generic [ref=f1e202]: Connect
+              - generic [ref=f1e203]: Ecosystem
+          - generic [ref=f1e204]:
+            - generic:
+              - paragraph: Understand the field, then apply it.
+              - link:
+                - /url: /intelligence
+                - text: All intelligence →
+            - list
+            - generic:
+              - paragraph: From understanding to action.
+              - link:
+                - /url: /services
+                - text: All services →
+            - list:
+              - listitem:
+                - link:
+                  - /url: /services/ai-strategy
+                  - generic: AI Strategy
+                  - generic: Direction before deployment. Every time.
+              - listitem:
+                - link:
+                  - /url: /services/ai-governance
+                  - generic: AI Governance
+                  - generic: Accountability built in, not bolted on.
+              - listitem:
+                - link:
+                  - /url: /services/ai-audit
+                  - generic: AI Audit
+                  - generic: Two disciplines. Both critical. Neither optional.
+              - listitem:
+                - link:
+                  - /url: /services/ai-visibility
+                  - generic: AI Visibility
+                  - generic: If AI platforms do not know you exist, your audience is shrinking.
+              - listitem:
+                - link:
+                  - /url: /services/business-setup
+                  - generic: Business Setup & Survival Advisory
+                  - generic: The right structure from the start. In the right place.
+              - listitem:
+                - link:
+                  - /url: /services/learning-development
+                  - generic: Learning and Development
+                  - generic: Capability that stays after the training ends.
+              - listitem:
+                - link:
+                  - /url: /services/community
+                  - generic: Community
+                  - generic: Inside the UAE AI ecosystem. Not outside looking in.
+              - listitem:
+                - link:
+                  - /url: /services/others
+                  - generic: Others
+                  - generic: Everything else AI. Scoped honestly, or referred on.
+            - generic:
+              - paragraph: The same decisions, in different contexts.
+              - link:
+                - /url: /industries
+                - text: All industries →
+            - list:
+              - listitem:
+                - link:
+                  - /url: /industries/healthcare
+                  - generic: Healthcare
+              - listitem:
+                - link:
+                  - /url: /industries/financial-services
+                  - generic: Financial Services
+              - listitem:
+                - link:
+                  - /url: /industries/government
+                  - generic: Government
+              - listitem:
+                - link:
+                  - /url: /industries/retail-ecommerce
+                  - generic: Retail and E-commerce
+              - listitem:
+                - link:
+                  - /url: /industries/construction-real-estate
+                  - generic: Construction and Real Estate
+              - listitem:
+                - link:
+                  - /url: /industries/education
+                  - generic: Education
+              - listitem:
+                - link:
+                  - /url: /industries/hospitality
+                  - generic: Hospitality and Tourism
+              - listitem:
+                - link:
+                  - /url: /industries/logistics-supply-chain
+                  - generic: Logistics & Supply Chain
+              - listitem:
+                - link:
+                  - /url: /industries/energy-utilities
+                  - generic: Energy & Utilities
+              - listitem:
+                - link:
+                  - /url: /industries/legal-professional-services
+                  - generic: Legal & Professional Services
+              - listitem:
+                - link:
+                  - /url: /industries/aviation-aerospace
+                  - generic: Aviation & Aerospace
+              - listitem:
+                - link:
+                  - /url: /industries/marketing-advertising
+                  - generic: Marketing and Advertising
+              - listitem:
+                - link:
+                  - /url: /industries/information-security
+                  - generic: Information Security
+              - listitem:
+                - link:
+                  - /url: /industries/technology
+                  - generic: Technology Companies
+              - listitem:
+                - link:
+                  - /url: /industries/manufacturing
+                  - generic: Manufacturing
+            - region "Connect Ecosystem" [ref=f1e205]:
+              - generic [ref=f1e206]:
+                - generic [ref=f1e207]:
+                  - paragraph [ref=f1e208]: The UAE AI system, mapped.
+                  - link "All ecosystem →" [ref=f1e209] [cursor=pointer]:
+                    - /url: /ecosystem
+                - list [ref=f1e210]:
+                  - listitem [ref=f1e211]:
+                    - link "Events 27" [ref=f1e212] [cursor=pointer]:
+                      - /url: /ecosystem/events
+                      - generic [ref=f1e213]:
+                        - generic [ref=f1e214]: Events
+                        - generic [ref=f1e215]: "27"
+      - generic [ref=f1e217]:
+        - paragraph [ref=f1e218]: Services
+        - heading "From understanding to action." [level=2] [ref=f1e219]
+        - paragraph [ref=f1e220]: Build it right from the start. For a venture taking its first steps and for a business that has run for years, each division starts where you are today.
+        - list [ref=f1e221]:
+          - listitem [ref=f1e222]:
+            - link "AI Strategy Know where AI creates value in your organization before you spend on it." [ref=f1e223] [cursor=pointer]:
+              - /url: /services/ai-strategy
+              - generic [ref=f1e224]: AI Strategy
+              - generic [ref=f1e225]: Know where AI creates value in your organization before you spend on it.
+              - generic [aria-hidden] [ref=f1e226]: →
+          - listitem [ref=f1e227]:
+            - link "AI Governance Build your AI governance framework before regulation forces you to." [ref=f1e228] [cursor=pointer]:
+              - /url: /services/ai-governance
+              - generic [ref=f1e229]: AI Governance
+              - generic [ref=f1e230]: Build your AI governance framework before regulation forces you to.
+              - generic [aria-hidden] [ref=f1e231]: →
+          - listitem [ref=f1e232]:
+            - link "AI Audit Prove the AI you already run does what you say it does." [ref=f1e233] [cursor=pointer]:
+              - /url: /services/ai-audit
+              - generic [ref=f1e234]: AI Audit
+              - generic [ref=f1e235]: Prove the AI you already run does what you say it does.
+              - generic [aria-hidden] [ref=f1e236]: →
+          - listitem [ref=f1e237]:
+            - link "AI Visibility Increase the chance ChatGPT, Gemini and Claude recommend your business." [ref=f1e238] [cursor=pointer]:
+              - /url: /services/ai-visibility
+              - generic [ref=f1e239]: AI Visibility
+              - generic [ref=f1e240]: Increase the chance ChatGPT, Gemini and Claude recommend your business.
+              - generic [aria-hidden] [ref=f1e241]: →
+          - listitem [ref=f1e242]:
+            - link "Business Setup & Survival Advisory Set up in the free zone that actually permits what you plan to do." [ref=f1e243] [cursor=pointer]:
+              - /url: /services/business-setup
+              - generic [ref=f1e244]: Business Setup & Survival Advisory
+              - generic [ref=f1e245]: Set up in the free zone that actually permits what you plan to do.
+              - generic [aria-hidden] [ref=f1e246]: →
+          - listitem [ref=f1e247]:
+            - link "Learning and Development Send your board into an AI decision able to ask the right questions." [ref=f1e248] [cursor=pointer]:
+              - /url: /services/learning-development
+              - generic [ref=f1e249]: Learning and Development
+              - generic [ref=f1e250]: Send your board into an AI decision able to ask the right questions.
+              - generic [aria-hidden] [ref=f1e251]: →
+          - listitem [ref=f1e252]:
+            - link "Community Get into the rooms where the UAE AI ecosystem actually meets." [ref=f1e253] [cursor=pointer]:
+              - /url: /services/community
+              - generic [ref=f1e254]: Community
+              - generic [ref=f1e255]: Get into the rooms where the UAE AI ecosystem actually meets.
+              - generic [aria-hidden] [ref=f1e256]: →
+          - listitem [ref=f1e257]:
+            - link "Others Describe an AI problem that fits no category and get an honest answer." [ref=f1e258] [cursor=pointer]:
+              - /url: /services/others
+              - generic [ref=f1e259]: Others
+              - generic [ref=f1e260]: Describe an AI problem that fits no category and get an honest answer.
+              - generic [aria-hidden] [ref=f1e261]: →
+        - generic [ref=f1e262]:
+          - paragraph [ref=f1e263]: Already running a business, or just starting one? Tell us where you are.
+          - link "Start a conversation" [ref=f1e264] [cursor=pointer]:
+            - /url: /contact
+      - generic [ref=f1e267]:
+        - generic [ref=f1e268]:
+          - generic [ref=f1e269]:
+            - heading "AI moves through organisations on the strength of the people inside them." [level=2] [ref=f1e271]:
+              - generic [ref=f1e272]: AI moves
+              - generic [ref=f1e273]: through organisations
+              - generic [ref=f1e274]: on the strength
+              - generic [ref=f1e275]: of the people
+              - generic [ref=f1e276]: inside them.
+            - list [ref=f1e277]:
+              - listitem [ref=f1e278]:
+                - link "Community" [ref=f1e279] [cursor=pointer]:
+                  - /url: /services/community
+                  - generic [aria-hidden] [ref=f1e281]: →
+              - listitem [ref=f1e282]:
+                - link "People" [ref=f1e283] [cursor=pointer]:
+                  - /url: /ecosystem/people
+                  - generic [aria-hidden] [ref=f1e285]: →
+              - listitem [ref=f1e286]:
+                - link "Events" [ref=f1e287] [cursor=pointer]:
+                  - /url: /ecosystem/events
+                  - generic [aria-hidden] [ref=f1e289]: →
+              - listitem [ref=f1e290]:
+                - link "Funding" [ref=f1e291] [cursor=pointer]:
+                  - /url: /ecosystem/funding
+                  - generic [aria-hidden] [ref=f1e293]: →
+          - figure [ref=f1e294]:
+            - img "Four colleagues in a working session around a table in a Dubai office, with the city skyline behind them." [ref=f1e295]
+        - generic [ref=f1e296]:
+          - paragraph [ref=f1e297]: Looking for the right people, partners or rooms in the UAE?
+          - link "Start a conversation" [ref=f1e298] [cursor=pointer]:
+            - /url: /contact
+      - generic [ref=f1e302]:
+        - heading "Reading's" [level=2] [ref=f1e303]
+        - generic [ref=f1e304]:
+          - region [ref=f1e305]:
+            - generic [ref=f1e306]:
+              - generic [ref=f1e307]:
+                - heading "From the blog" [level=3] [ref=f1e308]
+                - paragraph [ref=f1e309]: Frameworks and field notes on getting AI right in the UAE.
+              - link "Read the blog" [ref=f1e310] [cursor=pointer]:
+                - /url: /blog
+                - text: Read the blog
+                - generic [aria-hidden] [ref=f1e311]: →
+            - list [ref=f1e312]:
+              - listitem [ref=f1e313]:
+                - link "Seven different lenses arranged in a row on a linen surface. AI Visibility 17 SEP 2026 7 Disciplines Inside AI Visibility Every Brand Should Know — Nakoda AI's Map Nakoda AI breaks down every layer of being found across AI platforms, not just search engines Read article" [ref=f1e314] [cursor=pointer]:
+                  - /url: /blog/7-disciplines-inside-ai-visibility-every-brand-should-know-nakoda-ais-map
+                  - generic [ref=f1e315]:
+                    - img "Seven different lenses arranged in a row on a linen surface." [ref=f1e317]
+                    - generic [ref=f1e318]: AI Visibility
+                  - generic [ref=f1e319]:
+                    - paragraph [ref=f1e320]: 17 SEP 2026
+                    - paragraph [ref=f1e321]: 7 Disciplines Inside AI Visibility Every Brand Should Know — Nakoda AI's Map
+                    - paragraph [ref=f1e322]: Nakoda AI breaks down every layer of being found across AI platforms, not just search engines
+                    - generic [ref=f1e323]:
+                      - text: Read article
+                      - generic [aria-hidden] [ref=f1e324]: →
+              - listitem [ref=f1e325]:
+                - link "A bright atrium staircase with four landings rising in sequence. AI Framework 17 SEP 2026 4 Phases of an Enterprise AI Framework — A Nakoda AI Blueprint Nakoda AI maps the exact sequence that turns scattered AI initiatives into one governed system Read article" [ref=f1e326] [cursor=pointer]:
+                  - /url: /blog/4-phases-of-an-enterprise-ai-framework-a-nakoda-ai-blueprint
+                  - generic [ref=f1e327]:
+                    - img "A bright atrium staircase with four landings rising in sequence." [ref=f1e329]
+                    - generic [ref=f1e330]: AI Framework
+                  - generic [ref=f1e331]:
+                    - paragraph [ref=f1e332]: 17 SEP 2026
+                    - paragraph [ref=f1e333]: 4 Phases of an Enterprise AI Framework — A Nakoda AI Blueprint
+                    - paragraph [ref=f1e334]: Nakoda AI maps the exact sequence that turns scattered AI initiatives into one governed system
+                    - generic [ref=f1e335]:
+                      - text: Read article
+                      - generic [aria-hidden] [ref=f1e336]: →
+          - region [ref=f1e337]:
+            - generic [ref=f1e338]:
+              - generic [ref=f1e339]:
+                - heading "In the news" [level=3] [ref=f1e340]
+                - paragraph [ref=f1e341]: "The latest from Nakoda News: policy, programmes and funding across the UAE AI landscape."
+              - link "Read the news" [ref=f1e342] [cursor=pointer]:
+                - /url: https://news.nakoda.ai
+                - text: Read the news
+                - generic [aria-hidden] [ref=f1e343]: →
+            - list [ref=f1e344]:
+              - listitem [ref=f1e345]:
+                - link "Cover artwork for Researcher Finds macOS Quietly Scores Users' Contacts as Family, Partners and Friends Research 07 Nov 2026 Researcher Finds macOS Quietly Scores Users' Contacts as Family, Partners and Friends A security researcher's teardown of macOS 26 describes 51 local databases and two machine-learning classifiers that infer users' relationships, with no tool to view or correct the results. Read story" [ref=f1e346] [cursor=pointer]:
+                  - /url: https://news.nakoda.ai/article/macos-hidden-knowledge-graph-family-classifier-researcher
+                  - generic [ref=f1e347]:
+                    - img "Cover artwork for Researcher Finds macOS Quietly Scores Users' Contacts as Family, Partners and Friends" [ref=f1e348]
+                    - generic [ref=f1e350]: Research
+                  - generic [ref=f1e351]:
+                    - paragraph [ref=f1e352]: 07 Nov 2026
+                    - paragraph [ref=f1e353]: Researcher Finds macOS Quietly Scores Users' Contacts as Family, Partners and Friends
+                    - paragraph [ref=f1e354]: A security researcher's teardown of macOS 26 describes 51 local databases and two machine-learning classifiers that infer users' relationships, with no tool to view or correct the results.
+                    - generic [ref=f1e355]:
+                      - text: Read story
+                      - generic [aria-hidden] [ref=f1e356]: →
+              - listitem [ref=f1e357]:
+                - link "Cover artwork for Nvidia Posts Fifth Straight Weekly Loss, Leaving It About $1.27 Trillion Below Its Peak Markets 07 Nov 2026 Nvidia Posts Fifth Straight Weekly Loss, Leaving It About $1.27 Trillion Below Its Peak The chipmaker fell 8.76% in the week to November 6, its worst week since April 2025, as election results raised doubts about how fast US data centres can be built. Read story" [ref=f1e358] [cursor=pointer]:
+                  - /url: https://news.nakoda.ai/article/nvidia-fifth-straight-weekly-loss-1-27-trillion-below-peak
+                  - generic [ref=f1e359]:
+                    - img "Cover artwork for Nvidia Posts Fifth Straight Weekly Loss, Leaving It About $1.27 Trillion Below Its Peak" [ref=f1e360]
+                    - generic [ref=f1e365]: Markets
+                  - generic [ref=f1e366]:
+                    - paragraph [ref=f1e367]: 07 Nov 2026
+                    - paragraph [ref=f1e368]: Nvidia Posts Fifth Straight Weekly Loss, Leaving It About $1.27 Trillion Below Its Peak
+                    - paragraph [ref=f1e369]: The chipmaker fell 8.76% in the week to November 6, its worst week since April 2025, as election results raised doubts about how fast US data centres can be built.
+                    - generic [ref=f1e370]:
+                      - text: Read story
+                      - generic [aria-hidden] [ref=f1e371]: →
+        - generic [ref=f1e372]:
+          - paragraph [ref=f1e373]: Have a story, a launch or a question for our editors?
+          - link "Start a conversation" [ref=f1e374] [cursor=pointer]:
+            - /url: /contact
+      - generic [ref=f1e377]:
+        - generic [ref=f1e378]:
+          - generic [ref=f1e379]:
+            - heading "Intelligence you can use." [level=2] [ref=f1e380]
+            - list [ref=f1e381]:
+              - listitem [ref=f1e382]:
+                - link "AI Visibility Report How AI describes your organisation" [ref=f1e383] [cursor=pointer]:
+                  - /url: /report
+                  - generic [ref=f1e384]: AI Visibility Report
+                  - generic [ref=f1e385]: How AI describes your organisation
+              - listitem [ref=f1e386]:
+                - link "Field Manual Apply it" [ref=f1e387] [cursor=pointer]:
+                  - /url: /intelligence/field-manual
+                  - generic [ref=f1e388]: Field Manual
+                  - generic [ref=f1e389]: Apply it
+              - listitem [ref=f1e390]:
+                - link "Research Go deeper" [ref=f1e391] [cursor=pointer]:
+                  - /url: /intelligence/research
+                  - generic [ref=f1e392]: Research
+                  - generic [ref=f1e393]: Go deeper
+              - listitem [ref=f1e394]:
+                - link "Encyclopedia Understand the field" [ref=f1e395] [cursor=pointer]:
+                  - /url: /intelligence/encyclopedia
+                  - generic [ref=f1e396]: Encyclopedia
+                  - generic [ref=f1e397]: Understand the field
+          - figure "The first-look report. Request it to see your own results." [ref=f1e398]:
+            - generic [aria-hidden] [ref=f1e399]:
+              - paragraph [ref=f1e400]: Nakoda AI
+              - paragraph [ref=f1e401]: AI Visibility Report
+            - paragraph [ref=f1e431]: AI can make mistakes. Verify important outputs.
+            - paragraph [ref=f1e432]: The AI Visibility Report covers Where the brand is cited. Where it is absent. How it is described. What the gap is worth. Across ChatGPT, Gemini, Claude, Perplexity, Copilot, Google AI Mode. Delivered within 48 hours.
+        - generic [ref=f1e433]:
+          - paragraph [ref=f1e434]: Want this intelligence applied to your own organisation?
+          - link "Start a conversation" [ref=f1e435] [cursor=pointer]:
+            - /url: /contact
+      - region [ref=f1e438]:
+        - generic [ref=f1e439]:
+          - generic [ref=f1e440]:
+            - heading "Today in AI." [level=2] [ref=f1e441]
+            - paragraph [ref=f1e442]: A new term, product and fact every day, from Nakoda Intelligence.
+          - list [ref=f1e443]:
+            - listitem [ref=f1e444]:
+              - link [ref=f1e445] [cursor=pointer]:
+                - /url: /fun
+                - paragraph [ref=f1e446]: Did you know?
+                - paragraph [ref=f1e447]: Which Abu Dhabi institute developed the Falcon family of open language models?
+                - paragraph [ref=f1e448]: The Technology Innovation Institute (TII). TII is the applied research centre of Abu Dhabi's Advanced Technology Research Council.
+                - generic [ref=f1e449]:
+                  - text: Try the AI quiz
+                  - generic [aria-hidden] [ref=f1e450]: →
+          - generic [ref=f1e451]:
+            - paragraph [ref=f1e452]: Want a term, a tool or a trend explained for your team?
+            - link "Start a conversation" [ref=f1e453] [cursor=pointer]:
+              - /url: /contact
+      - generic [ref=f1e457]:
+        - heading "Start here." [level=2] [ref=f1e458]
+        - list [ref=f1e459]:
+          - listitem [ref=f1e460]:
+            - text: "01"
+            - generic [ref=f1e461]: Scope the decision
+          - listitem [ref=f1e462]:
+            - text: "02"
+            - generic [ref=f1e463]: Identify dependencies
+          - listitem [ref=f1e464]:
+            - text: "03"
+            - generic [ref=f1e465]: Connect the problem
+          - listitem [ref=f1e466]:
+            - text: "04"
+            - generic [ref=f1e467]: Measure the outcome
+        - generic [ref=f1e468]:
+          - link "Start a conversation" [ref=f1e469] [cursor=pointer]:
+            - /url: /contact
+          - link "Assess AI readiness" [ref=f1e472] [cursor=pointer]:
+            - /url: /readiness
+      - generic [ref=f1e476]:
+        - heading "Where do you want to begin?" [level=2] [ref=f1e477]
+        - list [ref=f1e478]:
+          - listitem [ref=f1e479]:
+            - link "I need to understand AI Intelligence" [ref=f1e480] [cursor=pointer]:
+              - /url: /intelligence
+              - generic [ref=f1e481]: I need to understand AI
+              - generic [ref=f1e482]:
+                - generic [ref=f1e483]: Intelligence
+                - generic [aria-hidden] [ref=f1e484]: →
+          - listitem [ref=f1e485]:
+            - link "I need to change something Services" [ref=f1e486] [cursor=pointer]:
+              - /url: /services
+              - generic [ref=f1e487]: I need to change something
+              - generic [ref=f1e488]:
+                - generic [ref=f1e489]: Services
+                - generic [aria-hidden] [ref=f1e490]: →
+          - listitem [ref=f1e491]:
+            - link "I need to understand the ecosystem Ecosystem" [ref=f1e492] [cursor=pointer]:
+              - /url: /ecosystem
+              - generic [ref=f1e493]: I need to understand the ecosystem
+              - generic [ref=f1e494]:
+                - generic [ref=f1e495]: Ecosystem
+                - generic [aria-hidden] [ref=f1e496]: →
+          - listitem [ref=f1e497]:
+            - link "I want to learn AI, at my own pace Academy" [ref=f1e498] [cursor=pointer]:
+              - /url: /education
+              - generic [ref=f1e499]: I want to learn AI, at my own pace
+              - generic [ref=f1e500]:
+                - generic [ref=f1e501]: Academy
+                - generic [aria-hidden] [ref=f1e502]: →
+          - listitem [ref=f1e503]:
+            - link "I need my team ready for AI Team training" [ref=f1e504] [cursor=pointer]:
+              - /url: /services/learning-development
+              - generic [ref=f1e505]: I need my team ready for AI
+              - generic [ref=f1e506]:
+                - generic [ref=f1e507]: Team training
+                - generic [aria-hidden] [ref=f1e508]: →
+          - listitem [ref=f1e509]:
+            - link "I want to work with Nakoda AI Contact" [ref=f1e510] [cursor=pointer]:
+              - /url: /contact
+              - generic [ref=f1e511]: I want to work with Nakoda AI
+              - generic [ref=f1e512]:
+                - generic [ref=f1e513]: Contact
+                - generic [aria-hidden] [ref=f1e514]: →
+      - generic [ref=f1e516]:
+        - heading "Common questions." [level=2] [ref=f1e517]
+        - generic [ref=f1e518]:
+          - group [ref=f1e519]:
+            - generic "What is Nakoda AI?" [ref=f1e520] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f1e522]: +
+          - group [ref=f1e523]:
+            - generic "What makes Nakoda AI different from other AI consultancies?" [ref=f1e524] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f1e526]: +
+          - group [ref=f1e527]:
+            - generic "Does Nakoda AI sell AI software or tools?" [ref=f1e528] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f1e530]: +
+          - group [ref=f1e531]:
+            - generic "What is AI governance and does my organization need it?" [ref=f1e532] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f1e534]: +
+          - group [ref=f1e535]:
+            - generic "How do engagements usually start?" [ref=f1e536] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f1e538]: +
+        - link "The full question list" [ref=f1e539] [cursor=pointer]:
+          - /url: /faq
+          - text: The full question list
+          - generic [aria-hidden] [ref=f1e540]: →
+        - generic [ref=f1e541]:
+          - paragraph [ref=f1e542]: Have a different question? Ask us directly.
+          - link "Start a conversation" [ref=f1e543] [cursor=pointer]:
+            - /url: /contact
+  - contentinfo [ref=f1e546]:
+    - generic [ref=f1e549]:
+      - generic [ref=f1e550]:
+        - paragraph [ref=f1e551]: Free · weekly · unsubscribe in one click
+        - paragraph [ref=f1e552]: The Nakoda AI Brief
+        - paragraph [ref=f1e553]: The UAE AI ecosystem, weekly. Policy, regulation, funding and events — the most useful ten minutes an AI professional here spends in their inbox.
+      - generic [ref=f1e554]:
+        - generic [ref=f1e555]:
+          - generic [ref=f1e556]:
+            - generic [ref=f1e557]: Email address
+            - textbox "Email address" [ref=f1e558]
+            - button "Subscribe now" [disabled] [ref=f1e559]
+          - generic [ref=f1e560]:
+            - checkbox "Agreement to the terms & conditions and privacy policy." [ref=f1e561] [cursor=pointer]
+            - checkbox [aria-hidden]
+            - generic [ref=f1e562]:
+              - text: Agreement to the
+              - link "terms & conditions" [ref=f1e563] [cursor=pointer]:
+                - /url: /policies/terms
+              - text: and
+              - link "privacy policy" [ref=f1e564] [cursor=pointer]:
+                - /url: /policies/privacy
+              - text: .
+        - generic [ref=f1e565]:
+          - link "Instagram" [ref=f1e566] [cursor=pointer]:
+            - /url: "#"
+          - link "TikTok" [ref=f1e571] [cursor=pointer]:
+            - /url: "#"
+          - link "LinkedIn" [ref=f1e574] [cursor=pointer]:
+            - /url: "#"
+          - link "X" [ref=f1e577] [cursor=pointer]:
+            - /url: "#"
+          - link "YouTube" [ref=f1e580] [cursor=pointer]:
+            - /url: "#"
+          - link "Facebook" [ref=f1e583] [cursor=pointer]:
+            - /url: "#"
+          - link "WhatsApp" [ref=f1e586] [cursor=pointer]:
+            - /url: "#"
+    - generic [ref=f1e589]:
+      - generic [ref=f1e590]:
+        - generic [ref=f1e591]:
+          - paragraph [ref=f1e592]: Divisions
+          - link "Full service overview" [ref=f1e593] [cursor=pointer]:
+            - /url: /services
+          - link "AI Strategy" [ref=f1e594] [cursor=pointer]:
+            - /url: /services/ai-strategy
+          - link "AI Governance" [ref=f1e595] [cursor=pointer]:
+            - /url: /services/ai-governance
+          - link "AI Audit" [ref=f1e596] [cursor=pointer]:
+            - /url: /services/ai-audit
+          - link "AI Visibility" [ref=f1e597] [cursor=pointer]:
+            - /url: /services/ai-visibility
+          - link "Business Setup & Survival Advisory" [ref=f1e598] [cursor=pointer]:
+            - /url: /services/business-setup
+          - link "Learning and Development" [ref=f1e599] [cursor=pointer]:
+            - /url: /services/learning-development
+          - link "Community" [ref=f1e600] [cursor=pointer]:
+            - /url: /services/community
+          - link "Others" [ref=f1e601] [cursor=pointer]:
+            - /url: /services/others
+        - generic [ref=f1e602]:
+          - paragraph [ref=f1e603]: Explore
+          - link "Academy" [ref=f1e604] [cursor=pointer]:
+            - /url: /education
+          - link "Ecosystem directory" [ref=f1e605] [cursor=pointer]:
+            - /url: /ecosystem
+          - link "Events" [ref=f1e606] [cursor=pointer]:
+            - /url: /ecosystem/events
+          - link "Intelligence" [ref=f1e607] [cursor=pointer]:
+            - /url: /intelligence
+          - link "AI models" [ref=f1e608] [cursor=pointer]:
+            - /url: /models
+          - link "Presence & coverage" [ref=f1e609] [cursor=pointer]:
+            - /url: /presence
+          - link "Media partners" [ref=f1e610] [cursor=pointer]:
+            - /url: /media-partners
+          - link "AI news" [ref=f1e611] [cursor=pointer]:
+            - /url: https://news.nakoda.ai
+          - link "Blog" [ref=f1e612] [cursor=pointer]:
+            - /url: /blog
+          - link "Careers" [ref=f1e613] [cursor=pointer]:
+            - /url: /life
+        - generic [ref=f1e614]:
+          - paragraph [ref=f1e615]: Platform
+          - link "About" [ref=f1e616] [cursor=pointer]:
+            - /url: /about
+          - link "FAQ" [ref=f1e617] [cursor=pointer]:
+            - /url: /faq
+          - link "AI readiness assessment" [ref=f1e618] [cursor=pointer]:
+            - /url: /readiness
+          - link "Free AI visibility report" [ref=f1e619] [cursor=pointer]:
+            - /url: /report
+        - generic [ref=f1e620]:
+          - paragraph [ref=f1e621]: Contact
+          - link "WhatsApp" [ref=f1e622] [cursor=pointer]:
+            - /url: "#"
+          - link "Telegram" [ref=f1e623] [cursor=pointer]:
+            - /url: "#"
+          - link "Botim" [ref=f1e624] [cursor=pointer]:
+            - /url: "#"
+          - link "+971 XX XXX XXXX" [ref=f1e625] [cursor=pointer]:
+            - /url: tel:+971XXXXXXXXX
+          - link "hello@nakoda.ai" [ref=f1e626] [cursor=pointer]:
+            - /url: mailto:hello@nakoda.ai
+          - link "Start a conversation" [ref=f1e627] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=f1e628]:
+          - paragraph [ref=f1e629]: Information
+          - link "Privacy policy" [ref=f1e630] [cursor=pointer]:
+            - /url: /policies/privacy
+          - link "Terms & conditions" [ref=f1e631] [cursor=pointer]:
+            - /url: /policies/terms
+          - link "All policies" [ref=f1e632] [cursor=pointer]:
+            - /url: /policies
+          - link "Payment options" [ref=f1e633] [cursor=pointer]:
+            - /url: /payment-options
+          - link "Accessibility" [ref=f1e634] [cursor=pointer]:
+            - /url: /accessibility
+          - link "DMCA & takedowns" [ref=f1e635] [cursor=pointer]:
+            - /url: /dmca
+          - link "Disclaimer" [ref=f1e636] [cursor=pointer]:
+            - /url: /disclaimer
+      - link "Every page on this site →" [ref=f1e638] [cursor=pointer]:
+        - /url: /sitemap
+    - generic [ref=f1e640]:
+      - paragraph [ref=f1e641]:
+        - text: Content on this site is general information for orientation. Take qualified professional advice before acting on it.
+        - link "Read the disclaimer" [ref=f1e642] [cursor=pointer]:
+          - /url: /disclaimer
+        - text: .
+      - paragraph [ref=f1e643]: AI can make mistakes. Verify important outputs.
+    - generic [ref=f1e645]:
+      - paragraph [ref=f1e646]: © 2026 Nakoda AI. All rights reserved.
+      - generic [ref=f1e647]:
+        - link "Terms of Use" [ref=f1e648] [cursor=pointer]:
+          - /url: /policies/terms
+        - link "Privacy Policy" [ref=f1e649] [cursor=pointer]:
+          - /url: /policies/privacy
+  - dialog "Cookie preferences" [ref=f1e650]:
+    - paragraph [ref=f1e651]:
+      - text: We use cookies to improve your experience and measure our marketing. Read the
+      - link "cookie policy" [ref=f1e652] [cursor=pointer]:
+        - /url: /policies/cookie
+      - text: .
+    - generic [ref=f1e653]:
+      - button "Accept" [ref=f1e654] [cursor=pointer]
+      - button "Decline →" [ref=f1e655] [cursor=pointer]
+  - 'button "Open support: ask a question or contact us" [ref=f1e657] [cursor=pointer]'
+  - alert [ref=f1e660]

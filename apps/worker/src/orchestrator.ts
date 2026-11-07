@@ -340,6 +340,9 @@ export class Orchestrator {
     } else {
       this.setStage(live, gate, {
         status: "waiting",
+        // When the wait began, so the job page can time it and place it on the run's timeline.
+        startedAt: new Date().toISOString(),
+        finishedAt: undefined,
         message: "Waiting for your review",
       });
     }
@@ -353,9 +356,12 @@ export class Orchestrator {
     { manual }: { manual: boolean },
   ): Promise<void> {
     const attempt = live.job.stages[gate].attempts + 1;
+    const prev = live.job.stages[gate];
     this.setStage(live, gate, {
       status: "running",
       attempts: attempt,
+      // A gate opened for review started when it began waiting; on autopilot it starts now.
+      startedAt: prev.status === "waiting" && prev.startedAt ? prev.startedAt : new Date().toISOString(),
       message: "Applying the review",
     });
     const ctx = this.context(live, gate, attempt);

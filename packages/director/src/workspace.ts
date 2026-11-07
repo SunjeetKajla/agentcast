@@ -258,7 +258,7 @@ ambient layer, and \`captions\`). Those files are yours: rewrite any of them, or
 with a new file, when a beat deserves better than the catalogue's version. The worker keeps the files you
 changed for every language, both aspects and re-runs, so write them to fit any of those.
 
-${w.baseline.style.timing === "music" ? "**This film is music-led.** It has no voice: the music's beats set every length, and on-screen type carries the words. It's built from the moves in `guides/primitives.md`. Keep to them, and write a scene only when a beat truly earns it. Improve it by choosing better moves, regions and words, not by slowing it down.\n\n" : ""}**The look to reach** is \`guides/reference-look.md\`: two launch films (LangEase, Lovable 2.0), shot by shot,
+${w.baseline.style.timing === "music" ? "**This film is music-led.** It has no voice: the music's beats set every length, and on-screen type carries the words. It's built from the moves in `guides/primitives.md`. Keep to them, and write a scene only when a beat truly earns it. Improve it by choosing better moves, regions and words, not by slowing it down. A primitive's file is rebuilt from its settings for every size, so edits to that file don't stay: change the settings in `edl.json`, or make the segment a `scene` with a new file.\n\n" : ""}**The look to reach** is \`guides/reference-look.md\`: two launch films (LangEase, Lovable 2.0), shot by shot,
 with the motion numbers to copy. Read it before you touch a scene. **How HyperFrames works** is
 \`guides/hyperframes/hyperframes/SKILL.md\` and its \`references/\` (format, motion, look). Ignore what they
 say about init, preview, render, publish, capture, skills or the desktop app: here you only edit files, run
