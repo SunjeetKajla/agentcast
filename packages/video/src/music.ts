@@ -1,4 +1,61 @@
+import { readFile, stat } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { MusicLibrary as MusicLibrarySchema } from "@agentcast/shared";
+import { BED_LUFS, DUCK_DB } from "./audio.ts";
 import type { Edl, MusicLibrary, MusicTrack, Personality } from "./compat";
+
+/** The music library folder: assets/music/ in the repo, or AGENTCAST_MUSIC_DIR. */
+export const musicDir = () =>
+  process.env.AGENTCAST_MUSIC_DIR ??
+  fileURLToPath(new URL("../../../assets/music/", import.meta.url));
+
+/** assets/music/tags.json, validated; undefined when there's no library. */
+export async function loadMusicLibrary(
+  dir = musicDir(),
+): Promise<MusicLibrary | undefined> {
+  const text = await readFile(
+    `${dir.replace(/\/$/, "")}/tags.json`,
+    "utf8",
+  ).catch(() => undefined);
+  if (!text) return undefined;
+  const library = MusicLibrarySchema.parse(JSON.parse(text));
+  // Metadata is committed, audio isn't. Only choose tracks that can actually be opened locally.
+  const present = await Promise.all(
+    library.tracks.map(
+      async (track) =>
+        await stat(`${dir.replace(/\/$/, "")}/${track.file}`).then(
+          (file) => file.isFile(),
+          () => false,
+        ),
+    ),
+  );
+  return {
+    ...library,
+    tracks: library.tracks.filter((_, index) => present[index]),
+  };
+}
+
+/**
+ * `style.music` for a picked track: its own gain brings it to the grammar's bed level (tracks differ
+ * by 10 dB or more), kept under −1 dBTP.
+ */
+export function musicStyle(
+  track: MusicTrack,
+  edit: Edl["style"]["edit"],
+): Edl["style"]["music"] {
+  const gainDb =
+    Math.round(
+      Math.min(BED_LUFS[edit] - track.lufs, -1 - track.truePeak) * 10,
+    ) / 10;
+  return {
+    mood: track.mood[0] ?? "none",
+    trackId: track.id,
+    bpm: track.bpm,
+    firstBeat: track.firstBeat,
+    gainDb,
+    duckDb: DUCK_DB,
+  };
+}
 
 /** Moods that suit each motion personality, best first. */
 const MOODS: Record<Personality, string[]> = {
@@ -30,9 +87,13 @@ export function pickTrack(
     edit: Edl["style"]["edit"];
     seconds: number;
     seed: string;
+    /** A music-led edit needs a grid it can trust. */
+    led?: boolean;
   },
 ): MusicTrack | undefined {
-  const tracks = library?.tracks ?? [];
+  const tracks = (library?.tracks ?? []).filter(
+    (t) => !o.led || t.analysis.confidence !== "low",
+  );
   if (!tracks.length) return undefined;
   const wanted = MOODS[o.personality];
   const energy = ENERGY[o.edit][o.personality];

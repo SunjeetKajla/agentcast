@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { MusicLibrary } from "./index.ts";
 import { ArtifactError, readArtifact, writeArtifact } from "./node.ts";
 
-const library = { schemaVersion: 1 as const, tracks: [] };
+const library = { schemaVersion: 3 as const, tracks: [] };
 
 test("writeArtifact validates, creates dirs and leaves no temp files", async () => {
   const dir = await mkdtemp(join(tmpdir(), "agentcast-shared-"));
@@ -20,7 +20,7 @@ test("writeArtifact refuses invalid data and writes nothing", async () => {
   const dir = await mkdtemp(join(tmpdir(), "agentcast-shared-"));
   const file = join(dir, "tags.json");
   // @ts-expect-error: wrong schemaVersion on purpose
-  await expect(writeArtifact(file, MusicLibrary, { schemaVersion: 2, tracks: [] })).rejects.toThrow(ArtifactError);
+  await expect(writeArtifact(file, MusicLibrary, { schemaVersion: 4, tracks: [] })).rejects.toThrow(ArtifactError);
   expect(await readdir(dir)).toEqual([]);
 });
 

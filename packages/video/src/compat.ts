@@ -6,7 +6,7 @@ import type {
   ShotSegment,
   MotionTokens,
 } from "@agentcast/shared";
-export type SfxKind = "whoosh" | "click" | "pop" | "riser" | "hit";
+export type SfxKind = "whoosh" | "click" | "pop" | "riser" | "hit" | "tick";
 export type Motion = MotionTokens;
 export type CameraKeyframe = ShotSegment["camera"][number];
 export type EdlSegment = Segment;

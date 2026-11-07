@@ -1,0 +1,121 @@
+{
+ "name": "ours-amazon",
+ "duration": 18.88,
+ "fps": 30.0,
+ "size": "1920x1080",
+ "cuts": 4,
+ "cuts_per_10s": 2.12,
+ "shot_median": 4.07,
+ "shot_mean": 3.78,
+ "shot_p10": 1.5,
+ "shot_p90": 5.77,
+ "cut_times": [
+  4.07,
+  4.77,
+  10.13,
+  12.83
+ ],
+ "soft_transitions": 1,
+ "scene_changes_per_10s": 2.65,
+ "scene_median": 2.68,
+ "soft_times": [
+  2.65
+ ],
+ "still_runs": [
+  [
+   0.4,
+   1.67
+  ],
+  [
+   6.8,
+   2.23
+  ],
+  [
+   11.3,
+   1.03
+  ],
+  [
+   15.97,
+   1.0
+  ],
+  [
+   17.6,
+   0.67
+  ]
+ ],
+ "still_pct": 35.0,
+ "moving_frames_pct": 25.1,
+ "motion_mean": 2.37,
+ "motion_per_sec": [
+  0.7,
+  0.0,
+  4.1,
+  12.5,
+  11.7,
+  1.1,
+  1.6,
+  0.0,
+  0.0,
+  0.8,
+  5.0,
+  1.0,
+  2.9,
+  1.7,
+  0.3,
+  0.9,
+  0.0,
+  0.2
+ ],
+ "luma_mean": 219.2,
+ "dark_pct": 0.0,
+ "light_pct": 90.3,
+ "sat_mean": 0.061,
+ "lufs": -17.8,
+ "lra": 4.4,
+ "truePeak": -2.4,
+ "bpm": 117.5,
+ "beat_strength": 0.228,
+ "hits_per_10s": 6.36,
+ "big_hits": [
+  1.35,
+  3.48,
+  3.99
+ ],
+ "audio_drops": [
+  [
+   4.1,
+   0.39
+  ],
+  [
+   5.51,
+   0.58
+  ],
+  [
+   8.97,
+   0.51
+  ],
+  [
+   11.34,
+   0.27
+  ],
+  [
+   12.39,
+   0.41
+  ],
+  [
+   13.4,
+   1.89
+  ],
+  [
+   17.1,
+   0.24
+  ]
+ ],
+ "cuts_on_beat": 0.25,
+ "cuts_on_beat_chance": 0.19,
+ "cuts_on_hit": 0.0,
+ "cuts_on_hit_chance": 0.06,
+ "cuts_on_bighit": 0.0,
+ "cuts_on_bighit_chance": 0.01,
+ "voiceover": null
+}

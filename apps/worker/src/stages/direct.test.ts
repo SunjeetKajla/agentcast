@@ -2,7 +2,13 @@ import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Edl, JobConfig, jobPaths, type GateDecision } from "@agentcast/shared";
+import {
+  Edl,
+  JobConfig,
+  MusicLibrary,
+  jobPaths,
+  type GateDecision,
+} from "@agentcast/shared";
 import {
   FIXTURE_JOB_DIR,
   readArtifact,
@@ -19,6 +25,12 @@ beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "agentcast-direct-"));
   await cp(FIXTURE_JOB_DIR, dir, { recursive: true });
   await rm(join(dir, "render"), { recursive: true, force: true });
+  // Unit tests use an explicit empty library, independent of local licensed audio files.
+  await writeArtifact(join(dir, "music/tags.json"), MusicLibrary, {
+    schemaVersion: 3,
+    tracks: [],
+  });
+  vi.stubEnv("AGENTCAST_MUSIC_DIR", join(dir, "music"));
   vi.stubEnv("AGENTCAST_STAGE_MODE", "real");
   vi.stubEnv("AGENTCAST_DIRECTOR", "");
   decision = undefined;

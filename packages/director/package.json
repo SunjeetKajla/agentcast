@@ -14,6 +14,7 @@
     "@agentcast/llm": "workspace:*",
     "@agentcast/shared": "workspace:*",
     "@agentcast/video": "workspace:*",
+    "hyperframes": "0.8.189",
     "zod": "^4.6.7"
   }
 }

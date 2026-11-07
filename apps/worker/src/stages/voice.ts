@@ -1,4 +1,4 @@
-import { Storyboard, Script, Voiceover, jobPaths } from "@agentcast/shared";
+import { Storyboard, Script, Voiceover, jobPaths, voiced } from "@agentcast/shared";
 import { fixtureStages } from "@agentcast/explore";
 import { renderNarration, type NarrationOptions } from "@agentcast/voice";
 import type { StageFn } from "./types.ts";
@@ -8,10 +8,10 @@ export function makeVoice(
   deps: Pick<NarrationOptions, "client" | "duration"> = {},
 ): StageFn {
   return async (ctx) => {
-    if (!ctx.config.voiceover)
+    if (!voiced(ctx.config))
       return {
         skipped: true,
-        message: "No voiceover: the script becomes captions",
+        message: "No voiceover",
       };
     if (fixtureStages()) {
       await pretend(ctx);

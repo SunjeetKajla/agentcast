@@ -123,8 +123,7 @@ export default function StoryboardReview({
           Read the script
         </h2>
         <p className="text-sm text-white/60">
-          One storyboard, narrated natively in each language. Edit any line; the meter shows whether it still fits its
-          shot.
+          One storyboard, in each language. Edit any narrated line; the meter shows whether it still fits its shot.
         </p>
       </div>
 
@@ -145,7 +144,8 @@ export default function StoryboardReview({
             <div className={`grid gap-4 ${langs.length > 1 ? "md:grid-cols-2" : ""}`}>
               {langs.map((lang) => {
                 const key = `${lang}:${beat.id}`;
-                if (lines[key] === undefined) return null;
+                // A music-led film has no narration to read: its beats are their on-screen text.
+                if (!lines[key]) return null;
                 return (
                   <label key={lang} className="block space-y-1.5">
                     <span className="text-[11px] text-white/40">{LANG_NAME[lang] ?? lang}</span>

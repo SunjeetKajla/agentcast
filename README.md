@@ -12,7 +12,7 @@
   <img alt="Status: hackathon build" src="https://img.shields.io/badge/status-hackathon%20build-8B5CF6">
   <img alt="Local browser agents" src="https://img.shields.io/badge/browser-Browser%20Harness-2563EB">
   <img alt="Directed by Claude Code" src="https://img.shields.io/badge/director-Claude%20Code-7C3AED">
-  <img alt="Rendered with Remotion" src="https://img.shields.io/badge/render-Remotion-F59E0B">
+  <img alt="Rendered with HyperFrames" src="https://img.shields.io/badge/render-HyperFrames-F59E0B">
   <img alt="Node 22+" src="https://img.shields.io/badge/node-22%2B-22C55E">
 </p>
 
@@ -38,7 +38,7 @@ flowchart LR
   G1 --> R["<b>Record</b><br/>Deterministic replay in<br/>a local browser at 60 fps"]
   R --> S["<b>Script + voice</b><br/>Narration per language,<br/>ElevenLabs TTS"]
   S --> D["<b>Direct</b><br/>Claude Code writes<br/>the edit"]
-  D --> V["<b>Render</b><br/>Remotion: every format<br/>and language in parallel"]
+  D --> V["<b>Render</b><br/>HyperFrames: every format<br/>and language in parallel"]
   V --> OUT([MP4s + captions])
 ```
 
@@ -46,7 +46,7 @@ flowchart LR
 2. **Record.** A Playwright script replays the approved flows in a local browser while capturing the screen over CDP at 60 fps. Blocked local access is surfaced explicitly. It only clicks an element when exactly one match exists, checks that each step did what it should, and throws away any take that goes wrong. The exploring agent's hesitation never reaches the footage.
 3. **Script and voice.** Narration is written per segment, natively in each language, and voiced with ElevenLabs using word-level timestamps.
 4. **Direct.** Claude Code, running headless in a sandbox, writes the edit: smart zoom on every click, a smooth cursor, captions, music ducked under the voice, and a branded intro and outro.
-5. **Render.** Remotion renders every variant in parallel. Each language is retimed to fit its own voiceover, so the product is recorded once and narrated many times.
+5. **Render.** HyperFrames renders every variant in parallel. Each language is retimed to fit its own voiceover, so the product is recorded once and narrated many times.
 
 When your UI changes, `rerun` reuses the approved flows, repairs broken element lookups, and regenerates the video in minutes. It can run from CI.
 
@@ -164,7 +164,7 @@ Planned: `apps/worker` (orchestrator), `apps/demoboard` (demo target app), and `
 
 - [**Browser Harness**](https://github.com/browser-use/browser-harness): isolated local browser exploration, driven by the existing Codex/Claude Code login through task-owned MCP tools.
 - [**Claude Code**](https://docs.claude.com/en/docs/claude-code): headless and sandboxed. The director.
-- [**Remotion**](https://www.remotion.dev): the editing suite.
+- [**HyperFrames**](https://hyperframes.heygen.com): the editing suite.
 - [**ElevenLabs**](https://elevenlabs.io): multilingual voiceover.
 - [**Playwright**](https://playwright.dev): deterministic replay over CDP.
 

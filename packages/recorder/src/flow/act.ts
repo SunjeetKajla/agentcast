@@ -14,6 +14,8 @@ export interface ActuatorOptions {
   motion<T>(work: () => Promise<T>): Promise<T>;
   /** Injectable randomness for reproducible rehearsals. Must return [0,1]. */
   random?: () => number;
+  /** Called as the action is about to happen: the pointer is there and anything covering the target has gone. */
+  onReady?: () => Promise<void>;
 }
 export interface ActionResult {
   /** Time of the action after movement/hover, in video seconds. */
@@ -185,6 +187,7 @@ export function createActuator(page: Page, options: ActuatorOptions) {
         }
         bbox = [latest.x, latest.y, latest.width, latest.height];
       }
+      await options.onReady?.();
       const at = options.now() / 1000;
       switch (step.action) {
         case "click":

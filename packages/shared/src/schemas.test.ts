@@ -14,6 +14,8 @@ import {
   StageName,
   StoredJob,
   variantMatrix,
+  musicLed,
+  voiced,
 } from "./index.ts";
 
 describe("stages", () => {
@@ -46,7 +48,6 @@ describe("JobConfig", () => {
       mode: "launch",
       variants: { aspects: ["16x9"], langs: ["en"], formFactors: ["desktop"] },
       autopilot: false,
-      voiceover: true,
     });
   });
 
@@ -146,28 +147,31 @@ describe("Job versions", () => {
 });
 
 describe("local exploration migration", () => {
-  test("upgrades v3 jobs and preserves legacy auth for viewing", () => {
-    const current = Job.parse(
-      JSON.parse(
-        readFileSync(
-          new URL("../fixtures/job-state.json", import.meta.url),
-          "utf8",
+  test.each([3, 4])(
+    "upgrades v%s jobs and preserves legacy auth for viewing",
+    (version) => {
+      const current = Job.parse(
+        JSON.parse(
+          readFileSync(
+            new URL("../fixtures/job-state.json", import.meta.url),
+            "utf8",
+          ),
         ),
-      ),
-    );
-    const old = {
-      ...current,
-      schemaVersion: 3,
-      config: {
-        ...current.config,
-        auth: { mode: "vault", credentialItemIds: ["legacy-id"] },
-      },
-    };
-    expect(StoredJob.parse(old)).toMatchObject({
-      schemaVersion: 4,
-      config: { auth: { mode: "vault" } },
-    });
-  });
+      );
+      const old = {
+        ...current,
+        schemaVersion: version,
+        config: {
+          ...current.config,
+          auth: { mode: "vault", credentialItemIds: ["legacy-id"] },
+        },
+      };
+      expect(StoredJob.parse(old)).toMatchObject({
+        schemaVersion: 5,
+        config: { auth: { mode: "vault" } },
+      });
+    },
+  );
   test("upgrades legacy flow provenance without keeping the provider field", () => {
     const current = JSON.parse(
       readFileSync(
@@ -188,5 +192,17 @@ describe("local exploration migration", () => {
     expect(upgraded.schemaVersion).toBe(2);
     expect(upgraded.flows[0]).toHaveProperty("agentRunId");
     expect(upgraded.flows[0]).not.toHaveProperty("tinyfishRunId");
+  });
+});
+
+describe("voice and music", () => {
+  test("only a tutorial is narrated by default, and an explicit choice wins", () => {
+    expect(voiced({ mode: "tutorial" })).toBe(true);
+    expect(voiced({ mode: "launch" })).toBe(false);
+    expect(voiced({ mode: "launch", voiceover: true })).toBe(true);
+    expect(musicLed({ mode: "launch" })).toBe(true);
+    expect(musicLed({ mode: "sales" })).toBe(true);
+    expect(musicLed({ mode: "tutorial", voiceover: false })).toBe(false);
+    expect(musicLed({ mode: "launch", voiceover: true })).toBe(false);
   });
 });

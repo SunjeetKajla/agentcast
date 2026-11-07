@@ -33,6 +33,8 @@ export async function selectMatch(
                   element instanceof HTMLElement && element.isContentEditable,
                 href: element instanceof HTMLAnchorElement ? element.href : "",
                 main: !!element.closest('main,[role="main"]'),
+                // Inside an open modal: what's behind it can't be clicked.
+                modal: !!element.closest('dialog[open],[role="dialog"],[role="alertdialog"],[aria-modal="true"]'),
               }),
               undefined,
               { timeout: 500 },
@@ -117,6 +119,11 @@ export async function selectMatch(
     }
     // An absent hint is optional. Continue with the same safe viewport/link tie-breaks.
   }
+  // An open dialog covers the page: its own match is the one a person would click (Linear's
+  // planning panel repeats the page's "Initiatives" in its tabs).
+  const inModal = eligible.filter((item) => item.modal);
+  if (inModal.length === 1 && eligible.length > 1) return found(inModal[0]!);
+  if (inModal.length > 1) eligible.splice(0, eligible.length, ...inModal);
   const viewport =
     page.viewportSize() ??
     (await page.evaluate(() => ({ width: innerWidth, height: innerHeight })));

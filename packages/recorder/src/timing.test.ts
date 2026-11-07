@@ -94,17 +94,37 @@ describe("Live stall check", () => {
     expect(report.effectiveFps).toBeGreaterThan(30);
   });
 
-  it("fails a gap over 250 ms even when the p95 is small", () => {
-    const times = Array.from({ length: 400 }, (_, i) => i * 16).filter(
-      (time) => time < 1000 || time > 1300,
+  it("passes one short hitch but fails a second one, or one over 400 ms, even when the p95 is small", () => {
+    const frames = (cut: (time: number) => boolean) => Array.from({ length: 400 }, (_, i) => i * 16).filter(cut);
+    const one = checkStalls(frames((t) => t < 1000 || t > 1300), [{ startMs: 0, endMs: 6400 }], 6400);
+    expect(one.maxGapMs).toBeGreaterThan(250);
+    expect(one.p95GapMs).toBeLessThan(60);
+    expect(one.status).toBe("passed");
+    const two = checkStalls(
+      frames((t) => (t < 1000 || t > 1300) && (t < 3000 || t > 3300)),
+      [{ startMs: 0, endMs: 6400 }],
+      6400,
     );
-    const report = checkStalls(times, [{ startMs: 0, endMs: 6400 }], 6400);
-    expect(report.maxGapMs).toBeGreaterThan(250);
-    expect(report.p95GapMs).toBeLessThan(60);
-    expect(report.status).toBe("failed");
+    expect(two.status).toBe("failed");
+    // A longer take earns one hitch per 5 s of motion.
+    const longer = Array.from({ length: 800 }, (_, i) => i * 16).filter((t) => (t < 1000 || t > 1300) && (t < 8000 || t > 8300));
+    expect(checkStalls(longer, [{ startMs: 0, endMs: 12800 }], 12800).status).toBe("passed");
+    const long = checkStalls(frames((t) => t < 1000 || t > 1450), [{ startMs: 0, endMs: 6400 }], 6400);
+    expect(long.maxGapMs).toBeGreaterThan(400);
+    expect(long.status).toBe("failed");
   });
 
-  it("fails uneven motion whose p95 exceeds 60 ms without a 250 ms gap", () => {
+  it("passes 30 fps-even motion with 60 ms gaps (one repeated output frame)", () => {
+    const even = checkStalls(
+      Array.from({ length: 34 }, (_, i) => i * 60),
+      [{ startMs: 0, endMs: 2000 }],
+      2000,
+    );
+    expect(even.p95GapMs).toBe(60);
+    expect(even.status).toBe("passed");
+  });
+
+  it("fails uneven motion whose p95 exceeds 73 ms without a 250 ms gap", () => {
     const report = checkStalls(
       [0, 80, 160, 240, 320, 400, 480],
       [{ startMs: 0, endMs: 500 }],

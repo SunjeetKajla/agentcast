@@ -1,10 +1,12 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { Edl, Script, Storyboard, type CameraKey, type ShotSegment, type Timeline } from "@agentcast/shared";
+import { Edl, Script, Storyboard, type CameraKey, type PrimitiveSegment, type Rect, type ShotSegment, type Timeline } from "@agentcast/shared";
 import { calloutSeconds, cropFor, inView, moveSeconds, readSeconds } from "@agentcast/video";
+import { checkRender, checkScenes, savedInput } from "./composition.ts";
 
-// Checks the director's edl.json. The director runs it (check-cli.ts) while it works; the worker runs
-// it again afterwards and doesn't take the agent's word for it.
+// Checks the director's work: edl.json, then (with a composition) the scene contract on the scene
+// files it wrote and `hyperframes check` on the composition rebuilt from the edit. The director runs
+// it (check-cli.ts) while it works; the worker runs it again afterwards and doesn't take its word.
 
 export type Issue = { severity: "error" | "warn"; at: string; message: string };
 export type CheckResult = { edl?: Edl; issues: Issue[] };
@@ -19,13 +21,26 @@ type WorkspaceTimeline = Pick<Timeline, "viewport" | "duration"> & {
   events: Pick<Timeline["events"][number], "t" | "stepId" | "kind" | "bbox">[];
 };
 
-export async function checkWorkspace(dir: string): Promise<CheckResult> {
+export type CheckOptions = {
+  /** Rebuild the composition and run `hyperframes check` (default true; needs composition/input.json). */
+  render?: boolean;
+  /** Values that must appear in no scene file (rule 5). */
+  secrets?: string[];
+  signal?: AbortSignal;
+};
+
+export async function checkWorkspace(dir: string, o: CheckOptions = {}): Promise<CheckResult> {
   let raw: unknown;
   try {
     raw = await readJson(dir, "edl.json");
   } catch (e) {
     return { issues: [error("edl.json", `isn't valid JSON: ${(e as Error).message}`)] };
   }
+  // What the director may not change (the brand, the music pick, the grammar) is put back from the
+  // baseline before checking, with a warning, so a slip there can't sink the rest of its edit.
+  const baselineRaw = (await readJson(dir, "edl.baseline.json")) as { style: Record<string, unknown> };
+  const restored = restoreFixed(raw, baselineRaw);
+  if (restored.length) await writeFile(join(dir, "edl.json"), JSON.stringify(raw, null, 2));
   const parsed = Edl.safeParse(raw);
   if (!parsed.success)
     return {
@@ -39,7 +54,38 @@ export async function checkWorkspace(dir: string): Promise<CheckResult> {
     .filter((f) => /^script\.[\w-]+\.json$/.test(f))
     .map((f) => f.slice("script.".length, -".json".length));
   for (const lang of langs) Script.parse(await readJson(dir, `data/script.${lang}.json`));
-  return { edl, issues: lint(edl, baseline, storyboard, timeline, langs) };
+  const issues = [
+    ...restored.map((key) => warn(`style.${key}`, "is fixed by the brand, the brief or the music pick: put back as the baseline has it")),
+    ...lint(edl, baseline, storyboard, timeline, langs),
+  ];
+  if (await savedInput(dir)) {
+    issues.push(...(await checkScenes(dir, edl, o.secrets)));
+    if (o.render !== false && !issues.some((i) => i.severity === "error"))
+      issues.push(...(await checkRender(dir, edl, o.signal)));
+  }
+  return { edl, issues };
+}
+
+/** The style fields the director doesn't own. */
+const FIXED = ["palette", "fonts", "music", "edit", "pacing", "timing"] as const;
+
+/** Puts the baseline's fixed style fields (and look.theme) back into `raw`; returns what changed. */
+function restoreFixed(raw: unknown, baseline: { style: Record<string, unknown> }): string[] {
+  const style = (raw as { style?: Record<string, unknown> } | undefined)?.style;
+  if (!style || typeof style !== "object") return [];
+  const changed: string[] = [];
+  for (const key of FIXED)
+    if (JSON.stringify(style[key]) !== JSON.stringify(baseline.style[key])) {
+      style[key] = baseline.style[key];
+      changed.push(key);
+    }
+  const look = style.look as Record<string, unknown> | undefined;
+  const theme = (baseline.style.look as Record<string, unknown>).theme;
+  if (look && typeof look === "object" && look.theme !== theme) {
+    look.theme = theme;
+    changed.push("look.theme");
+  }
+  return changed;
 }
 
 /** The rules, on parsed inputs. */
@@ -60,8 +106,8 @@ export function lint(
   if (motion.personality !== baseline.style.motion.personality)
     issues.push(error("style.motion.personality", `must stay "${baseline.style.motion.personality}" (the brief's)`));
   if (edl.style.edit !== baseline.style.edit) issues.push(error("style.edit", `must stay "${baseline.style.edit}"`));
-  if (edl.style.music.trackId)
-    issues.push(error("style.music", "music isn't rendered yet: leave style.music as it was"));
+  if (JSON.stringify(edl.style.music) !== JSON.stringify(baseline.style.music))
+    issues.push(error("style.music", "the music bed is the worker's pick: leave style.music as the baseline has it"));
   if (edl.style.look.theme !== baseline.style.look.theme)
     issues.push(error("style.look.theme", `must stay "${baseline.style.look.theme}" (the product's own)`));
   if (edl.style.captionStyle === "karaoke" && baseline.style.captionStyle === "block")
@@ -98,6 +144,10 @@ export function lint(
       return;
     }
     if (segment.kind === "stat") return fullText(at, "the label", segment.label);
+    if (segment.kind === "scene") {
+      for (const [name, text] of Object.entries(segment.copy ?? {})) fullText(at, `the ${name} copy`, text);
+      return;
+    }
     if (segment.kind === "montage") {
       if (segment.clips.length < 2 || segment.clips.length > 4) issues.push(error(at, "a montage has 2–4 clips"));
       for (const c of segment.clips)
@@ -108,8 +158,45 @@ export function lint(
       if (segment.text) fullText(at, "the line", segment.text);
       return;
     }
+    if (segment.kind === "primitive") return primitiveIssues(segment, at);
     shotIssues(segment, at);
   });
+
+  // A music-led film keeps moving: the same treatment twice running reads as a template.
+  edl.segments.forEach((segment, i) => {
+    const next = edl.segments[i + 1];
+    if (segment.kind === "primitive" && next?.kind === "primitive" && segment.primitive.type !== "label" && segment.primitive.type === next.primitive.type)
+      issues.push(warn(`segments[${i + 1}] (${next.id})`, `follows another ${next.primitive.type}: vary the move`));
+  });
+
+  function primitiveIssues(segment: PrimitiveSegment, at: string) {
+    const p = segment.primitive;
+    const beat = 60 / (edl.style.music.bpm ?? 120);
+    if (Math.abs(segment.seconds / beat - Math.round(segment.seconds / beat)) > 0.1)
+      issues.push(warn(at, `${segment.seconds} s isn't a whole number of ${Math.round(beat * 1000)} ms beats; it will be moved onto the grid`));
+    if (segment.seconds < beat) issues.push(error(at, "lasts less than a beat"));
+    if (p.type === "label") fullText(at, "the label", p.text);
+    if (p.type === "swap") {
+      fullText(at, "the lead", p.lead);
+      p.words.forEach((w) => fullText(at, "a word", w));
+    }
+    if (p.type === "ticker") p.terms.forEach((t) => fullText(at, "a term", t));
+    const box = (name: string, r: Rect) => {
+      if (r[0] < -1 || r[1] < -1 || r[0] + r[2] > view.w + 1 || r[1] + r[3] > view.h + 1 || r[2] <= 0 || r[3] <= 0)
+        issues.push(error(at, `${name} [${r.join(", ")}] isn't inside the ${view.w}×${view.h} recording`));
+    };
+    if (p.type === "proof" || p.type === "prompt") {
+      if (p.in < 0 || p.out > timeline.duration || p.out <= p.in) issues.push(error(at, `footage ${p.in}–${p.out} s isn't inside the recording (0–${timeline.duration} s)`));
+      box("frame", p.frame);
+    }
+    if (p.type === "prompt") box("input", p.input);
+    if (p.type === "proof") p.hops?.forEach((h) => box("a hop", h));
+    if (p.type === "build") {
+      if (p.at < 0 || p.at > timeline.duration) issues.push(error(at, `at ${p.at} s isn't inside the recording`));
+      p.items.forEach((r) => box("an item", r));
+      if (p.lift) box("lift", p.lift);
+    }
+  }
 
   function shotIssues(shot: ShotSegment, at: string) {
     const beat = shot.beatId ? beats.get(shot.beatId) : undefined;

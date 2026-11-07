@@ -33,7 +33,7 @@ const Draft = z.object({
   lines: z.array(
     z.object({
       beatId: z.string(),
-      text: z.string().min(1),
+      text: z.string(),
       onScreen: z.array(z.string()).default([]),
     }),
   ),
@@ -47,6 +47,7 @@ export function checkScript(
   d: Draft,
   board: Storyboard,
   lang: string,
+  led = false,
 ): string[] {
   const problems: string[] = [];
   const tutorial = board.arc === "tutorial";
@@ -61,8 +62,9 @@ export function checkScript(
       );
       continue;
     }
+    if (!led && !lines[0]!.text.trim()) problems.push(`beat ${b.id}'s line is empty`);
     const budget = wordBudget(b.maxSeconds, lang, tutorial);
-    const n = words(lines[0]!.text);
+    const n = led ? 0 : words(lines[0]!.text);
     // A line may run a little long (FR-62 tightens it after voicing); much longer won't fit the footage.
     if (n > budget * 1.25)
       problems.push(
@@ -90,6 +92,8 @@ export async function writeScript(
     storyboard: Storyboard;
     creative: CreativeBrief;
     product?: ProductBrief;
+    /** No voice: on-screen copy only. */
+    led?: boolean;
   },
   signal?: AbortSignal,
 ): Promise<Script> {
@@ -130,8 +134,12 @@ export async function writeScript(
     }
     const language = LANG_NAME[lang] ?? lang;
     const prompt = [
-      `Write the ${language} voiceover script for a ${storyboard.arc} video. Read every file first.`,
-      "- beats.json: the storyboard, in playing order. Each beat has an intent (what its line must get across), its length in seconds, maxWords (a hard limit: the voice must fit the footage), on-screen texts and the emotion it carries.",
+      input.led
+        ? `Write the ${language} on-screen copy for a ${storyboard.arc} film. It has no voice: music and big type carry it. Read every file first.`
+        : `Write the ${language} voiceover script for a ${storyboard.arc} video. Read every file first.`,
+      input.led
+        ? "- beats.json: the storyboard, in playing order. Each beat has an intent, on-screen texts and the emotion it carries."
+        : "- beats.json: the storyboard, in playing order. Each beat has an intent (what its line must get across), its length in seconds, maxWords (a hard limit: the voice must fit the footage), on-screen texts and the emotion it carries.",
       "- creative-brief.json: audience, tone, personality and the call to action. Match its tone.",
       input.product
         ? "- product-brief.json: the product name and the key terms a narrator must say correctly."
@@ -140,10 +148,16 @@ export async function writeScript(
       `Write everything in ${language}: the lines, on-screen texts, hook, title card, CTA and posting copy.${lang === "hi" ? `\n${HINDI_STYLE}` : " Plain, spoken, confident; no hype words."}`,
       tutorial
         ? 'This is a how-to: speak in imperative steps ("Click New project, then name it").'
-        : "This is a launch-style video, not a tutorial. Sell outcomes: say what the viewer gets and why it matters. Never narrate clicks, menu names, field labels, usernames or typed values; the picture shows those. Beats without footage are headlines: their line says the headline's idea out loud. Keep lines short and confident; the music and the cuts carry the rest.",
+        : input.led
+          ? "This is a launch film, not a tutorial. Sell outcomes in very few words. Never name clicks, menus, field labels, usernames or typed values; the picture shows those."
+          : "This is a launch-style video, not a tutorial. Sell outcomes: say what the viewer gets and why it matters. Never narrate clicks, menu names, field labels, usernames or typed values; the picture shows those. Beats without footage are headlines: their line says the headline's idea out loud. Keep lines short and confident; the music and the cuts carry the rest.",
       "Return:",
-      "- lines: exactly one per beat, by beatId, each within its maxWords. Lines must flow into each other as one voiceover. onScreen: the beat's on-screen texts in this language, same order, each ≤ 6 words.",
-      "- hook: the first line again as a hook of at most 8 words; titleCard: a short line for the title card (≤ 8 words); cta: the closing call to action.",
+      input.led
+        ? "- lines: exactly one per beat, by beatId, with an empty text. onScreen: the beat's on-screen texts in this language, same order, each ≤ 4 words: read at a glance, in time with the music."
+        : "- lines: exactly one per beat, by beatId, each within its maxWords. Lines must flow into each other as one voiceover. onScreen: the beat's on-screen texts in this language, same order, each ≤ 6 words.",
+      input.led
+        ? "- hook: the film's opening idea, at most 6 words; titleCard: that idea as the opening line, at most 6 words, one phrase per beat of music; cta: the closing line, at most 5 words."
+        : "- hook: the first line again as a hook of at most 8 words; titleCard: a short line for the title card (≤ 8 words); cta: the closing call to action.",
       "- posting: a title, a two-sentence description and up to 6 hashtags for publishing the video.",
     ]
       .filter(Boolean)
@@ -158,7 +172,7 @@ export async function writeScript(
       timeoutMs: 300_000,
       prompt,
     });
-    let problems = checkScript(draft, storyboard, lang);
+    let problems = checkScript(draft, storyboard, lang, input.led);
     if (problems.length) {
       await writeFile(
         join(dir, "previous-script.json"),
@@ -173,7 +187,7 @@ export async function writeScript(
         timeoutMs: 300_000,
         prompt: `${prompt}\n\nprevious-script.json was your first attempt. Fix these problems and return the whole script again:\n${problems.map((p) => `- ${p}`).join("\n")}`,
       });
-      problems = checkScript(draft, storyboard, lang);
+      problems = checkScript(draft, storyboard, lang, input.led);
       if (problems.some((p) => !/budget/.test(p)))
         throw new Error(
           `The ${language} script still has problems: ${problems.join("; ")}`,

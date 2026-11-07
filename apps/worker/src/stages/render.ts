@@ -4,8 +4,8 @@ import type { StageFn } from "./types.ts";
 import { renderTo, videoInput } from "./preview.ts";
 import { copyFixture, pretend } from "./stub.ts";
 
-// render: every variant at 1080p (PRD §9.8). Owner: Neeraj. One at a time: Remotion already uses
-// every core for each. Desktop footage only until mobile recording exists.
+// render: every variant at 1080p (PRD §9.8). Owner: Neeraj. One at a time: each render already uses
+// every core. Desktop footage only until mobile recording exists.
 export const render: StageFn = async (ctx) => {
   const all = variantMatrix(ctx.config.variants);
   if (fixtureStages()) {

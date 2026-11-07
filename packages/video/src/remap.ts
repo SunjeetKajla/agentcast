@@ -132,7 +132,16 @@ export function remapEdl(
 ): Edl {
   const kept = (flowId: string) => !drop.has(flowId) && retakes[flowId];
   const segments = edl.segments.flatMap((seg): Edl["segments"] => {
-    if (seg.kind === "statement" || seg.kind === "stat") return [seg];
+    if (seg.kind === "statement" || seg.kind === "stat" || seg.kind === "scene") return [seg];
+    if (seg.kind === "primitive") {
+      const p = seg.primitive;
+      if (p.type === "label" || p.type === "swap" || p.type === "ticker") return [seg];
+      if (!kept(p.flowId)) return [];
+      const map = timeMap(retakes[p.flowId]!, p.flowId);
+      const length = retakes[p.flowId]!.after.duration;
+      if (p.type === "build") return [{ ...seg, primitive: { ...p, ...{ at: span(map, p.at, p.at, length).in } } }];
+      return [{ ...seg, primitive: { ...p, ...span(map, p.in, p.out, length) } }];
+    }
     if (seg.kind === "montage") {
       const clips = seg.clips
         .filter((c) => kept(c.flowId))

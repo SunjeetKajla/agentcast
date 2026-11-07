@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The Remotion edit: primitives, camera math, motion tokens, baseline EDL, renderVideo().",
+  "description": "The HyperFrames edit: primitives, camera math, motion tokens, baseline EDL, renderVideo().",
   "exports": {
     ".": "./src/index.ts"
   },
@@ -12,17 +12,10 @@
   },
   "dependencies": {
     "@agentcast/shared": "workspace:*",
-    "@remotion/bundler": "4.0.538",
-    "@remotion/google-fonts": "4.0.538",
-    "@remotion/media-utils": "4.0.538",
-    "@remotion/renderer": "4.0.538",
-    "@remotion/transitions": "4.0.538",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "remotion": "4.0.538"
-  },
-  "devDependencies": {
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0"
+    "@hyperframes/core": "0.8.189",
+    "@hyperframes/producer": "0.8.189",
+    "gsap": "3.15.0",
+    "hyperframes": "0.8.189",
+    "zod": "^4.6.7"
   }
 }

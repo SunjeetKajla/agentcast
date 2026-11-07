@@ -18,6 +18,7 @@ import {
 import {
   alignFrames,
   checkStalls,
+  STALL,
   type MotionWindow,
   type StallReport,
 } from "./timing.ts";
@@ -67,7 +68,13 @@ export class LiveStallError extends Error {
   constructor(
     public readonly takes: { attempt: number; stall: StallReport }[],
   ) {
-    super(`Live recording failed stall checks after ${takes.length} take(s)`);
+    const last = takes.at(-1)?.stall;
+    super(
+      `Live recording failed stall checks after ${takes.length} take(s)` +
+        (last
+          ? ` (longest frame gap ${Math.round(last.maxGapMs)} ms, p95 ${Math.round(last.p95GapMs)} ms, ${last.effectiveFps.toFixed(1)} fps while moving; limits: gaps under ${STALL.maxGapMs} ms, one over ${STALL.hitchMs} ms per ${STALL.hitchEveryMs / 1000} s of motion, p95 ${STALL.p95GapMs} ms)`
+          : ""),
+    );
     this.name = "LiveStallError";
   }
 }

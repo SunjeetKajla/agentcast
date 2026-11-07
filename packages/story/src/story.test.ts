@@ -462,3 +462,45 @@ describe("script", () => {
     });
   });
 });
+
+describe("a film without a voice", () => {
+  const span = {
+    id: "s1",
+    flowId: "f",
+    flowTitle: "Flow",
+    in: 0,
+    out: 4,
+    seconds: 4,
+    actions: ["Open"],
+    stepIds: ["a"],
+    frameAt: 1,
+  };
+  const beats = (title?: string) => ({
+    arc: "launch",
+    beats: [
+      { role: "hook", onScreen: [], motion: { kind: "reveal", emotion: "bold" }, intent: "x" },
+      { role: "core", spanId: "s1", onScreen: title ? [{ kind: "title", text: title }] : [], motion: { kind: "reveal", emotion: "bold" }, intent: "x" },
+      { role: "cta", onScreen: [], motion: { kind: "hold", emotion: "bold" }, intent: "x" },
+    ],
+  });
+
+  it("needs a short title on every shot", () => {
+    const check = (title?: string) => checkDraft(beats(title) as never, [span] as never, 30, "launch", true);
+    expect(check("Plan every quarter")).toEqual([]);
+    expect(check().join()).toMatch(/needs an onScreen title/);
+    expect(check("Plan every single quarter ahead").join()).toMatch(/over 4 words/);
+    expect(checkDraft(beats() as never, [span] as never, 30, "launch", false)).toEqual([]);
+  });
+
+  it("doesn't mind footage longer than the film: it's sped up to fit", () => {
+    expect(checkDraft(beats("Go") as never, [{ ...span, seconds: 90 }] as never, 30, "launch", true)).toEqual([]);
+    expect(checkDraft(beats("Go") as never, [{ ...span, seconds: 90 }] as never, 30, "launch", false).join()).toMatch(/well over/);
+  });
+
+  it("takes empty lines only without a voice", () => {
+    const board = { schemaVersion: 1, arc: "launch", edit: "trailer", beats: [{ id: "b", role: "core", onScreen: [], motion: { kind: "reveal", emotion: "x" }, intent: "x", maxSeconds: 3 }] } as never;
+    const draft = { hook: "h", titleCard: "t", cta: "c", posting: { title: "t", description: "d", hashtags: [] }, lines: [{ beatId: "b", text: "", onScreen: [] }] } as never;
+    expect(checkScript(draft, board, "en", true)).toEqual([]);
+    expect(checkScript(draft, board, "en", false).join()).toMatch(/is empty/);
+  });
+});

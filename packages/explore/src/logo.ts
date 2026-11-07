@@ -1,6 +1,7 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 import { randomUUID } from "node:crypto";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Brand } from "@agentcast/shared";
 import type { RecorderBrowser } from "@agentcast/recorder";
@@ -167,10 +168,12 @@ export async function captureLogo(
       }
       const box = await element.boundingBox();
       if (!box || box.width < 4 || box.height < 4) continue;
-      await element.screenshot({
-        path: join(dir, "brief/logo.png"),
-        animations: "disabled",
-      });
+      await sharpLogo(page, box, join(dir, "brief/logo.png")).catch(() =>
+        element.screenshot({
+          path: join(dir, "brief/logo.png"),
+          animations: "disabled",
+        }),
+      );
       return {
         file: "brief/logo.png",
         width: box.width,
@@ -190,4 +193,18 @@ export async function captureLogo(
     }
   }
   return undefined;
+}
+
+/** The logo at four times its size, since end cards show it big, whatever the page's pixel density. */
+async function sharpLogo(page: RecorderBrowser["page"], box: { x: number; y: number; width: number; height: number }, file: string) {
+  const session = await page.context().newCDPSession(page);
+  try {
+    const shot = (await session.send("Page.captureScreenshot", {
+      format: "png",
+      clip: { x: box.x, y: box.y, width: box.width, height: box.height, scale: 4 },
+    })) as { data: string };
+    await writeFile(file, Buffer.from(shot.data, "base64"));
+  } finally {
+    await session.detach().catch(() => {});
+  }
 }

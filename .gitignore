@@ -87,3 +87,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Music library audio (tags.json is committed; see assets/music/README.md)
+assets/music/*.mp3
+assets/music/*.wav
+assets/music/*.m4a

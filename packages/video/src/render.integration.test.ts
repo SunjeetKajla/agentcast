@@ -7,7 +7,7 @@ import { FIXTURE_JOB_DIR, readArtifact } from "@agentcast/shared/node";
 import { renderVideo } from "./render";
 
 it.skipIf(process.env.AGENTCAST_RENDER_TESTS !== "1")(
-  "renders actual fixture footage into an H.264 video through the production Remotion bundle",
+  "renders actual fixture footage into an H.264 video",
   async () => {
     const root = await mkdtemp(join(tmpdir(), "agentcast-render-integration-"));
     try {
@@ -38,7 +38,6 @@ it.skipIf(process.env.AGENTCAST_RENDER_TESTS !== "1")(
       const rendered = await renderVideo({
         root,
         out,
-        concurrency: 2,
         signal: AbortSignal.timeout(120000),
         input: {
           edl,

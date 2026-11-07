@@ -43,7 +43,7 @@ export class JobStore {
       ]),
     ) as Record<StageName, StageState>;
     const job: Job = {
-      schemaVersion: 4,
+      schemaVersion: 5,
       id,
       createdAt: now,
       updatedAt: now,

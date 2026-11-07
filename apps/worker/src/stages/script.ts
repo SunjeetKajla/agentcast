@@ -9,8 +9,7 @@ import {
   Storyboard,
   Timeline,
   MOTION_PRESETS,
-  jobPaths,
-} from "@agentcast/shared";
+  jobPaths, musicLed } from "@agentcast/shared";
 import {
   candidateSpans,
   plainStoryboard,
@@ -95,7 +94,9 @@ export const script: StageFn = async (ctx) => {
       ctx.signal.throwIfAborted();
     }
   }
+  const led = musicLed(ctx.config);
   const input = {
+    led,
     mode: ctx.config.mode,
     creative,
     product,
@@ -133,7 +134,7 @@ export const script: StageFn = async (ctx) => {
   for (const [index, lang] of ctx.config.variants.langs.entries()) {
     const result = await writeScript(
       llm,
-      { lang, storyboard: board, creative, product },
+      { lang, storyboard: board, creative, product, led },
       ctx.signal,
     );
     await ctx.write(jobPaths.script(lang), Script, result);

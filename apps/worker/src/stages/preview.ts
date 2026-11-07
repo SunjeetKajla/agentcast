@@ -1,5 +1,5 @@
-import { copyFile, mkdir, rename } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { access, copyFile, mkdir, rename } from "node:fs/promises";
+import { dirname, extname, join } from "node:path";
 import {
   Brand,
   Edl,
@@ -8,6 +8,8 @@ import {
   Storyboard,
   Timeline,
   Voiceover,
+  musicLed,
+  voiced,
   jobPaths,
   type Aspect,
 } from "@agentcast/shared";
@@ -15,6 +17,7 @@ import { fixtureStages } from "@agentcast/explore";
 import {
   assignNarration,
   ensureSfx,
+  measureVideo,
   planParts,
   renderVideo,
   scriptCaptions,
@@ -46,15 +49,17 @@ export async function videoInput(
   aspect: Aspect,
   lang: string,
   height: number,
+  /** The edit to render (default: render/edl.json). */
+  edit?: Edl,
 ): Promise<VideoInput> {
   const [edl, timeline, storyboard, script, product, voice, brand] =
     await Promise.all([
-      ctx.read(jobPaths.edl, Edl),
+      edit ?? ctx.read(jobPaths.edl, Edl),
       ctx.read(jobPaths.timeline("desktop"), Timeline),
       ctx.read(jobPaths.storyboard, Storyboard),
       ctx.read(jobPaths.script(lang), Script),
       ctx.read(jobPaths.productBrief, ProductBrief),
-      ctx.config.voiceover
+      voiced(ctx.config)
         ? optional(ctx.read(jobPaths.voice(lang), Voiceover))
         : undefined,
       optional(ctx.read(jobPaths.brand, Brand)),
@@ -64,6 +69,15 @@ export async function videoInput(
   const narration = voice ? assignNarration(storyboard, voice, edl) : [];
   const plan = planParts(edl, narration);
   const logo = brand?.logo;
+  // The music bed the direct stage picked and copied in (PRD §9.7.2).
+  const music =
+    edl.style.music.trackId &&
+    (await access(ctx.path("render/audio/music.mp3")).then(
+      () => true,
+      () => false,
+    ))
+      ? "render/audio/music.mp3"
+      : undefined;
   const sfx =
     edl.style.sfx === "auto" ||
     edl.segments.some((s) => s.kind === "shot" && s.sfx?.length);
@@ -73,9 +87,12 @@ export async function videoInput(
     lang,
     footage: { src: jobPaths.recording("desktop"), timeline },
     narration,
-    captions: voice
-      ? voiceCaptions(plan.clips)
-      : scriptCaptions(plan.parts, edl, storyboard, script),
+    // A music-led film's type is its narration.
+    captions: musicLed(ctx.config)
+      ? []
+      : voice
+        ? voiceCaptions(plan.clips)
+        : scriptCaptions(plan.parts, edl, storyboard, script),
     brand: {
       name: product.name,
       tagline: product.oneLiner,
@@ -94,25 +111,30 @@ export async function videoInput(
     },
     copy: { title: script.titleCard, cta: script.cta },
     height,
-    ...(sfx ? { audio: { sfx: await soundEffects(ctx) } } : {}),
+    ...(sfx || music
+      ? { audio: { sfx: sfx ? await soundEffects(ctx) : {}, ...(music ? { music } : {}) } }
+      : {}),
   };
 }
 
 /**
- * The sound effects, made once per machine in $AGENTCAST_HOME/sfx and copied into the job's
- * render/audio/sfx/ so renders read them like any other job file.
+ * The sound effects' takes, from the pack or made once per machine in $AGENTCAST_HOME/sfx, copied
+ * into the job's render/audio/sfx/ so renders read them like any other job file.
  */
 async function soundEffects(
   ctx: StageContext,
-): Promise<Partial<Record<SfxKind, string>>> {
+): Promise<Partial<Record<SfxKind, string[]>>> {
   const made = await ensureSfx(join(agentcastHome(), "sfx"), ctx.signal);
   await mkdir(ctx.path("render/audio/sfx"), { recursive: true });
-  const files: Partial<Record<SfxKind, string>> = {};
-  for (const [kind, file] of Object.entries(made) as [SfxKind, string][]) {
-    const rel = `render/audio/sfx/${kind}.wav`;
-    await copyFile(file, ctx.path(rel));
-    files[kind] = rel;
-  }
+  const files: Partial<Record<SfxKind, string[]>> = {};
+  for (const [kind, takes] of Object.entries(made) as [SfxKind, string[]][])
+    files[kind] = await Promise.all(
+      takes.map(async (file, i) => {
+        const rel = `render/audio/sfx/${kind}-${i + 1}${extname(file)}`;
+        await copyFile(file, ctx.path(rel));
+        return rel;
+      }),
+    );
   return files;
 }
 
@@ -135,6 +157,8 @@ export async function renderTo(
     out: staged,
     signal: ctx.signal,
     onProgress,
+    // The director's scene files (PRD §9.7.5); the catalogue draws every other part.
+    scenes: ctx.path("render/composition/compositions"),
   });
   await rename(staged, out);
   ctx.artifact(rel);
@@ -156,4 +180,10 @@ export const preview: StageFn = async (ctx) => {
   ctx.log(
     `Preview: ${result.frames} frames in ${result.seconds.toFixed(1)} s.`,
   );
+  // The reference-look numbers (PRD FR-88), so an edit that stands still or plays quiet shows here.
+  const m = await measureVideo(ctx.path(jobPaths.preview), ctx.signal).catch(() => undefined);
+  if (m) {
+    const line = `still ${(m.stillShareExEnd * 100).toFixed(0)}% (target ≤ 10%, end card excluded), ${m.lufs ?? "no"} LUFS`;
+    ctx.log(`Reference check: ${line}.`, m.stillShareExEnd > 0.1 || (m.lufs !== undefined && Math.abs(m.lufs + 14) > 1.5) ? "warn" : "info");
+  }
 };

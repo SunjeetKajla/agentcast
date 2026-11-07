@@ -6,6 +6,7 @@ packages:
   - "!apps/demoboard"
 allowBuilds:
   esbuild: true
+  puppeteer: false
   unrs-resolver: true
 overrides:
   "webpack@5.105.0>schema-utils": 4.5.0

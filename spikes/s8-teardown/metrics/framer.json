@@ -1,0 +1,111 @@
+{
+ "name": "framer",
+ "duration": 37.55,
+ "fps": 24.0,
+ "size": "1920x1080",
+ "cuts": 4,
+ "cuts_per_10s": 1.07,
+ "shot_median": 2.67,
+ "shot_mean": 7.51,
+ "shot_p10": 1.31,
+ "shot_p90": 18.18,
+ "cut_times": [
+  1.71,
+  4.38,
+  5.42,
+  10.92
+ ],
+ "soft_transitions": 0,
+ "scene_changes_per_10s": 1.07,
+ "scene_median": 2.67,
+ "soft_times": [],
+ "still_runs": [
+  [
+   24.5,
+   0.75
+  ],
+  [
+   33.71,
+   3.25
+  ]
+ ],
+ "still_pct": 10.7,
+ "moving_frames_pct": 67.8,
+ "motion_mean": 3.14,
+ "motion_per_sec": [
+  4.8,
+  5.0,
+  3.6,
+  3.2,
+  3.8,
+  8.9,
+  2.6,
+  1.4,
+  0.7,
+  0.2,
+  4.4,
+  1.9,
+  1.7,
+  3.1,
+  1.0,
+  5.3,
+  5.4,
+  9.9,
+  9.3,
+  9.9,
+  1.0,
+  0.4,
+  0.5,
+  0.2,
+  1.0,
+  0.5,
+  0.5,
+  1.8,
+  6.8,
+  6.5,
+  0.1,
+  4.2,
+  6.8,
+  0.9,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "luma_mean": 19.7,
+ "dark_pct": 99.7,
+ "light_pct": 0.0,
+ "sat_mean": 0.203,
+ "lufs": -15.7,
+ "lra": 3.1,
+ "truePeak": -0.8,
+ "bpm": 156.6,
+ "beat_strength": 0.419,
+ "hits_per_10s": 6.66,
+ "big_hits": [
+  2.47,
+  7.57,
+  13.85,
+  21.28,
+  28.08,
+  31.29
+ ],
+ "audio_drops": [
+  [
+   5.46,
+   0.35
+  ]
+ ],
+ "cuts_on_beat": 0.5,
+ "cuts_on_beat_chance": 0.33,
+ "cuts_on_hit": 0.0,
+ "cuts_on_hit_chance": 0.1,
+ "cuts_on_bighit": 0.0,
+ "cuts_on_bighit_chance": 0.01,
+ "voiceover": {
+  "words": 72,
+  "wps_over_film": 1.92,
+  "first": 0.9,
+  "last": 34.4,
+  "text": "with framer the things you design become real framer feels like a design tool but it ships fast modern websites you can start from scratch import from figma or choose from thousands of free and premium templates framer is easy to learn there's frames text and stacks combine them however you want add whatever you want and make everything responsive then the only thing left to do is hit publish that's framer"
+ }
+}
