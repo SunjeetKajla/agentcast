@@ -4,6 +4,13 @@ import { Brand, CreativeBrief, ProductBrief } from "./brief.ts";
 import { ChangeReport } from "./changes.ts";
 import { Edl } from "./edl.ts";
 import { FlowsFile, ReplayPlan } from "./flow.ts";
+import {
+  ExplorationTask,
+  ExplorationPlan,
+  RehearsalFile,
+  AuthState,
+  BrowserTrace,
+} from "./exploration.ts";
 import { Job } from "./job.ts";
 import { Script, Storyboard } from "./story.ts";
 import { Timeline } from "./timeline.ts";
@@ -19,6 +26,7 @@ export const jobPaths = {
   brand: "brief/brand.json",
   hero: "brief/hero.jpg",
   flows: "explore/flows.json",
+  explorationTrace: (taskId: string) => `explore/traces/${taskId}.json`,
   recording: (ff: FormFactor) => `record/${ff}/recording.mp4`,
   timeline: (ff: FormFactor) => `record/${ff}/timeline.json`,
   replayPlan: "record/replay-plan.json",
@@ -29,7 +37,8 @@ export const jobPaths = {
   voiceClip: (lang: Lang, beatId: string) => `voice/${lang}/${beatId}.mp3`,
   edl: "render/edl.json",
   preview: "out/preview.mp4",
-  output: (variantId: string, ext: "mp4" | "srt" | "vtt") => `out/${variantId}.${ext}`,
+  output: (variantId: string, ext: "mp4" | "srt" | "vtt") =>
+    `out/${variantId}.${ext}`,
 } as const;
 
 /** Every schema-validated artifact, by job-relative path. */
@@ -39,6 +48,14 @@ export const ARTIFACTS: { pattern: RegExp; schema: z.ZodType }[] = [
   { pattern: /^brief\/creative\.json$/, schema: CreativeBrief },
   { pattern: /^brief\/brand\.json$/, schema: Brand },
   { pattern: /^explore\/flows\.json$/, schema: FlowsFile },
+  { pattern: /^explore\/tasks\/[a-z0-9_-]+\.json$/i, schema: ExplorationTask },
+  { pattern: /^explore\/plan\.json$/, schema: ExplorationPlan },
+  {
+    pattern: /^explore\/rehearsals\/[a-z0-9_.-]+\.json$/i,
+    schema: RehearsalFile,
+  },
+  { pattern: /^explore\/traces\/[a-z0-9_-]+\.json$/i, schema: BrowserTrace },
+  { pattern: /^auth\/state\.json$/, schema: AuthState },
   { pattern: /^record\/(desktop|mobile)\/timeline\.json$/, schema: Timeline },
   { pattern: /^record\/replay-plan\.json$/, schema: ReplayPlan },
   { pattern: /^record\/changes\.json$/, schema: ChangeReport },

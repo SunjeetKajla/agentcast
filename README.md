@@ -10,7 +10,7 @@
 
 <p align="center">
   <img alt="Status: hackathon build" src="https://img.shields.io/badge/status-hackathon%20build-8B5CF6">
-  <img alt="Built with TinyFish" src="https://img.shields.io/badge/web%20agents-TinyFish-2563EB">
+  <img alt="Local browser agents" src="https://img.shields.io/badge/browser-Browser%20Harness-2563EB">
   <img alt="Directed by Claude Code" src="https://img.shields.io/badge/director-Claude%20Code-7C3AED">
   <img alt="Rendered with Remotion" src="https://img.shields.io/badge/render-Remotion-F59E0B">
   <img alt="Node 22+" src="https://img.shields.io/badge/node-22%2B-22C55E">
@@ -33,7 +33,7 @@ AI video generators can't help, because they generate footage instead of showing
 
 ```mermaid
 flowchart LR
-  URL([Your URL]) --> E["<b>Explore</b><br/>TinyFish agents find<br/>the flows worth showing"]
+  URL([Your URL]) --> E["<b>Explore</b><br/>local browser agents find<br/>the flows worth showing"]
   E --> G1{{"You review<br/>the flows"}}
   G1 --> R["<b>Record</b><br/>Deterministic replay in<br/>a local browser at 60 fps"]
   R --> S["<b>Script + voice</b><br/>Narration per language,<br/>ElevenLabs TTS"]
@@ -42,8 +42,8 @@ flowchart LR
   V --> OUT([MP4s + captions])
 ```
 
-1. **Explore.** TinyFish web agents open your product, sign in, work through onboarding and try candidate flows in parallel. Each flow is scored on how clearly it shows your product's value, and the best 3–4 are ordered into a story.
-2. **Record.** A Playwright script replays the approved flows in a local browser while capturing the screen over CDP at 60 fps. TinyFish cloud browsers are the fallback for sites that block a local browser. It only clicks an element when exactly one match exists, checks that each step did what it should, and throws away any take that goes wrong. The exploring agent's hesitation never reaches the footage.
+1. **Explore.** Your logged-in coding agent and Browser Harness open your product, sign in, work through onboarding and try candidate flows in parallel. Each flow is scored on how clearly it shows your product's value, and the best 3–4 are ordered into a story.
+2. **Record.** A Playwright script replays the approved flows in a local browser while capturing the screen over CDP at 60 fps. Blocked local access is surfaced explicitly. It only clicks an element when exactly one match exists, checks that each step did what it should, and throws away any take that goes wrong. The exploring agent's hesitation never reaches the footage.
 3. **Script and voice.** Narration is written per segment, natively in each language, and voiced with ElevenLabs using word-level timestamps.
 4. **Direct.** Claude Code, running headless in a sandbox, writes the edit: smart zoom on every click, a smooth cursor, captions, music ducked under the voice, and a branded intro and outro.
 5. **Render.** Remotion renders every variant in parallel. Each language is retimed to fit its own voiceover, so the product is recorded once and narrated many times.
@@ -61,7 +61,7 @@ When your UI changes, `rerun` reuses the approved flows, repairs broken element 
 | 🌐 **Variants from one run** | 16:9 and 9:16, desktop and mobile, English and Hindi |
 | 🙋 **Human in the loop** | Review the flows, the script and a preview you can revise with a prompt. Autopilot skips all three. |
 | 🔁 **Re-run on update** | Cached flows and self-healing locators regenerate the video after a UI change |
-| 🔐 **Secrets stay secret** | Credentials go from TinyFish Vault or your own sign-in straight to the browser, never into a prompt |
+| 🔐 **Secrets stay secret** | Your local sign-in session goes straight to isolated browsers, never into a prompt |
 | 🧩 **Bring your own coding agent** | No LLM API key needed. Uses your logged-in Claude Code (default) or Codex CLI; opencode is planned. |
 
 ## DemoBoard target
@@ -80,7 +80,7 @@ The controlled demo SaaS lives in [`apps/demoboard`](apps/demoboard/README.md) a
 
 ## Status
 
-AgentCast is being built for **HackIIIT 2026** (IIIT Delhi) in the TinyFish-sponsored track. The pipeline above is the design. Here's what exists today:
+AgentCast is being built for **HackIIIT 2026** (IIIT Delhi) as a local-first project. The pipeline above is the design. Here's what exists today:
 
 - [ ] Product requirements and phased implementation plan
 - [ ] Monorepo scaffold (pnpm, TypeScript strict, Vitest)
@@ -88,7 +88,7 @@ AgentCast is being built for **HackIIIT 2026** (IIIT Delhi) in the TinyFish-spon
 - [ ] `packages/llm`: LLM runner with Claude Code and Codex backends
 - [ ] `agentcast doctor`: environment and LLM-login checks
 - [ ] UI design agreed ([DESIGN.md](DESIGN.md)) and the web app started: a chat-style New video page that asks setup questions one at a time
-- [ ] Spikes: CDP recording from TinyFish browsers, agent step quality, sign-in once, Remotion, Hindi TTS
+- [ ] Spikes: local Browser Harness exploration, agent step quality, sign-in once, Remotion, Hindi TTS
 - [ ] Worker and orchestrator with a live-progress UI
 - [ ] Explore, record, script, voice, direct, render
 - [ ] Variant fan-out, re-run on update, CLI and GitHub Action
@@ -99,12 +99,13 @@ AgentCast is being built for **HackIIIT 2026** (IIIT Delhi) in the TinyFish-spon
 - Node.js 22+ and pnpm
 - ffmpeg
 - A logged-in coding-agent CLI: Claude Code (the default) or Codex CLI 0.163+. **No LLM API key is required.**
-- A [TinyFish](https://tinyfish.ai) API key and an [ElevenLabs](https://elevenlabs.io) API key (the current scaffold runs without them)
+- A logged-in Codex or Claude Code CLI, uv/Python 3.12, Google Chrome, and an [ElevenLabs](https://elevenlabs.io) API key when using voiceover
 
 ```bash
 git clone <this repo> agentcast && cd agentcast
 pnpm install
-cp .env.example .env              # add TINYFISH_API_KEY and ELEVENLABS_API_KEY
+pnpm --filter @agentcast/browser setup  # pinned Browser Harness + Python 3.12
+cp .env.example .env              # select AGENTCAST_LLM=codex and add ELEVENLABS_API_KEY for voiceover
 pnpm agentcast doctor --probe     # checks tools and keys, and makes one tiny call through your coding agent
 ```
 
@@ -148,20 +149,20 @@ apps/
 assets/brand/  logo and banner
 ```
 
-Planned: `apps/worker` (orchestrator), `apps/demoboard` (demo target app), and `packages/tinyfish`, `recorder`, `director`, `voice`, `video`.
+Planned: `apps/worker` (orchestrator), `apps/demoboard` (demo target app), and `packages/browser`, `recorder`, `director`, `voice`, `video`.
 
 ## Documentation
 
 | Doc | What's in it |
 |---|---|
-| [PRD.md](PRD.md) | Problem, requirements, architecture, TinyFish integration, data contracts, risks |
+| [PRD.md](PRD.md) | Problem, requirements, architecture, local browser integration, data contracts, risks |
 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Phases, spikes, schedule, cut-line, testing strategy |
 | [DESIGN.md](DESIGN.md) | The agreed UI: palette, type, components, screens, landing page |
 | [AGENTS.md](AGENTS.md) | Instructions for coding agents working on this repo (Claude Code reads it via `CLAUDE.md`) |
 
 ## Built with
 
-- [**TinyFish**](https://tinyfish.ai): Agent, Fetch, Vault and Browser Context Profiles, with the Browser API as the fallback recorder. The location scouts that find and rehearse every shot.
+- [**Browser Harness**](https://github.com/browser-use/browser-harness): isolated local browser exploration, driven by the existing Codex/Claude Code login through task-owned MCP tools.
 - [**Claude Code**](https://docs.claude.com/en/docs/claude-code): headless and sandboxed. The director.
 - [**Remotion**](https://www.remotion.dev): the editing suite.
 - [**ElevenLabs**](https://elevenlabs.io): multilingual voiceover.
@@ -171,3 +172,5 @@ Planned: `apps/worker` (orchestrator), `apps/demoboard` (demo target app), and `
 <p align="center">
   <img src="assets/brand/logo.svg" alt="AgentCast logo" width="56"><br>
 </p>
+
+Local browser setup, supported controls and optional login smoke tests: [packages/browser/README.md](packages/browser/README.md).

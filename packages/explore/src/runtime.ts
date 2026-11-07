@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import type { Brand, Flow, ReplayPlan } from "@agentcast/shared";
-import type { FetchResult } from "@agentcast/tinyfish";
+import type { PageRead } from "@agentcast/browser";
 import type { PageColors, LogoCandidate, ColorSample } from "./brand";
 import type { PageFacts } from "./tour";
 import type { SessionState } from "./artifacts";
@@ -18,7 +18,7 @@ export type BrowserOptions = {
 export type RehearsalResult = { flow: Flow; replay?: ReplayPlan };
 /** Neeraj's recorder boundary. The explorer never accepts an agent's self-reported replay success. */
 export type BrowserAdapter = {
-  readPage(url: string, options: BrowserOptions): Promise<FetchResult>;
+  readPage(url: string, options: BrowserOptions): Promise<PageRead>;
   inspect(
     url: string,
     options: BrowserOptions,

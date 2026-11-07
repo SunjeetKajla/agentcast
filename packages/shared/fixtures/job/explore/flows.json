@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "flows": [
     {
       "id": "flow-template",
@@ -10,7 +10,7 @@
       "rank": 1,
       "selected": true,
       "source": "agent",
-      "tinyfishRunId": "run_fixture_001",
+      "agentRunId": "run_fixture_001",
       "rehearsal": { "ok": true, "seconds": 6 },
       "scoring": {
         "valueAlignment": 5,
@@ -70,7 +70,7 @@
       "rank": 2,
       "selected": false,
       "source": "agent",
-      "tinyfishRunId": "run_fixture_002",
+      "agentRunId": "run_fixture_002",
       "rehearsal": { "ok": true, "seconds": 4 },
       "scoring": {
         "valueAlignment": 2,

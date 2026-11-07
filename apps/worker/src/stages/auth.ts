@@ -15,7 +15,6 @@ import {
   fixtureStages,
   type BrowserAdapter,
 } from "@agentcast/explore";
-import { TinyFish, type AgentRequest } from "@agentcast/tinyfish";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
 import { pretend } from "./stub.ts";
@@ -72,29 +71,8 @@ export async function sessionFor(
     );
   }
 }
-export async function authRequest(
-  ctx: Pick<StageContext, "config" | "read">,
-): Promise<
-  Pick<
-    AgentRequest,
-    "use_profile" | "profile_id" | "use_vault" | "credential_item_ids"
-  >
-> {
-  if (ctx.config.auth.mode === "public") return {};
-  if (ctx.config.auth.mode === "vault")
-    return {
-      use_vault: true,
-      credential_item_ids: ctx.config.auth.credentialItemIds,
-    };
-  const state = await ctx.read("auth/state.json", AuthState);
-  if (!state.profileId)
-    throw new Error(
-      "The sign-in session was not uploaded to a TinyFish profile.",
-    );
-  return { use_profile: true, profile_id: state.profileId };
-}
 export function makeAuth(
-  deps: { tf?: TinyFish; browser?: BrowserAdapter; done?: Promise<void> } = {},
+  deps: { browser?: BrowserAdapter; done?: Promise<void> } = {},
 ): StageFn {
   return async (ctx) => {
     if (ctx.config.auth.mode === "public")
@@ -105,6 +83,10 @@ export function makeAuth(
     }
     const site = siteOf(new URL(ctx.config.url).hostname);
     let captured = await sessionFor(ctx);
+    if (!captured && ctx.config.auth.mode === "vault")
+      throw new Error(
+        "This legacy job has no local session. Create a new job using sign-in-once.",
+      );
     if (!captured) {
       const browser = deps.browser ?? (await recorderAdapter());
       if (!browser.signIn)
@@ -126,7 +108,11 @@ export function makeAuth(
           ),
           signal: ctx.signal,
           done,
-          onOpen: () => ctx.progress(0.1, "Sign in in Chrome, then press I'm signed in or close the window"),
+          onOpen: () =>
+            ctx.progress(
+              0.1,
+              "Sign in in Chrome, then press I'm signed in or close the window",
+            ),
         }),
       );
     } else ctx.log("Reusing the encrypted session saved by this job.");
@@ -163,60 +149,9 @@ export function makeAuth(
       { mode: 0o600 },
     );
     await rename(temp, file);
-    let profileId: string | undefined;
-    if (ctx.config.auth.mode === "sign-in-once") {
-      ctx.progress(0.8, "Sharing your session with the exploration agents");
-      const tf = deps.tf ?? new TinyFish();
-      profileId = ctx.config.auth.profileId;
-      if (!profileId) {
-        try {
-          profileId = (await ctx.read("auth/state.json", AuthState)).profileId;
-        } catch (error) {
-          if (
-            (error as { cause?: NodeJS.ErrnoException }).cause?.code !==
-            "ENOENT"
-          )
-            throw error;
-        }
-      }
-      if (!profileId) {
-        profileId = (
-          await tf.createProfile(
-            { name: `AgentCast ${site}`.slice(0, 100) },
-            ctx.signal,
-          )
-        ).id;
-        // Save the new profile ID before upload so a retry reuses it.
-        await ctx.write("auth/state.json", AuthState, {
-          schemaVersion: 1,
-          mode: "sign-in-once",
-          profileId,
-          sessionFile: "auth/session.enc",
-        });
-      }
-      const uploaded = await tf.uploadProfile(
-        profileId,
-        {
-          cookies: state.cookies.map(({ expires, ...cookie }) => ({
-            ...cookie,
-            ...(expires > 0 ? { expires } : {}),
-          })),
-          localStorage: state.origins.map((origin) => ({
-            origin: origin.origin,
-            items: origin.localStorage,
-          })),
-        },
-        ctx.signal,
-      );
-      if (uploaded.domains_failed.length || !uploaded.domains_updated.length)
-        throw new Error(
-          "TinyFish could not save the product session; the encrypted local copy is retained for retry.",
-        );
-    }
     await ctx.write("auth/state.json", AuthState, {
-      schemaVersion: 1,
-      mode: ctx.config.auth.mode,
-      profileId,
+      schemaVersion: 2,
+      mode: "sign-in-once",
       sessionFile: "auth/session.enc",
     });
     ctx.progress(1, "Signed-in session saved");

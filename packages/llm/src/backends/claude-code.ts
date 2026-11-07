@@ -4,29 +4,62 @@ import type { z } from "zod";
 import { command, detectCli } from "../cli.ts";
 import { claudeEnv } from "../env.ts";
 import { LlmError, classify } from "../errors.ts";
-import { DEFAULT_AGENT_TIMEOUT, DEFAULT_JSON_TIMEOUT, askValidated, withTaskDir } from "../json.ts";
+import {
+  DEFAULT_AGENT_TIMEOUT,
+  DEFAULT_JSON_TIMEOUT,
+  askValidated,
+  withTaskDir,
+} from "../json.ts";
 import { jsonSchemaOf } from "../schema.ts";
 import { run } from "../spawn.ts";
-import type { AgentResult, AgentTask, JsonTask, LlmBackend, OnEvent } from "../types.ts";
+import type {
+  AgentResult,
+  AgentTask,
+  JsonTask,
+  LlmBackend,
+  OnEvent,
+} from "../types.ts";
 
 // Claude Code, headless (`claude -p`) on the person's own login (PRD §9.9).
-// Every call: --restricted (no Bash/WebFetch unless named, user/project settings ignored, file tools
-// confined to the working dirs) and --strict-mcp-config (none of the person's MCP servers). Never --bare:
+// Every call ignores user/project settings and hooks, and uses strict explicit MCP configuration.
+// Browser calls have no built-in tools; editor calls receive only their explicit tools. Never --bare:
 // it forces API-key auth and breaks subscription logins.
 
-const LOCKED = ["-p", "--restricted", "--strict-mcp-config"];
+const LOCKED = [
+  "-p",
+  "--setting-sources",
+  "",
+  "--disable-slash-commands",
+  "--strict-mcp-config",
+  "--settings",
+  JSON.stringify({
+    disableAllHooks: true,
+    claudeAiMcpServers: [],
+    enableAllProjectMcpServers: false,
+  }),
+];
 const FILE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep"];
 const bin = () => process.env.AGENTCAST_CLAUDE_BIN || "claude";
 const LABEL = "Claude Code";
 
-type ResultMessage = { type: "result"; is_error?: boolean; result?: string; session_id?: string; structured_output?: unknown };
+type ResultMessage = {
+  type: "result";
+  is_error?: boolean;
+  result?: string;
+  session_id?: string;
+  structured_output?: unknown;
+};
 
 export const claudeCode: LlmBackend = {
   name: "claude-code",
 
   detect: () => detectCli({ bin: bin(), env: claudeEnv(), label: LABEL }),
 
-  json<S extends z.ZodType>(task: JsonTask<S>, model: string | undefined, onEvent?: OnEvent) {
+  json<S extends z.ZodType>(
+    task: JsonTask<S>,
+    model: string | undefined,
+    onEvent?: OnEvent,
+  ) {
     return withTaskDir(async (dir) => {
       // Restricted mode only reads inside the working dir, so screenshots are copied in.
       const images: string[] = [];
@@ -38,15 +71,21 @@ export const claudeCode: LlmBackend = {
       const schema = JSON.stringify(jsonSchemaOf(task.schema));
       const args = [
         ...LOCKED,
-        "--tools", images.length ? "Read" : "",
-        "--permission-mode", "dontAsk",
-        "--output-format", "json",
+        "--tools",
+        images.length ? "Read" : "",
+        "--permission-mode",
+        "dontAsk",
+        "--output-format",
+        "json",
         "--no-session-persistence",
-        "--json-schema", schema,
+        "--json-schema",
+        schema,
         ...(model ? ["--model", model] : []),
       ];
       const result = await askValidated(task, async (prompt) => {
-        const input = images.length ? `${prompt}\n\nLook at these image files in the working directory: ${images.join(", ")}` : prompt;
+        const input = images.length
+          ? `${prompt}\n\nLook at these image files in the working directory: ${images.join(", ")}`
+          : prompt;
         const r = await run({
           ...command(bin(), args),
           cwd: dir,
@@ -60,8 +99,17 @@ export const claudeCode: LlmBackend = {
         try {
           message = JSON.parse(r.stdout) as ResultMessage;
         } catch {}
-        if (!message || r.code !== 0 || message.is_error) throw classify(LABEL, `${message?.result ?? ""}\n${r.stderr}\n${r.stdout}`);
-        if (message.structured_output === undefined) throw new LlmError("llm.invalid", `${LABEL} returned no structured output`, message.result);
+        if (!message || r.code !== 0 || message.is_error)
+          throw classify(
+            LABEL,
+            `${message?.result ?? ""}\n${r.stderr}\n${r.stdout}`,
+          );
+        if (message.structured_output === undefined)
+          throw new LlmError(
+            "llm.invalid",
+            `${LABEL} returned no structured output`,
+            message.result,
+          );
         return message.structured_output;
       });
       onEvent?.({ kind: "done", text: "Answer checked" });
@@ -69,24 +117,60 @@ export const claudeCode: LlmBackend = {
     });
   },
 
-  async agent(task: AgentTask, model: string | undefined, onEvent?: OnEvent): Promise<AgentResult> {
-    const commands = task.allowCommands ?? [];
-    const outside = [...new Set((task.images ?? []).map(dirname).filter((d) => relative(task.cwd, d).startsWith("..")))];
+  async agent(
+    task: AgentTask,
+    model: string | undefined,
+    onEvent?: OnEvent,
+  ): Promise<AgentResult> {
+    const commands = task.mcp ? [] : (task.allowCommands ?? []);
+    const outside = [
+      ...new Set(
+        (task.images ?? [])
+          .map(dirname)
+          .filter((d) => relative(task.cwd, d).startsWith("..")),
+      ),
+    ];
     const args = [
       ...LOCKED,
-      "--tools", [...FILE_TOOLS, ...(commands.length ? ["Bash"] : [])].join(","),
-      ...(commands.length ? ["--allowedTools", ...commands.map((c) => `Bash(${c}:*)`)] : []),
+      "--tools",
+      task.mcp
+        ? ""
+        : [...FILE_TOOLS, ...(commands.length ? ["Bash"] : [])].join(","),
+      ...(task.mcp
+        ? [
+            "--mcp-config",
+            JSON.stringify({
+              mcpServers: {
+                agentcast: {
+                  command: task.mcp.command,
+                  args: task.mcp.args,
+                  env: task.mcp.env ?? {},
+                },
+              },
+            }),
+            "--allowedTools",
+            ...task.mcp.tools.map((t) => `mcp__agentcast__${t}`),
+          ]
+        : []),
+      ...(commands.length
+        ? ["--allowedTools", ...commands.map((c) => `Bash(${c}:*)`)]
+        : []),
       ...outside.flatMap((d) => ["--add-dir", d]),
-      "--permission-mode", "acceptEdits",
-      "--output-format", "stream-json",
+      "--permission-mode",
+      task.mcp ? "dontAsk" : "acceptEdits",
+      "--output-format",
+      "stream-json",
       "--verbose",
       ...(model ? ["--model", model] : []),
       ...(task.resume ? ["--resume", task.resume] : []),
     ];
-    const prompt = task.images?.length ? `${task.prompt}\n\nLook at these images: ${task.images.join(", ")}` : task.prompt;
+    const prompt = task.images?.length
+      ? `${task.prompt}\n\nLook at these images: ${task.images.join(", ")}`
+      : task.prompt;
     let sessionId = task.resume ?? "";
     let final: ResultMessage | undefined;
-    const short = (p: unknown) => (typeof p === "string" ? (isAbsolute(p) ? relative(task.cwd, p) : p) : "");
+    const short = (p: unknown) =>
+      typeof p === "string" ? (isAbsolute(p) ? relative(task.cwd, p) : p) : "";
 
     const r = await run({
       ...command(bin(), args),
@@ -106,10 +190,19 @@ export const claudeCode: LlmBackend = {
         if (e.session_id) sessionId = e.session_id;
         if (e.type === "assistant") {
           for (const c of e.message?.content ?? []) {
-            if (c.type === "text" && c.text?.trim()) onEvent?.({ kind: "text", text: c.text.trim().slice(0, 500) });
+            if (c.type === "text" && c.text?.trim())
+              onEvent?.({ kind: "text", text: c.text.trim().slice(0, 500) });
             if (c.type === "tool_use") {
-              const target = short(c.input?.file_path) || c.input?.pattern || c.input?.command || "";
-              onEvent?.({ kind: "tool_use", text: `${c.name} ${target}`.trim() });
+              const target = task.mcp
+                ? ""
+                : short(c.input?.file_path) ||
+                  c.input?.pattern ||
+                  c.input?.command ||
+                  "";
+              onEvent?.({
+                kind: "tool_use",
+                text: `${c.name} ${target}`.trim(),
+              });
             }
           }
         }

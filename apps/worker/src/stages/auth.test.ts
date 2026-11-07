@@ -9,9 +9,8 @@ import {
   type BrowserAdapter,
   type SessionState,
 } from "@agentcast/explore";
-import type { TinyFish } from "@agentcast/tinyfish";
 import type { StageContext } from "../context";
-import { authRequest, makeAuth, sessionFor } from "./auth";
+import { makeAuth, sessionFor } from "./auth";
 
 let dir: string;
 let ctx: StageContext;
@@ -62,23 +61,20 @@ afterEach(async () => {
 });
 const deps = () => ({
   browser: { signIn: vi.fn(async () => state) } as unknown as BrowserAdapter,
-  tf: {
-    createProfile: vi.fn(async () => ({ id: "profile-1" })),
-    uploadProfile: vi.fn(async () => ({
-      domains_updated: ["product.example"],
-      domains_failed: [],
-    })),
-  } as unknown as TinyFish,
 });
 
 describe("real auth stage", () => {
   it("waits for the stage's completion signal while the ordinary Chrome window is open", async () => {
     const services = deps();
     let finish!: () => void;
-    const done = new Promise<void>((resolve) => { finish = resolve; });
+    const done = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
     vi.mocked(ctx.when).mockReturnValue(done);
     let opened!: () => void;
-    const ready = new Promise<void>((resolve) => { opened = resolve; });
+    const ready = new Promise<void>((resolve) => {
+      opened = resolve;
+    });
     vi.mocked(services.browser.signIn!).mockImplementation(async (options) => {
       options.onOpen?.();
       opened();
@@ -88,13 +84,14 @@ describe("real auth stage", () => {
     const run = makeAuth(services)(ctx);
     await ready;
     expect(ctx.when).toHaveBeenCalledWith("signed-in");
-    expect(services.tf.uploadProfile).not.toHaveBeenCalled();
     finish();
     await run;
-    expect(services.tf.uploadProfile).toHaveBeenCalledTimes(1);
-    expect(ctx.progress).toHaveBeenCalledWith(0.5, "Saving your signed-in session");
+    expect(ctx.progress).toHaveBeenCalledWith(
+      0.5,
+      "Saving your signed-in session",
+    );
   });
-  it("seals only the authorized product state and omits invalid session-cookie expiry on upload", async () => {
+  it("seals only the authorized product state", async () => {
     const services = deps();
     await makeAuth(services)(ctx);
     const saved = await sessionFor(ctx);
@@ -105,30 +102,18 @@ describe("real auth stage", () => {
     expect(encrypted.includes(Buffer.from("private-cookie"))).toBe(false);
     expect(encrypted.includes(Buffer.from("private-token"))).toBe(false);
     expect((await stat(ctx.path("auth/session.enc"))).mode & 0o777).toBe(0o600);
-    const uploaded = vi.mocked(services.tf.uploadProfile).mock.calls[0]![1];
-    expect(uploaded.cookies[0]).not.toHaveProperty("expires");
-    expect(uploaded.cookies).toHaveLength(1);
     expect(JSON.stringify(vi.mocked(ctx.log).mock.calls)).not.toContain(
       "private-",
     );
-    expect(await authRequest(ctx)).toEqual({
-      use_profile: true,
-      profile_id: "profile-1",
-    });
+    expect((await ctx.read("auth/state.json", AuthState)).schemaVersion).toBe(
+      2,
+    );
   });
-  it("retries profile upload using saved session/profile IDs without opening another sign-in window", async () => {
+  it("reuses a sealed session without opening another sign-in window", async () => {
     const services = deps();
-    vi.mocked(services.tf.uploadProfile).mockRejectedValueOnce(
-      new Error("fixture upload disconnected"),
-    );
-    await expect(makeAuth(services)(ctx)).rejects.toThrow("disconnected");
-    expect((await ctx.read("auth/state.json", AuthState)).profileId).toBe(
-      "profile-1",
-    );
+    await makeAuth(services)(ctx);
     await makeAuth(services)(ctx);
     expect(services.browser.signIn).toHaveBeenCalledTimes(1);
-    expect(services.tf.createProfile).toHaveBeenCalledTimes(1);
-    expect(services.tf.uploadProfile).toHaveBeenCalledTimes(2);
   });
   it("rejects tampered sessions rather than silently exploring signed out", async () => {
     await makeAuth(deps())(ctx);
@@ -143,19 +128,12 @@ describe("real auth stage", () => {
     const services = deps();
     expect(await makeAuth(services)(ctx)).toMatchObject({ skipped: true });
     expect(services.browser.signIn).not.toHaveBeenCalled();
-    expect(services.tf.createProfile).not.toHaveBeenCalled();
     expect(ctx.when).not.toHaveBeenCalled();
-    expect(await authRequest(ctx)).toEqual({});
   });
-  it("uses Vault item IDs for agents and the sealed local session for rehearsal", async () => {
-    ctx.config.auth = { mode: "vault", credentialItemIds: ["item-1"] };
+  it("rejects legacy Vault jobs without a local session", async () => {
+    ctx.config.auth = { mode: "vault", credentialItemIds: ["old"] };
     const services = deps();
-    await makeAuth(services)(ctx);
-    expect(services.tf.createProfile).not.toHaveBeenCalled();
-    expect((await sessionFor(ctx))?.cookies).toHaveLength(1);
-    expect(await authRequest(ctx)).toEqual({
-      use_vault: true,
-      credential_item_ids: ["item-1"],
-    });
+    await expect(makeAuth(services)(ctx)).rejects.toThrow("sign-in-once");
+    expect(services.browser.signIn).not.toHaveBeenCalled();
   });
 });

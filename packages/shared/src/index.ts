@@ -15,3 +15,5 @@ export * from "./job.ts";
 export * from "./events.ts";
 export * from "./variants.ts";
 export * from "./paths.ts";
+
+export * from "./exploration.ts";

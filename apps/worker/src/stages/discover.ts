@@ -7,20 +7,20 @@ import {
   type BrowserAdapter,
   type ExploreOptions,
 } from "@agentcast/explore";
-import { TinyFish, type Run } from "@agentcast/tinyfish";
+import { createBrowserAgent, type ExplorationAgent } from "@agentcast/browser";
+import { siteOf, type ExplorationUpdate } from "@agentcast/explore";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
 import { pretend } from "./stub.ts";
-import { authRequest, sessionFor } from "./auth.ts";
+import { sessionFor } from "./auth.ts";
 
 export async function explorationOptions(
   ctx: StageContext,
-  deps: { tf?: TinyFish; browser?: BrowserAdapter } = {},
+  deps: { agent?: ExplorationAgent; browser?: BrowserAdapter } = {},
 ): Promise<ExploreOptions> {
-  const [product, creative, auth, state] = await Promise.all([
+  const [product, creative, state] = await Promise.all([
     ctx.read(jobPaths.productBrief, ProductBrief),
     ctx.read(jobPaths.creativeBrief, CreativeBrief),
-    authRequest(ctx),
     sessionFor(ctx),
   ]);
   if (ctx.config.auth.mode !== "public" && !state)
@@ -31,12 +31,18 @@ export async function explorationOptions(
     url: ctx.config.url,
     dir: ctx.dir,
     io: ctx,
-    tf: deps.tf ?? new TinyFish(),
+    agent:
+      deps.agent ??
+      createBrowserAgent({
+        llm: ctx.llm,
+        dir: ctx.dir,
+        authorizedUrl: ctx.config.url,
+        siteOf,
+      }),
     llm: workspaceLlm(ctx.llm, ctx.llmProgress),
     browser: deps.browser ?? (await recorderAdapter()),
     product,
     creative,
-    auth,
     publicMode: ctx.config.auth.mode === "public",
     browserOptions: { storageState: state },
     signal: ctx.signal,
@@ -46,51 +52,41 @@ export async function explorationOptions(
   };
 }
 
-/**
- * Turns TinyFish run polls (every ~1.5 s) into agent events for the live views. A poll only becomes an
- * event when something changed: each new step once, with TinyFish's own words for it; a new live-view
- * link; a new status. Signed-in runs never send their live view (AGENTS.md rule 5).
- */
+/** Publish observed actions once; authenticated runs never publish live frames. */
 export function agentEvents(
   ctx: Pick<StageContext, "emit" | "stage" | "config">,
 ) {
-  const seen = new Map<
-    string,
-    { steps: number; url?: string; status: string }
-  >();
+  const seen = new Map<string, { steps: number; status: string }>();
   return (
     id: string,
     title: string,
     status: "started" | "step" | "done" | "failed" | "cancelled",
-    run?: Run,
+    run?: ExplorationUpdate,
   ) => {
     const prev = seen.get(id) ?? { steps: 0, status: "" };
-    const url =
-      ctx.config.auth.mode === "public"
-        ? (run?.streaming_url ?? prev.url)
-        : undefined;
     const fresh = run?.steps.slice(prev.steps) ?? [];
-    seen.set(id, { steps: prev.steps + fresh.length, url, status });
-    if (!fresh.length && url === prev.url && status === prev.status) return;
+    seen.set(id, { steps: prev.steps + fresh.length, status });
+    if (!fresh.length && prev.status === status) return;
     const event = {
       type: "agent",
       stage: ctx.stage,
       agentId: id,
       title,
       status,
-      ...(url ? { streamingUrl: url } : {}),
     } as const;
     if (!fresh.length) return ctx.emit(event);
-    fresh.forEach((step, i) =>
+    for (const step of fresh)
       ctx.emit({
         ...event,
-        step: step.action?.trim().slice(0, 200) || `Step ${prev.steps + i + 1}`,
-      }),
-    );
+        step: step.action.slice(0, 200),
+        ...(ctx.config.auth.mode === "public" && step.screenshot
+          ? { screenshot: step.screenshot }
+          : {}),
+      });
   };
 }
 export function makeDiscover(
-  deps: { tf?: TinyFish; browser?: BrowserAdapter } = {},
+  deps: { agent?: ExplorationAgent; browser?: BrowserAdapter } = {},
 ): StageFn {
   return async (ctx) => {
     if (fixtureStages()) {

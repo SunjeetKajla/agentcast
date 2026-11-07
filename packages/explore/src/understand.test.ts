@@ -3,10 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Llm } from "./llm";
-import type { FetchResult, TinyFish } from "@agentcast/tinyfish";
+import type { PageRead } from "@agentcast/browser";
 import { understand } from "./understand";
 
-const page: FetchResult = {
+const page: PageRead = {
   url: "https://product.example/",
   final_url: "https://product.example/",
   title: "Public product",
@@ -34,64 +34,39 @@ describe("resilient product reading", () => {
     keyTerms: [],
   };
   const options = () => {
-    const fetchPages = vi
-      .fn()
-      .mockResolvedValue({
-        results: [],
-        errors: [{ url: page.url, error: "bot_blocked" }],
-      });
+    const readPage = vi.fn(async () => page);
     const json = vi.fn().mockResolvedValue(brief);
     return {
-      tf: { fetchPages } as unknown as TinyFish,
+      readPage,
       llm: { json } as unknown as Llm,
       url: page.url,
       dir,
-      fetchPages,
+
       json,
     };
   };
 
-  it.each(["bot_blocked", "timeout", "no_content"])(
-    "uses one verified browser read when Fetch returns %s",
-    async (error) => {
-      const o = options();
-      o.fetchPages.mockResolvedValue({
-        results: [],
-        errors: [{ url: page.url, error }],
-      });
-      const readPage = vi.fn().mockResolvedValue(page);
-      const result = await understand({ ...o, readPage });
-      expect(result.brief.name).toBe(brief.name);
-      expect(result.pages).toEqual([page]);
-      expect(readPage).toHaveBeenCalledTimes(1);
-      expect(o.json).toHaveBeenCalledTimes(1);
-    },
-  );
-
-  it("falls back for an empty SPA shell but rejects a security page as product content", async () => {
+  it("reads verified local content once", async () => {
     const o = options();
-    o.fetchPages.mockResolvedValue({
-      results: [{ ...page, text: "" }],
-      errors: [],
+    const result = await understand(o);
+    expect(result.brief.name).toBe(brief.name);
+    expect(o.readPage).toHaveBeenCalledTimes(1);
+  });
+  it("rejects security pages without inventing a brief", async () => {
+    const o = options();
+    o.readPage.mockResolvedValue({
+      ...page,
+      text: "Sorry, you have been blocked",
     });
-    await expect(
-      understand({
-        ...o,
-        readPage: async () => ({
-          ...page,
-          text: "Sorry, you have been blocked",
-        }),
-      }),
-    ).rejects.toMatchObject({ kind: "blocked" });
+    await expect(understand(o)).rejects.toMatchObject({ kind: "blocked" });
     expect(o.json).not.toHaveBeenCalled();
   });
-
   it("keeps readable root content when optional linked pages fail", async () => {
     const o = options();
-    o.fetchPages
+    o.readPage
       .mockResolvedValueOnce({
-        results: [{ ...page, links: ["https://product.example/docs"] }],
-        errors: [],
+        ...page,
+        links: ["https://product.example/docs"],
       })
       .mockRejectedValueOnce(new Error("connection reset"));
     const result = await understand(o);
@@ -104,7 +79,6 @@ describe("resilient product reading", () => {
   it("never falls back after cancellation", async () => {
     const o = options();
     const signal = AbortSignal.abort(new Error("cancelled"));
-    o.fetchPages.mockRejectedValue(signal.reason);
     const readPage = vi.fn();
     await expect(understand({ ...o, readPage, signal })).rejects.toThrow(
       "cancelled",

@@ -16,14 +16,14 @@ import {
   verifyFlowEntry,
   type BrowserAdapter,
 } from "@agentcast/explore";
-import { type TinyFish } from "@agentcast/tinyfish";
+import type { ExplorationAgent } from "@agentcast/browser";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
 import { copyFixture, pretend } from "./stub.ts";
 import { explorationOptions } from "./discover.ts";
 
 export function makeFlowRuns(
-  deps: { tf?: TinyFish; browser?: BrowserAdapter } = {},
+  deps: { agent?: ExplorationAgent; browser?: BrowserAdapter } = {},
 ): StageFn {
   return async (ctx) => {
     if (fixtureStages()) {
@@ -68,7 +68,7 @@ export const AddFlow = z.object({
 export async function editStep(
   ctx: StageContext,
   payload: unknown,
-  deps: { tf?: TinyFish; browser?: BrowserAdapter } = {},
+  deps: { agent?: ExplorationAgent; browser?: BrowserAdapter } = {},
 ) {
   const edit = StepEdit.parse(payload);
   const file = await ctx.read(jobPaths.flows, FlowsFile);
@@ -142,7 +142,7 @@ async function saveReplay(
 export async function addFlow(
   ctx: StageContext,
   payload: unknown,
-  deps: { tf?: TinyFish; browser?: BrowserAdapter } = {},
+  deps: { agent?: ExplorationAgent; browser?: BrowserAdapter } = {},
 ) {
   const { description } = AddFlow.parse(payload);
   const options = await explorationOptions(ctx, deps);
@@ -154,7 +154,8 @@ export async function addFlow(
   try {
     entryUrl = (await ctx.read("explore/plan.json", ExplorationPlan)).entryUrl;
   } catch (error) {
-    if ((error as { cause?: NodeJS.ErrnoException }).cause?.code !== "ENOENT") throw error;
+    if ((error as { cause?: NodeJS.ErrnoException }).cause?.code !== "ENOENT")
+      throw error;
   }
   const startUrl = await verifyFlowEntry(options, entryUrl);
   const candidate = Candidate.parse({
@@ -168,15 +169,18 @@ export async function addFlow(
     id,
     request: {
       url: startUrl,
-      goal: flowGoal(candidate, new URL(startUrl).hostname, undefined, !options.publicMode),
+      goal: flowGoal(
+        candidate,
+        new URL(startUrl).hostname,
+        undefined,
+        !options.publicMode,
+      ),
       output_schema: FLOW_RUN_SCHEMA,
-      browser_profile: "stealth",
-      agent_config: { max_duration_seconds: 120 },
-      ...options.auth,
     },
     schema: FlowRunResult,
     io: ctx,
-    tf: options.tf,
+    agent: options.agent,
+    storageState: options.browserOptions?.storageState,
     signal: ctx.signal,
     maxMs: 300_000,
     onUpdate: (run) => options.onAgent?.(id, candidate.title, "step", run),

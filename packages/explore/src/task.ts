@@ -1,14 +1,13 @@
 import { createHash } from "node:crypto";
-import { setTimeout as delay } from "node:timers/promises";
 import type { z } from "zod";
-import {
-  TinyFishError,
-  type AgentRequest,
-  type Run,
-  type TinyFish,
-} from "@agentcast/tinyfish";
+import { randomUUID } from "node:crypto";
+import type {
+  ExplorationAgent,
+  ExplorationRequest,
+  BrowserProgress,
+} from "@agentcast/browser";
+import type { BrowserOptions } from "./runtime";
 import { ExplorationTask } from "./artifacts";
-import { ExplorationWatchdog } from "./access";
 import type { ArtifactIO } from "./runtime";
 
 export const requestHash = (value: unknown) =>
@@ -103,30 +102,36 @@ async function limited<T>(
   }
 }
 
+export type ExplorationUpdate = {
+  status: "RUNNING" | "COMPLETED";
+  steps: BrowserProgress[];
+};
 export type TaskOptions<S extends z.ZodType> = {
   id: string;
-  request: AgentRequest;
+  request: ExplorationRequest;
   schema: S;
   io: ArtifactIO;
-  tf: TinyFish;
+  agent: ExplorationAgent;
+  storageState?: BrowserOptions["storageState"];
   signal?: AbortSignal;
   maxMs: number;
   maxSteps?: number;
-  idleMs?: number;
-  intervalMs?: number;
-  onUpdate?: (run: Run) => void | Promise<void>;
+  onUpdate?: (run: ExplorationUpdate) => void | Promise<void>;
 };
 
-/** Durable single submission. A lost run-creation response is never submitted again automatically. */
+/** Complete results are reusable. Interrupted browser mutations are never automatically repeated. */
 export async function runTask<S extends z.ZodType>(
   options: TaskOptions<S>,
 ): Promise<{ result: z.output<S>; runId: string }> {
   if (!/^[a-z0-9_-]{1,80}$/i.test(options.id))
     throw new Error("Invalid exploration task id.");
   return limited(options.signal, async () => {
-    const { io, tf, request, id } = options;
+    const { io, id, request } = options;
     const file = `explore/tasks/${id}.json`;
-    const hash = requestHash(request);
+    const hash = requestHash([
+      request,
+      requestHash(options.storageState ?? "public"),
+    ]);
     let checkpoint: ExplorationTask | undefined;
     try {
       checkpoint = await io.read(file, ExplorationTask);
@@ -137,21 +142,19 @@ export async function runTask<S extends z.ZodType>(
       )
         throw error;
     }
-    if (checkpoint && checkpoint.requestHash !== hash)
-      throw new Error(
-        "Exploration inputs changed. Start a new job; existing run IDs cannot be reused with different goals.",
-      );
-    if (checkpoint?.state === "done")
+    if (checkpoint) {
+      if (checkpoint.state !== "done")
+        throw new Error(
+          "Previous exploration was interrupted or failed. Start fresh exploration in a new job; browser actions will not be repeated automatically.",
+        );
+      if (checkpoint.requestHash !== hash)
+        throw new Error("Exploration inputs changed. Start a new job.");
       return {
         result: options.schema.parse(checkpoint.result),
         runId: checkpoint.runId!,
       };
-    if (checkpoint && !checkpoint.runId)
-      throw new Error(
-        `${checkpoint.error ?? "Run creation could not be confirmed."} It will not be submitted twice; start a new job after checking provider runs.`,
-      );
-    if (checkpoint?.state === "failed")
-      throw new Error(checkpoint.error ?? "The saved exploration run failed.");
+    }
+    const runId = randomUUID();
     const save = async (patch: Partial<ExplorationTask>) => {
       checkpoint = ExplorationTask.parse({
         ...checkpoint,
@@ -160,106 +163,50 @@ export async function runTask<S extends z.ZodType>(
       });
       await io.write(file, ExplorationTask, checkpoint);
     };
+    await save({
+      schemaVersion: 2,
+      id,
+      runId,
+      requestHash: hash,
+      state: "running",
+      startedAt: new Date().toISOString(),
+    });
     const signal = AbortSignal.any([
       AbortSignal.timeout(options.maxMs),
       ...(options.signal ? [options.signal] : []),
     ]);
-    if (!checkpoint) {
-      await save({
-        schemaVersion: 1,
+    const steps: BrowserProgress[] = [];
+    try {
+      const response = await options.agent.run({
         id,
-        requestHash: hash,
-        state: "creating",
-        startedAt: new Date().toISOString(),
+        request,
+        schema: options.schema,
+        signal,
+        maxSteps: options.maxSteps ?? 32,
+        storageState: options.storageState,
+        onStep: async (step) => {
+          steps.push(step);
+          await options.onUpdate?.({ status: "RUNNING", steps: [...steps] });
+        },
       });
-      try {
-        await save({
-          runId: await tf.runAsync(request, signal),
-          state: "running",
-        });
-      } catch (error) {
-        const known =
-          error instanceof TinyFishError &&
-          error.status < 500 &&
-          error.status !== 408;
-        await save({
-          state: known ? "failed" : "uncertain",
-          error: known
-            ? (error as Error).message
-            : "Run creation could not be confirmed.",
-        });
-        throw error;
-      }
-    }
-    const watchdog = new ExplorationWatchdog(
-      Date.now(),
-      options.maxSteps ?? 32,
-      // An agent writing its final report adds no steps for a while (a shadcn/ui scout: 92 s), so
-      // only a longer silence counts as stuck.
-      options.idleMs ?? 150_000,
-    );
-    const accept = async (run: Run) => {
-      if (run.status !== "COMPLETED") return undefined;
-      const result = options.schema.parse(safeReport(run.result));
+      signal.throwIfAborted();
+      const result = options.schema.parse(safeReport(response.result));
       await save({
         state: "done",
         result: result as Record<string, unknown>,
-        error: undefined,
+        sessionId: response.sessionId,
       });
-      return { result, runId: run.run_id };
-    };
-    let cancelling: Promise<void> | undefined;
-    const cancelRemote = () =>
-      (cancelling ??= tf.cancelRun(checkpoint!.runId!).catch(() => {}));
-    const onAbort = () => {
-      void cancelRemote();
-    };
-    options.signal?.addEventListener("abort", onAbort, { once: true });
-    if (options.signal?.aborted) onAbort();
-    try {
-      for (;;) {
-        signal.throwIfAborted();
-        const run = await tf.getRun(checkpoint!.runId!, signal);
-        signal.throwIfAborted();
-        const complete = await accept(run);
-        if (complete) {
-          await options.onUpdate?.(run);
-          return complete;
-        }
-        if (run.status === "FAILED" || run.status === "CANCELLED") {
-          const message = `TinyFish run ${run.status.toLowerCase()}${run.error?.code ? ` (${run.error.code})` : ""}.`;
-          await save({ state: "failed", error: message });
-          throw new Error(message);
-        }
-        for (const step of run.steps) {
-          const problem = watchdog.observe(step, Date.now());
-          if (problem) throw new Error(problem);
-        }
-        const idle = watchdog.idle(Date.now());
-        if (idle) throw new Error(idle);
-        await options.onUpdate?.(run);
-        await delay(options.intervalMs ?? 1500, undefined, { signal });
-      }
+      await options.onUpdate?.({ status: "COMPLETED", steps });
+      return { result, runId };
     } catch (error) {
-      if (!options.signal?.aborted) {
-        // A terminal result may arrive just as the local deadline fires. Recover it without a POST.
-        const run = await tf
-          .getRun(checkpoint!.runId!, AbortSignal.timeout(5000))
-          .catch(() => undefined);
-        if (run) {
-          const result = await accept(run);
-          if (result) return result;
-        }
-      }
-      await cancelRemote();
+      await save({
+        state: signal.aborted ? "interrupted" : "failed",
+        error: signal.aborted
+          ? "Exploration cancelled or timed out; start a new job."
+          : "Browser exploration failed; start a new job.",
+      });
       if (options.signal?.aborted) throw options.signal.reason;
-      if (signal.aborted)
-        throw new Error(
-          `${id} exceeded its ${Math.round(options.maxMs / 1000)} s deadline; its run ID was saved.`,
-        );
       throw error;
-    } finally {
-      options.signal?.removeEventListener("abort", onAbort);
     }
   });
 }

@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef } from "react";
+import { fileUrl } from "@/lib/api";
 import type { AgentView } from "@/lib/job-state";
 import { EASE, MOTION_OK, gsap, useGSAP, settle } from "@/lib/motion";
 
-// The TinyFish agents at work (PRD FR-22): each run's live browser view while it's running, then the
-// steps it took.
+// Public browser snapshots are local job files; legacy remote views are never loaded.
 
 const STATUS: Record<AgentView["status"], { label: string; cls: string }> = {
   started: { label: "Starting", cls: "text-accent" },
@@ -15,7 +15,13 @@ const STATUS: Record<AgentView["status"], { label: string; cls: string }> = {
   cancelled: { label: "Stopped", cls: "text-white/40" },
 };
 
-export default function LiveAgents({ agents }: { agents: AgentView[] }) {
+export default function LiveAgents({
+  agents,
+  jobId,
+}: {
+  agents: AgentView[];
+  jobId: string;
+}) {
   const root = useRef<HTMLElement>(null);
   const seen = useRef(new Set<string>());
 
@@ -28,16 +34,32 @@ export default function LiveAgents({ agents }: { agents: AgentView[] }) {
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         const els = fresh
-          .map((a) => root.current?.querySelector(`[data-agent="${CSS.escape(a.agentId)}"]`))
+          .map((a) =>
+            root.current?.querySelector(
+              `[data-agent="${CSS.escape(a.agentId)}"]`,
+            ),
+          )
           .filter(Boolean) as Element[];
-        gsap.fromTo(els, ...settle({ autoAlpha: 0, y: 24, scale: 0.98, duration: 0.8, ease: EASE.expo, stagger: 0.08 }));
+        gsap.fromTo(
+          els,
+          ...settle({
+            autoAlpha: 0,
+            y: 24,
+            scale: 0.98,
+            duration: 0.8,
+            ease: EASE.expo,
+            stagger: 0.08,
+          }),
+        );
       });
     },
     { scope: root, dependencies: [agents.length] },
   );
 
   if (!agents.length) return null;
-  const live = agents.filter((a) => a.status === "started" || a.status === "step").length;
+  const live = agents.filter(
+    (a) => a.status === "started" || a.status === "step",
+  ).length;
 
   return (
     <section ref={root} className="space-y-4" aria-labelledby="agents-title">
@@ -45,27 +67,39 @@ export default function LiveAgents({ agents }: { agents: AgentView[] }) {
         <h2 id="agents-title" className="font-serif text-2xl text-white">
           Agents exploring
         </h2>
-        <span className="text-xs text-white/50">{live ? `${live} running` : `${agents.length} finished`}</span>
+        <span className="text-xs text-white/50">
+          {live ? `${live} running` : `${agents.length} finished`}
+        </span>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {agents.map((a) => {
           const running = a.status === "started" || a.status === "step";
           return (
-            <article key={a.agentId} data-agent={a.agentId} className="overflow-hidden rounded-2xl border border-white/10 bg-[#121215]/80">
+            <article
+              key={a.agentId}
+              data-agent={a.agentId}
+              className="overflow-hidden rounded-2xl border border-white/10 bg-[#121215]/80"
+            >
               <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <h3 className="truncate text-sm font-medium text-white">{a.title}</h3>
-                <span className={`flex shrink-0 items-center gap-1.5 text-xs ${STATUS[a.status].cls}`}>
-                  {running && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />}
+                <h3 className="truncate text-sm font-medium text-white">
+                  {a.title}
+                </h3>
+                <span
+                  className={`flex shrink-0 items-center gap-1.5 text-xs ${STATUS[a.status].cls}`}
+                >
+                  {running && (
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                  )}
                   {STATUS[a.status].label}
                 </span>
               </div>
-              {running && a.streamingUrl ? (
-                <iframe
-                  src={a.streamingUrl}
-                  title={`Live view: ${a.title}`}
-                  className="aspect-video w-full border-0 bg-black"
-                  sandbox="allow-scripts allow-same-origin"
-                  referrerPolicy="no-referrer"
+              {a.screenshot &&
+              /^explore\/frames\/[a-z0-9_-]+\/\d+\.png$/i.test(a.screenshot) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={fileUrl(jobId, a.screenshot)}
+                  alt={`Latest browser frame: ${a.title}`}
+                  className="aspect-video w-full object-contain bg-black"
                 />
               ) : null}
               {a.steps.length > 0 && (

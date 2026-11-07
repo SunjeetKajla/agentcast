@@ -16,8 +16,13 @@ import {
   readArtifact,
   writeArtifact,
 } from "@agentcast/shared/node";
-import { ExplorationPlan, PageAccessError, type BrowserAdapter, type RehearsalResult } from "@agentcast/explore";
-import type { TinyFish, Run } from "@agentcast/tinyfish";
+import {
+  ExplorationPlan,
+  PageAccessError,
+  type BrowserAdapter,
+  type RehearsalResult,
+} from "@agentcast/explore";
+import type { ExplorationAgent } from "@agentcast/browser";
 import type { StageContext } from "../context";
 import { addFlow, editStep } from "./flow-runs";
 import { makeAuth } from "./auth";
@@ -77,7 +82,17 @@ beforeEach(async () => {
   });
   browser = {
     readPage: vi.fn(),
-    inspect: vi.fn(async (url) => ({ facts: { url, title: "Workspace", heading: "Workspace", height: 1000, viewport: 900, links: [], tabs: [] } })),
+    inspect: vi.fn(async (url) => ({
+      facts: {
+        url,
+        title: "Workspace",
+        heading: "Workspace",
+        height: 1000,
+        viewport: 900,
+        links: [],
+        tabs: [],
+      },
+    })),
     rehearse: vi.fn(async (flow: Flow): Promise<RehearsalResult> => ({
       flow: { ...flow, rehearsal: { ok: true } },
       replay: {
@@ -103,39 +118,91 @@ describe("flow review action implementations", () => {
   it("starts a follow-up at the authenticated app entrance and passes the session to every browser", async () => {
     vi.stubEnv("AGENTCAST_STAGE_MODE", "real");
     vi.stubEnv("AGENTCAST_SECRET", "fixture-key");
-    ctx.config.url = "https://www.tinyfish.ai/";
+    ctx.config.url = "https://www.product.example/";
     ctx.config.auth = { mode: "sign-in-once" };
     ctx.path = (rel) => join(dir, rel);
     ctx.when = vi.fn(() => new Promise<void>(() => {}));
-    const state = { cookies: [{ name: "sid", value: "private-cookie", domain: ".tinyfish.ai", path: "/", expires: -1, httpOnly: true, secure: true, sameSite: "Lax" as const }],
-      origins: [{ origin: "https://agent.tinyfish.ai", localStorage: [{ name: "session", value: "private-token" }] }] };
-    const tf = {
-      createProfile: vi.fn(async () => ({ id: "profile-fixture" })),
-      uploadProfile: vi.fn(async () => ({ domains_updated: ["tinyfish.ai"], domains_failed: [] })),
-      runAsync: vi.fn(async () => "user-run"),
-      getRun: vi.fn(async () => ({ run_id: "user-run", status: "COMPLETED", result: {
-        flow_title: "Monitor", completed: true, steps: [
-          { action: "navigate", result_url_path: "/monitor" },
-          { action: "click", target_role: "menuitem", target_text: "Monitor", secret: true },
-          { action: "click", target_role: "button", target_text: "Preview", secret: true },
-        ],
-      }, steps: [] })),
-    } as unknown as TinyFish;
+    const state = {
+      cookies: [
+        {
+          name: "sid",
+          value: "private-cookie",
+          domain: ".product.example",
+          path: "/",
+          expires: -1,
+          httpOnly: true,
+          secure: true,
+          sameSite: "Lax" as const,
+        },
+      ],
+      origins: [
+        {
+          origin: "https://agent.product.example",
+          localStorage: [{ name: "session", value: "private-token" }],
+        },
+      ],
+    };
+    const agent = {
+      run: vi.fn(async () => ({
+        result: {
+          flow_title: "Monitor",
+          completed: true,
+          steps: [
+            { action: "navigate", result_url_path: "/monitor" },
+            {
+              action: "click",
+              target_role: "menuitem",
+              target_text: "Monitor",
+            },
+            { action: "click", target_role: "button", target_text: "Preview" },
+          ],
+        },
+      })),
+    } as unknown as ExplorationAgent;
     browser.signIn = vi.fn(async () => state);
-    await makeAuth({ browser, tf })(ctx);
-    const entry = "https://agent.tinyfish.ai/home";
-    await ctx.write("explore/plan.json", ExplorationPlan, { schemaVersion: 1, entryUrl: entry, access: "authenticated", reason: "Signed-in workspace", blockers: [], candidates: [] });
-    const flow = await addFlow(ctx, { description: "Preview a monitor" }, { browser, tf });
-    expect(tf.runAsync).toHaveBeenCalledWith(expect.objectContaining({ url: entry, use_profile: true, profile_id: "profile-fixture", browser_profile: "stealth" }), expect.any(AbortSignal));
-    const request = vi.mocked(tf.runAsync).mock.calls[0]![0];
+    await makeAuth({ browser })(ctx);
+    const entry = "https://agent.product.example/home";
+    await ctx.write("explore/plan.json", ExplorationPlan, {
+      schemaVersion: 1,
+      entryUrl: entry,
+      access: "authenticated",
+      reason: "Signed-in workspace",
+      blockers: [],
+      candidates: [],
+    });
+    const flow = await addFlow(
+      ctx,
+      { description: "Preview a monitor" },
+      { browser, agent },
+    );
+    expect(agent.run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({ url: entry }),
+        storageState: state,
+      }),
+    );
+    const request = vi.mocked(agent.run).mock.calls[0]![0].request;
     expect(request.goal).toContain("An authorized saved profile is supplied");
     expect(request.goal).not.toContain("private-");
-    expect(browser.inspect).toHaveBeenCalledWith(entry, expect.objectContaining({ storageState: state }));
-    expect(browser.rehearse).toHaveBeenCalledWith(expect.objectContaining({ startUrl: "https://agent.tinyfish.ai/monitor", requiresAuth: true }), expect.objectContaining({ storageState: state }));
+    expect(browser.inspect).toHaveBeenCalledWith(
+      entry,
+      expect.objectContaining({ storageState: state }),
+    );
+    expect(browser.rehearse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startUrl: "https://agent.product.example/monitor",
+        requiresAuth: true,
+      }),
+      expect.objectContaining({ storageState: state }),
+    );
     expect(flow.selected).toBe(true);
-    vi.mocked(browser.inspect).mockRejectedValueOnce(new PageAccessError("sign-in-required", "Login page"));
-    await expect(addFlow(ctx, { description: "Try another monitor" }, { browser, tf })).rejects.toThrow("saved session was rejected");
-    expect(tf.runAsync).toHaveBeenCalledTimes(1);
+    vi.mocked(browser.inspect).mockRejectedValueOnce(
+      new PageAccessError("sign-in-required", "Login page"),
+    );
+    await expect(
+      addFlow(ctx, { description: "Try another monitor" }, { browser, agent }),
+    ).rejects.toThrow("saved session was rejected");
+    expect(agent.run).toHaveBeenCalledTimes(1);
   });
   it("rejects an edit that turns a public field into a credential input before saving or rehearsing it", async () => {
     await expect(
@@ -147,7 +214,7 @@ describe("flow review action implementations", () => {
           text: "Password",
           value: "private-credential",
         },
-        { browser, tf: {} as TinyFish },
+        { browser },
       ),
     ).rejects.toThrow("Secret inputs");
     expect(browser.rehearse).not.toHaveBeenCalled();
@@ -159,7 +226,7 @@ describe("flow review action implementations", () => {
     const result = await editStep(
       ctx,
       { flowId: "flow-template", stepId: "s1", text: "Create project" },
-      { browser, tf: {} as TinyFish },
+      { browser },
     );
     expect(result.steps[0]?.target?.text).toBe("Create project");
     expect(result.selected).toBe(true);
@@ -179,7 +246,7 @@ describe("flow review action implementations", () => {
     const result = await editStep(
       ctx,
       { flowId: "flow-template", stepId: "s1", text: "Missing" },
-      { browser, tf: {} as TinyFish },
+      { browser },
     );
     expect(result.selected).toBe(false);
     expect(
@@ -187,35 +254,22 @@ describe("flow review action implementations", () => {
     ).not.toHaveProperty("flow-template/s1");
   });
   it("reuses a completed add-flow request and saves its independent replay locators", async () => {
-    const completed: Run = {
-      run_id: "user-run",
-      status: "COMPLETED",
-      result: {
-        flow_title: "Preview a project",
-        completed: true,
-        steps: [
-          { action: "click", target_role: "button", target_text: "Preview" },
-          { action: "click", target_role: "button", target_text: "Details" },
-        ],
-      },
-      goal: "",
-      created_at: "",
-      started_at: null,
-      finished_at: null,
-      num_of_steps: 0,
-      error: null,
-      steps: [],
-      streaming_url: null,
-      video_url: null,
-    };
-    const tf = {
-      runAsync: vi.fn(async () => "user-run"),
-      getRun: vi.fn(async () => completed),
-    } as unknown as TinyFish;
+    const agent = {
+      run: vi.fn(async () => ({
+        result: {
+          flow_title: "Preview a project",
+          completed: true,
+          steps: [
+            { action: "click", target_role: "button", target_text: "Preview" },
+            { action: "click", target_role: "button", target_text: "Details" },
+          ],
+        },
+      })),
+    } as unknown as ExplorationAgent;
     const added = await addFlow(
       ctx,
       { description: "Preview the project details" },
-      { browser, tf },
+      { browser, agent },
     );
     expect(added.source).toBe("user");
     expect(added.selected).toBe(true);
@@ -227,10 +281,10 @@ describe("flow review action implementations", () => {
     const again = await addFlow(
       ctx,
       { description: "Preview the project details" },
-      { browser, tf },
+      { browser, agent },
     );
     expect(again.id).toBe(added.id);
-    expect(tf.runAsync).toHaveBeenCalledTimes(1);
+    expect(agent.run).toHaveBeenCalledTimes(1);
     expect(browser.rehearse).toHaveBeenCalledTimes(1);
   });
 });

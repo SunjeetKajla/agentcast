@@ -1,3 +1,33 @@
+# Browser Harness migration — 2026-11-07
+
+Local integration against an owned HTTP fixture passed with pinned Browser Harness 0.1.13 / Python 3.12 and dedicated headless Google Chrome. The fixture verified MCP image delivery, a real button click and visible outcome, stale-target rejection, destructive-action rejection, actual-action trace persistence and successful cleanup.
+
+A real logged-in Codex CLI 0.167.0 browser smoke test passed: observe → click Show preview → verify Preview ready → submit validated report. Only the task-owned MCP server was configured; shell, user settings and unrelated tools remained disabled. The installed CLI needs per-tool `approval_mode="approve"` for these explicitly authorized tools; `auto` still rejected calls under approval policy never.
+
+The Claude runner now uses explicit settings isolation and tools/MCP configuration instead of the unsupported `--restricted` flag found on an older installation. After login, the configured Claude Code CLI also passed the real observe → click → verify → submit smoke test in 13 seconds. Fake-CLI contract tests cover both adapters.
+
+These checks use a controlled local fixture. They do not establish broad website coverage or a completed voiced/video-rendering job. Tests are in `packages/browser/src/browser.integration.test.ts`; setup and optional login checks are in its README.
+
+The complete local exploration integration also passed: a real Codex scout proposed at least two candidates, focused runs executed them in separate browsers, the existing Playwright adapter independently rehearsed at least two agent-origin flows, and shared flow artifacts validated as v2. Runtime: 87 seconds against the controlled PreviewForge HTTP fixture. Authenticated-session cancellation checks verified no published live frames or session values in traces. Web screenshots at 1440/768/390 px showed the new local frame panel without overflow or legacy URL requests. Full workspace typecheck, 332 tests including real browser/private-session checks and the production web build passed before this additional optional pipeline check.
+
+Claude Code also passed the full local discovery → focused execution → independent Playwright rehearsal integration in 56 seconds, producing at least two selected agent-origin flows with clean rehearsals. Both live checks honor the project's configured CLI binaries while explicitly selecting the requested backend for the test. The final suite passed 332 tests (94 optional tests skipped); full typecheck, doctor and the rebuilt web app also passed.
+
+## Linear public-site browser benchmark — 2026-11-07
+
+A browser-only live run tested public `https://linear.app/` with both logged-in CLI backends: Codex default model and Claude Code `opus`. Each scout identified six public workflows, followed by all six focused attempts (two isolated browsers at a time). No worker job, independent rehearsal, recording, voice or render ran. Actual workspace operations were behind sign-in.
+
+Codex: scouting 122.56 s, focused attempts 181.79 s, total 304.35 s (5m 04s), 4/6 reported complete. Claude: scouting 138.05 s, focused attempts 102.03 s, total 240.08 s (4m 00s), 6/6 reported complete. These were different six-flow inventories, so this is not a matched-workload speed ranking. Claude's integration search reached a changelog result rather than an integration card; the report preserves that limitation.
+
+Successful tool latency (median/p95): observation 63/150 ms on Codex and 60/157 ms on Claude; click 354/526 ms and 341/439 ms; navigation 1064/2045 ms and 963/1155 ms. Clicks include the existing 250 ms settle delay. Codex had seven rejected/failed tool calls and Claude four. Most task time was outside measured browser tool responses, including CLI/model time between calls and report generation.
+
+The initial attempt failed before either model started: `document.body` was missing immediately after navigation. The bridge now waits up to 15 seconds for a readable HTTP(S) body and retries transient navigation-context replacement. Both delayed-body and authenticated-session/cancellation Chrome regressions passed (2 tests), and browser/spike typechecks passed. Initial failed attempts (5.24 s Codex, 6.52 s Claude) are excluded from the clean timings above.
+
+[Full per-flow results and measurement method](linear-browser-benchmark.md). Reproduce with `node --import tsx spikes/browser-harness-benchmark.ts --url https://linear.app/ --backend both --max-flows 6`. Screenshots, traces and raw timing logs remain under `/tmp`, outside version control.
+
+## Historical pre-migration spike evidence
+
+The following records describe the removed provider and earlier architecture; they are retained as history, not current setup or implementation guidance.
+
 # Spike results
 
 One section per spike (IMPLEMENTATION_PLAN.md Phase 0): the question, what we ran, the numbers, go/no-go, and what changed in the PRD.

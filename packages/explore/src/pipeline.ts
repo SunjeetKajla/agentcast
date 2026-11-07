@@ -8,11 +8,8 @@ import {
 } from "@agentcast/shared";
 import { readFile, realpath, stat } from "node:fs/promises";
 import { join, sep } from "node:path";
-import {
-  type AgentRequest,
-  type Run,
-  type TinyFish,
-} from "@agentcast/tinyfish";
+import type { ExplorationAgent, ExplorationRequest } from "@agentcast/browser";
+import type { ExplorationUpdate } from "./task";
 import {
   Candidate,
   FlowRunResult,
@@ -41,24 +38,20 @@ export type ExploreOptions = {
   url: string;
   dir: string;
   io: ArtifactIO;
-  tf: TinyFish;
+  agent: ExplorationAgent;
   llm: Llm;
   browser: BrowserAdapter;
   product: ProductBrief;
   creative: CreativeBrief;
   signal?: AbortSignal;
   browserOptions?: Omit<BrowserOptions, "signal" | "authorizedUrl" | "dir">;
-  auth?: Pick<
-    AgentRequest,
-    "use_profile" | "profile_id" | "use_vault" | "credential_item_ids"
-  >;
   publicMode: boolean;
   log?: (message: string) => void;
   onAgent?: (
     id: string,
     title: string,
     status: "started" | "step" | "done" | "failed" | "cancelled",
-    run?: Run,
+    run?: ExplorationUpdate,
   ) => void;
   progress?: (value: number, message: string) => void;
   deadlines?: { scoutMs?: number; flowMs?: number; intervalMs?: number };
@@ -72,7 +65,10 @@ const browserOptions = (o: ExploreOptions): BrowserOptions => ({
 });
 
 /** Check a reported route locally with the same session before paying for a focused run. */
-export async function verifyFlowEntry(o: ExploreOptions, requested: string): Promise<string> {
+export async function verifyFlowEntry(
+  o: ExploreOptions,
+  requested: string,
+): Promise<string> {
   const url = productEntry(requested, o.url);
   try {
     const page = await o.browser.inspect(url, browserOptions(o));
@@ -81,8 +77,14 @@ export async function verifyFlowEntry(o: ExploreOptions, requested: string): Pro
     return url;
   } catch (error) {
     o.signal?.throwIfAborted();
-    if (!o.publicMode && (error as { kind?: string }).kind === "sign-in-required")
-      throw new PageAccessError("sign-in-required", "The saved session was rejected or has expired at the app entrance. Sign in again before exploring authenticated flows.");
+    if (
+      !o.publicMode &&
+      (error as { kind?: string }).kind === "sign-in-required"
+    )
+      throw new PageAccessError(
+        "sign-in-required",
+        "The saved session was rejected or has expired at the app entrance. Sign in again before exploring authenticated flows.",
+      );
     throw error;
   }
 }
@@ -94,7 +96,7 @@ async function agent<S extends typeof ScoutResult | typeof FlowRunResult>(
   o: ExploreOptions,
   id: string,
   title: string,
-  request: AgentRequest,
+  request: ExplorationRequest,
   schema: S,
   scout = false,
 ) {
@@ -102,16 +104,16 @@ async function agent<S extends typeof ScoutResult | typeof FlowRunResult>(
   try {
     const result = await runTask({
       id,
-      request: { ...request, browser_profile: "stealth", ...o.auth },
+      request,
       schema,
       io: o.io,
-      tf: o.tf,
+      agent: o.agent,
+      storageState: o.browserOptions?.storageState,
       signal: o.signal,
       maxMs: scout
         ? (o.deadlines?.scoutMs ?? 240_000)
         : (o.deadlines?.flowMs ?? 300_000),
       maxSteps: scout ? 18 : 32,
-      intervalMs: o.deadlines?.intervalMs,
       onUpdate: (run) =>
         o.onAgent?.(
           id,
@@ -158,7 +160,6 @@ export async function discoverProduct(
               : {}),
           }),
           output_schema: SCOUT_SCHEMA,
-          agent_config: { max_duration_seconds: 60 },
         },
         ScoutResult,
         true,
@@ -172,13 +173,13 @@ export async function discoverProduct(
         break;
     } catch (error) {
       o.signal?.throwIfAborted();
-      // A second POST after an ambiguous creation could charge twice; retain the first task instead.
+      // A second attempt after an interrupted browser could duplicate mutations; retain the task instead.
       const reason =
         error instanceof Error
           ? error.message.split("\n")[0]
           : "Unknown provider failure";
       o.log?.(
-        `The remote scout did not produce usable candidates (${reason?.slice(0, 200)}). Its checkpoint is retained; local tour candidates will be rehearsed.`,
+        `The browser scout did not produce usable candidates (${reason?.slice(0, 200)}). Its checkpoint is retained; local tour candidates will be rehearsed.`,
       );
       break;
     }
@@ -226,7 +227,7 @@ export async function discoverProduct(
         : "public",
     reason: candidates.length
       ? "The entrance opens independently in local Chrome; candidates still require focused execution and rehearsal."
-      : "Local Chrome confirmed a usable public surface; independently rehearsed guided tours will supplement remote discovery.",
+      : "Local Chrome confirmed a usable public surface; independently rehearsed guided tours will supplement agent discovery.",
     blockers: [],
     candidates,
   });
@@ -253,7 +254,7 @@ export async function rehearseCandidate(
   }
   const result = await o.browser.rehearse(flow, browserOptions(o));
   await o.io.write(file, RehearsalFile, {
-    schemaVersion: 1,
+    schemaVersion: 2,
     flowHash: hash,
     ...result,
   });
@@ -284,7 +285,7 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
   const save = () => {
     writes = writes.then(async () => {
       await o.io.write(jobPaths.flows, FlowsFile, {
-        schemaVersion: 1,
+        schemaVersion: 2,
         flows: [...results.values()],
       });
       await o.io.write(jobPaths.replayPlan, ReplayPlan, replay);
@@ -309,18 +310,42 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
       const id = `f${index + 1}`;
       let startUrl: string;
       try {
-        const requested = productEntry(candidate.start_url || plan.entryUrl, plan.entryUrl);
-        if (!entries.has(requested)) entries.set(requested, verifyFlowEntry(o, requested));
+        const requested = productEntry(
+          candidate.start_url || plan.entryUrl,
+          plan.entryUrl,
+        );
+        if (!entries.has(requested))
+          entries.set(requested, verifyFlowEntry(o, requested));
         startUrl = await entries.get(requested)!;
       } catch (error) {
         o.signal?.throwIfAborted();
-        const normalized = toFlow(FlowRunResult.parse({ flow_title: candidate.title, completed: false, steps: [] }), {
-          id, candidate, productUrl: o.url, runId: "", startedAt: plan.entryUrl,
+        const normalized = toFlow(
+          FlowRunResult.parse({
+            flow_title: candidate.title,
+            completed: false,
+            steps: [],
+          }),
+          {
+            id,
+            candidate,
+            productUrl: o.url,
+            runId: "",
+            startedAt: plan.entryUrl,
+          },
+        );
+        await remember({
+          flow: {
+            ...normalized.flow,
+            rehearsal: {
+              ok: false,
+              reason: `Candidate entrance could not be verified: ${(error as Error).message.split("\n")[0]}`,
+            },
+          },
         });
-        await remember({ flow: { ...normalized.flow, rehearsal: {
-          ok: false, reason: `Candidate entrance could not be verified: ${(error as Error).message.split("\n")[0]}`,
-        } } });
-        o.progress?.(++completed / Math.max(1, plan.candidates.length), `Checked ${completed} candidate flows`);
+        o.progress?.(
+          ++completed / Math.max(1, plan.candidates.length),
+          `Checked ${completed} candidate flows`,
+        );
         continue;
       }
       let previous: string | undefined;
@@ -332,9 +357,13 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
             candidate.title,
             {
               url: startUrl,
-              goal: flowGoal({ ...candidate, start_url: startUrl }, new URL(startUrl).hostname, previous, !o.publicMode),
+              goal: flowGoal(
+                { ...candidate, start_url: startUrl },
+                new URL(startUrl).hostname,
+                previous,
+                !o.publicMode,
+              ),
               output_schema: FLOW_RUN_SCHEMA,
-              agent_config: { max_duration_seconds: 120 },
             },
             FlowRunResult,
           );
@@ -362,7 +391,7 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
           }
         } catch (error) {
           o.signal?.throwIfAborted();
-          // Transport failure already has a durable provider ID. Never turn that into a new paid repair.
+          // Interrupted actions have durable evidence. Never replay them as an automatic repair.
           o.log?.(
             `Flow ${index + 1} stopped; other completed rehearsals are preserved.`,
           );
@@ -467,7 +496,7 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
     },
   ).map((result) => result.flow);
   await o.io.write(jobPaths.flows, FlowsFile, {
-    schemaVersion: 1,
+    schemaVersion: 2,
     flows: selected,
   });
   return selected;

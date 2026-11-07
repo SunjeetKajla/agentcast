@@ -3,7 +3,7 @@
 // instead of the person's subscription (PRD §9.9).
 
 const SECRET = /(_API_KEY|_SECRET|_SECRET_KEY|_TOKEN|_PASSWORD)$/;
-const ALWAYS_DROP = new Set(["AGENTCAST_SECRET", "TINYFISH_API_KEY", "ELEVENLABS_API_KEY"]);
+const ALWAYS_DROP = new Set(["AGENTCAST_SECRET", "ELEVENLABS_API_KEY"]);
 
 export function childEnv(keep: string[] = []): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
@@ -17,8 +17,16 @@ export function childEnv(keep: string[] = []): NodeJS.ProcessEnv {
 
 /** ANTHROPIC_API_KEY reaches Claude Code only when AGENTCAST_CLAUDE_USE_API_KEY=1. */
 export const claudeEnv = () =>
-  childEnv(process.env.AGENTCAST_CLAUDE_USE_API_KEY === "1" ? ["ANTHROPIC_API_KEY"] : []);
+  childEnv(
+    process.env.AGENTCAST_CLAUDE_USE_API_KEY === "1"
+      ? ["ANTHROPIC_API_KEY"]
+      : [],
+  );
 
 /** OPENAI_API_KEY / CODEX_API_KEY reach Codex only when AGENTCAST_CODEX_USE_API_KEY=1. */
 export const codexEnv = () =>
-  childEnv(process.env.AGENTCAST_CODEX_USE_API_KEY === "1" ? ["OPENAI_API_KEY", "CODEX_API_KEY"] : []);
+  childEnv(
+    process.env.AGENTCAST_CODEX_USE_API_KEY === "1"
+      ? ["OPENAI_API_KEY", "CODEX_API_KEY"]
+      : [],
+  );

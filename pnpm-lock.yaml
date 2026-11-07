@@ -232,6 +232,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@agentcast/browser':
+        specifier: workspace:*
+        version: link:../../packages/browser
       '@agentcast/director':
         specifier: workspace:*
         version: link:../../packages/director
@@ -250,9 +253,6 @@ importers:
       '@agentcast/story':
         specifier: workspace:*
         version: link:../../packages/story
-      '@agentcast/tinyfish':
-        specifier: workspace:*
-        version: link:../../packages/tinyfish
       '@agentcast/video':
         specifier: workspace:*
         version: link:../../packages/video
@@ -272,8 +272,26 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
 
+  packages/browser:
+    dependencies:
+      '@agentcast/llm':
+        specifier: workspace:*
+        version: link:../llm
+      '@agentcast/shared':
+        specifier: workspace:*
+        version: link:../shared
+      playwright-core:
+        specifier: 1.64.1
+        version: 1.64.1
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+
   packages/cli:
     dependencies:
+      '@agentcast/browser':
+        specifier: workspace:*
+        version: link:../browser
       '@agentcast/llm':
         specifier: workspace:*
         version: link:../llm
@@ -283,12 +301,12 @@ importers:
       '@agentcast/shared':
         specifier: workspace:*
         version: link:../shared
-      '@agentcast/tinyfish':
-        specifier: workspace:*
-        version: link:../tinyfish
       '@agentcast/worker':
         specifier: workspace:*
         version: link:../../apps/worker
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
 
   packages/director:
     dependencies:
@@ -307,6 +325,9 @@ importers:
 
   packages/explore:
     dependencies:
+      '@agentcast/browser':
+        specifier: workspace:*
+        version: link:../browser
       '@agentcast/llm':
         specifier: workspace:*
         version: link:../llm
@@ -316,9 +337,6 @@ importers:
       '@agentcast/shared':
         specifier: workspace:*
         version: link:../shared
-      '@agentcast/tinyfish':
-        specifier: workspace:*
-        version: link:../tinyfish
       playwright-core:
         specifier: 1.64.1
         version: 1.64.1
@@ -370,15 +388,6 @@ importers:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
-
-  packages/tinyfish:
-    dependencies:
-      '@agentcast/shared':
-        specifier: workspace:*
-        version: link:../shared
-      eventsource-parser:
-        specifier: ^4.1.2
-        version: 4.1.2
 
   packages/video:
     dependencies:
@@ -2625,10 +2634,6 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
-
-  eventsource-parser@4.1.2:
-    resolution: {integrity: sha512-N9b0EvATDJfZj+Szg3m8WwqseQhei/mtTd6V0rCciGbI/yG24o3yBk0YVyfOZZsLVMZHWs++Zk3Aqd2y2EztnQ==}
-    engines: {node: '>=22.12'}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -6412,8 +6417,6 @@ snapshots:
   esutils@2.0.3: {}
 
   events@3.3.0: {}
-
-  eventsource-parser@4.1.2: {}
 
   execa@5.1.1:
     dependencies:

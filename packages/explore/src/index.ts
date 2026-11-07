@@ -53,7 +53,13 @@ export {
   type Rgb,
 } from "./brand";
 export { workspaceLlm, availableLlm, type Llm } from "./llm";
-export { runTask, safeReport, requestHash, type TaskOptions } from "./task";
+export {
+  runTask,
+  safeReport,
+  requestHash,
+  type TaskOptions,
+  type ExplorationUpdate,
+} from "./task";
 export {
   ExplorationTask,
   ExplorationPlan,

@@ -16,14 +16,12 @@ import {
   type BrowserAdapter,
 } from "@agentcast/explore";
 import { creativeBrief } from "@agentcast/story";
-import { TinyFish } from "@agentcast/tinyfish";
 import type { StageFn } from "./types.ts";
 import { stub } from "./stub.ts";
 
 /** Fetch + a real browser brand inspection. Provider failures never become fixture successes. */
 export function makeUnderstand(
   deps: {
-    tf?: TinyFish;
     browser?: BrowserAdapter;
     hasFont?: typeof googleFontAvailable;
   } = {},
@@ -38,7 +36,6 @@ export function makeUnderstand(
       return;
     }
     const browser = deps.browser ?? (await recorderAdapter());
-    const tf = deps.tf ?? new TinyFish();
     const llm = workspaceLlm(ctx.llm, ctx.llmProgress);
     const options = {
       dir: ctx.dir,
@@ -48,7 +45,6 @@ export function makeUnderstand(
     await mkdir(ctx.path("brief"), { recursive: true });
     const [product, inspection] = await Promise.allSettled([
       readProduct({
-        tf,
         llm,
         url: ctx.config.url,
         dir: ctx.path("brief"),

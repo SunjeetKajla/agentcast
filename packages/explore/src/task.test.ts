@@ -4,15 +4,9 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { readArtifact, writeArtifact } from "@agentcast/shared/node";
-import {
-  TinyFishTransportError,
-  type Run,
-  type TinyFish,
-} from "@agentcast/tinyfish";
+import type { ExplorationAgent } from "@agentcast/browser";
 import { ExplorationTask } from "./artifacts";
-import { requestHash, runTask, safeReport } from "./task";
-import type { ArtifactIO } from "./runtime";
-
+import { runTask, safeReport } from "./task";
 let dir: string;
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "agentcast-task-"));
@@ -25,156 +19,70 @@ const request = {
   url: "https://product.example/",
   goal: "Inspect the public demo",
 };
-const run = (status: Run["status"] = "COMPLETED"): Run => ({
-  run_id: "remote-1",
-  status,
-  result: status === "COMPLETED" ? { done: true } : null,
-  goal: "",
-  created_at: "",
-  started_at: null,
-  finished_at: null,
-  num_of_steps: 0,
-  error: null,
-  steps: [],
-  streaming_url: null,
-  video_url: null,
+const io = () => ({
+  read: <S extends z.ZodType>(name: string, shape: S) =>
+    readArtifact(join(dir, name), shape),
+  write: <S extends z.ZodType>(name: string, shape: S, value: z.input<S>) =>
+    writeArtifact(join(dir, name), shape, value),
 });
-const io = (): ArtifactIO => ({
-  read: (name, shape) => readArtifact(join(dir, name), shape),
-  write: (name, shape, value) => writeArtifact(join(dir, name), shape, value),
-});
-const client = () => ({
-  runAsync: vi.fn().mockResolvedValue("remote-1"),
-  getRun: vi.fn().mockResolvedValue(run()),
-  cancelRun: vi.fn().mockResolvedValue(undefined),
-});
-
-describe("durable exploration tasks", () => {
-  it("sends cancellation immediately even while a polling callback is still running", async () => {
-    const tf = client();
-    tf.getRun.mockResolvedValue(run("RUNNING"));
-    let entered!: () => void;
-    let release!: () => void;
-    const ready = new Promise<void>((resolve) => {
-      entered = resolve;
-    });
-    const blocked = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    const abort = new AbortController();
-    const pending = runTask({
-      id: "scout",
-      request,
-      schema,
-      io: io(),
-      tf: tf as unknown as TinyFish,
-      maxMs: 5000,
-      signal: abort.signal,
-      onUpdate: async () => {
-        entered();
-        await blocked;
-      },
-    });
-    const result = pending.catch((error) => error);
-    try {
-      await ready;
-      abort.abort(new Error("fixture cancelled"));
-      expect(tf.cancelRun).toHaveBeenCalledExactlyOnceWith("remote-1");
-    } finally {
-      release();
-    }
-    expect(await result).toMatchObject({ message: "fixture cancelled" });
-    expect(tf.cancelRun).toHaveBeenCalledTimes(1);
-  });
-  it("writes the run id before polling and reuses the completed result without another POST", async () => {
-    const tf = client();
-    tf.getRun.mockImplementation(async () => {
-      expect(
-        (await io().read("explore/tasks/scout.json", ExplorationTask)).runId,
-      ).toBe("remote-1");
-      return run();
-    });
-    const options = {
-      id: "scout",
-      request,
-      schema,
-      io: io(),
-      tf: tf as unknown as TinyFish,
-      maxMs: 1000,
-    };
-    expect(await runTask(options)).toEqual({
-      runId: "remote-1",
+const options = () => ({
+  id: "scout",
+  request,
+  schema,
+  io: io(),
+  agent: {
+    run: vi.fn(async () => ({
       result: { done: true },
+      sessionId: "local-session",
+    })),
+  } as unknown as ExplorationAgent,
+  maxMs: 1000,
+});
+describe("durable local exploration tasks", () => {
+  it("saves the attempt before execution and reuses only completed matching work", async () => {
+    const o = options();
+    vi.mocked(o.agent.run).mockImplementation(async () => {
+      expect(
+        (await o.io.read("explore/tasks/scout.json", ExplorationTask)).state,
+      ).toBe("running");
+      return { result: { done: true }, sessionId: "local-session" };
     });
-    await runTask(options);
-    expect(tf.runAsync).toHaveBeenCalledTimes(1);
-    expect(tf.getRun).toHaveBeenCalledTimes(1);
-  });
-  it("preserves an ambiguous create and never submits it again", async () => {
-    const tf = client();
-    tf.runAsync.mockRejectedValue(
-      new TinyFishTransportError("POST", "/run-async", "NETWORK_ERROR"),
-    );
-    const options = {
-      id: "scout",
-      request,
-      schema,
-      io: io(),
-      tf: tf as unknown as TinyFish,
-      maxMs: 1000,
-    };
-    await expect(runTask(options)).rejects.toThrow("NETWORK_ERROR");
-    await expect(runTask(options)).rejects.toThrow("not be submitted twice");
-    expect(tf.runAsync).toHaveBeenCalledTimes(1);
-    expect(
-      (await io().read("explore/tasks/scout.json", ExplorationTask)).state,
-    ).toBe("uncertain");
-  });
-  it("resumes a known run after a worker restart and refuses changed goals", async () => {
-    await io().write("explore/tasks/scout.json", ExplorationTask, {
-      schemaVersion: 1,
-      id: "scout",
-      requestHash: requestHash(request),
-      state: "running",
-      runId: "remote-1",
-      startedAt: "",
-      updatedAt: "",
-    });
-    const tf = client();
-    await runTask({
-      id: "scout",
-      request,
-      schema,
-      io: io(),
-      tf: tf as unknown as TinyFish,
-      maxMs: 1000,
-    });
-    expect(tf.runAsync).not.toHaveBeenCalled();
+    const first = await runTask(o);
+    expect(first.result.done).toBe(true);
+    expect((await runTask(o)).runId).toBe(first.runId);
+    expect(o.agent.run).toHaveBeenCalledTimes(1);
     await expect(
-      runTask({
-        id: "scout",
-        request: { ...request, goal: "changed" },
-        schema,
-        io: io(),
-        tf: tf as unknown as TinyFish,
-        maxMs: 1000,
-      }),
+      runTask({ ...o, request: { ...request, goal: "changed" } }),
     ).rejects.toThrow("inputs changed");
   });
-  it("recovers a terminal result after a polling transport race", async () => {
-    const tf = client();
-    tf.getRun.mockRejectedValueOnce(new Error("disconnected"));
-    const result = await runTask({
+  it("does not repeat an interrupted or legacy remote task", async () => {
+    const o = options();
+    await o.io.write("explore/tasks/scout.json", ExplorationTask, {
+      schemaVersion: 1,
       id: "scout",
-      request,
-      schema,
-      io: io(),
-      tf: tf as unknown as TinyFish,
-      maxMs: 1000,
+      runId: "legacy",
+      state: "running",
+      requestHash: "old",
+      startedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
-    expect(result.result.done).toBe(true);
-    expect(tf.runAsync).toHaveBeenCalledTimes(1);
-    expect(tf.cancelRun).not.toHaveBeenCalled();
+    await expect(runTask(o)).rejects.toThrow("interrupted");
+    expect(o.agent.run).not.toHaveBeenCalled();
+  });
+  it("propagates cancellation and saves an interrupted checkpoint", async () => {
+    const o = options();
+    const abort = new AbortController();
+    vi.mocked(o.agent.run).mockImplementation(async (task) => {
+      abort.abort(new Error("cancelled"));
+      task.signal.throwIfAborted();
+      throw Error("unreachable");
+    });
+    await expect(runTask({ ...o, signal: abort.signal })).rejects.toThrow(
+      "cancelled",
+    );
+    expect(
+      (await o.io.read("explore/tasks/scout.json", ExplorationTask)).state,
+    ).toBe("interrupted");
   });
   it("redacts secret typed values before persistence", () => {
     expect(

@@ -14,7 +14,14 @@ import PlanCard from "@/components/job/PlanCard";
 import ActivityLog from "@/components/job/ActivityLog";
 import { waitingGate } from "@/lib/job-state";
 import { useJob } from "@/lib/useJob";
-import { EASE, MOTION_OK, gsap, useGSAP, useReveal, settle } from "@/lib/motion";
+import {
+  EASE,
+  MOTION_OK,
+  gsap,
+  useGSAP,
+  useReveal,
+  settle,
+} from "@/lib/motion";
 
 // /jobs/[id]: one job, live (PRD §5.1 screens 2–7). The rail shows where the pipeline is; the main panel
 // is whatever needs you now: a review, the agents at work, or the finished videos.
@@ -51,7 +58,10 @@ export default function JobView({ id }: { id: string }) {
       if (!panel.current) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
-        gsap.fromTo(panel.current, ...settle({ autoAlpha: 0, y: 28, duration: 0.8, ease: EASE.expo }));
+        gsap.fromTo(
+          panel.current,
+          ...settle({ autoAlpha: 0, y: 28, duration: 0.8, ease: EASE.expo }),
+        );
       });
       return () => mm.revert();
     },
@@ -66,7 +76,10 @@ export default function JobView({ id }: { id: string }) {
           {error.status === 404 ? "No such job" : "Can't load this job"}
         </h1>
         <p className="text-sm text-white/60">{error.message}</p>
-        <Link href="/" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black">
+        <Link
+          href="/"
+          className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black"
+        >
           Back home
         </Link>
       </div>
@@ -82,8 +95,13 @@ export default function JobView({ id }: { id: string }) {
   }
 
   const host = new URL(job.config.url).hostname.replace(/^www\./, "");
-  const finished = job.status === "done" || job.status === "failed" || job.status === "cancelled";
-  const exploring = ["discover", "flow-runs"].some((s) => job.stages[s as "discover"].status === "running");
+  const finished =
+    job.status === "done" ||
+    job.status === "failed" ||
+    job.status === "cancelled";
+  const exploring = ["discover", "flow-runs"].some(
+    (s) => job.stages[s as "discover"].status === "running",
+  );
   const failed = STAGES.filter((s) => job.stages[s.name].status === "failed");
 
   return (
@@ -97,7 +115,9 @@ export default function JobView({ id }: { id: string }) {
             {STATUS_LABEL[job.status]}
             {!finished && !live && " · reconnecting"}
           </p>
-          <h1 className="font-serif text-4xl font-normal text-white sm:text-5xl">{host}</h1>
+          <h1 className="font-serif text-4xl font-normal text-white sm:text-5xl">
+            {host}
+          </h1>
           <a
             href={job.config.url}
             target="_blank"
@@ -113,9 +133,17 @@ export default function JobView({ id }: { id: string }) {
             onClick={async () => {
               setCancelError(undefined);
               setCancelling(true);
-              try { await cancel(); }
-              catch (error) { setCancelError(error instanceof Error ? error.message : "Could not cancel the job. Try again."); }
-              finally { setCancelling(false); }
+              try {
+                await cancel();
+              } catch (error) {
+                setCancelError(
+                  error instanceof Error
+                    ? error.message
+                    : "Could not cancel the job. Try again.",
+                );
+              } finally {
+                setCancelling(false);
+              }
             }}
             disabled={cancelling}
             className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
@@ -124,7 +152,11 @@ export default function JobView({ id }: { id: string }) {
           </button>
         )}
       </header>
-      {cancelError && <p role="alert" className="mb-6 text-sm text-red-400">{cancelError}</p>}
+      {cancelError && (
+        <p role="alert" className="mb-6 text-sm text-red-400">
+          {cancelError}
+        </p>
+      )}
 
       <div className="grid gap-10 lg:grid-cols-[230px_minmax(0,1fr)]">
         <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
@@ -138,8 +170,9 @@ export default function JobView({ id }: { id: string }) {
                 jobId={job.id}
                 version={view.artifacts[jobPaths.flows]}
                 action={
-                  view.events.findLast((e) => e.type === "action" && e.gate === "gate-flows") as
-                    Extract<JobEvent, { type: "action" }> | undefined
+                  view.events.findLast(
+                    (e) => e.type === "action" && e.gate === "gate-flows",
+                  ) as Extract<JobEvent, { type: "action" }> | undefined
                 }
                 onApprove={(d) => decide("gate-flows", d)}
               />
@@ -160,28 +193,39 @@ export default function JobView({ id }: { id: string }) {
               <Outputs job={job} versions={view.artifacts} />
             ) : job.status === "failed" ? (
               <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.07] p-6 space-y-3">
-                <h2 className="font-serif text-3xl text-white">Something went wrong</h2>
+                <h2 className="font-serif text-3xl text-white">
+                  Something went wrong
+                </h2>
                 {failed.map((s) => (
                   <p key={s.name} className="text-sm text-red-300">
-                    <span className="text-white">{s.label}:</span> {job.stages[s.name].error?.message ?? "failed"}
+                    <span className="text-white">{s.label}:</span>{" "}
+                    {job.stages[s.name].error?.message ?? "failed"}
                   </p>
                 ))}
-                <Link href="/#hero-input" className="inline-block pt-2 text-sm text-white/70 hover:text-white">
+                <Link
+                  href="/#hero-input"
+                  className="inline-block pt-2 text-sm text-white/70 hover:text-white"
+                >
                   ← Start a new video
                 </Link>
               </div>
             ) : job.status === "cancelled" ? (
               <div className="rounded-2xl border border-white/10 bg-[#121215]/80 p-6 space-y-2">
                 <h2 className="font-serif text-3xl text-white">Stopped</h2>
-                <p className="text-sm text-white/60">This job was cancelled. Its finished stages are kept.</p>
+                <p className="text-sm text-white/60">
+                  This job was cancelled. Its finished stages are kept.
+                </p>
               </div>
             ) : (
               <NowCard job={job} events={view.events} />
             )}
           </div>
 
-          {(exploring || (view.agents.length > 0 && !finished && job.stages["gate-flows"].status !== "done")) && (
-            <LiveAgents agents={view.agents} />
+          {(exploring ||
+            (view.agents.length > 0 &&
+              !finished &&
+              job.stages["gate-flows"].status !== "done")) && (
+            <LiveAgents agents={view.agents} jobId={job.id} />
           )}
 
           <PlanCard jobId={job.id} versions={view.artifacts} />

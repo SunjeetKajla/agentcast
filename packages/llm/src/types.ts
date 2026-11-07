@@ -7,7 +7,10 @@ export type BackendName = (typeof BACKENDS)[number];
 export type Tier = "smart" | "fast";
 
 /** Progress for the UI (JobEvent type "llm"). */
-export type LlmEvent = { kind: "text" | "tool_use" | "done" | "error"; text: string };
+export type LlmEvent = {
+  kind: "text" | "tool_use" | "done" | "error";
+  text: string;
+};
 export type OnEvent = (event: LlmEvent) => void;
 
 export type JsonTask<S extends z.ZodType> = {
@@ -31,6 +34,13 @@ export type AgentTask = {
    * shell off, so the worker must run these checks itself and send failures back with resume.
    */
   allowCommands?: string[];
+  /** Explicit task-owned stdio MCP server. Browser tasks have no built-in tools. */
+  mcp?: {
+    command: string;
+    args: string[];
+    env?: Record<string, string>;
+    tools: string[];
+  };
   /** Absolute paths of images to show the agent (e.g. rendered stills). */
   images?: string[];
   /** A session id from an earlier agent() call: continue that conversation. */
@@ -46,12 +56,21 @@ export type AgentResult = {
   text: string;
 };
 
-export type Detection = { ok: true; version: string } | { ok: false; reason: string };
+export type Detection =
+  { ok: true; version: string } | { ok: false; reason: string };
 
 export interface LlmBackend {
   readonly name: BackendName;
   /** Is the CLI installed (and new enough)? Doesn't spend quota. */
   detect(): Promise<Detection>;
-  json<S extends z.ZodType>(task: JsonTask<S>, model: string | undefined, onEvent?: OnEvent): Promise<z.output<S>>;
-  agent(task: AgentTask, model: string | undefined, onEvent?: OnEvent): Promise<AgentResult>;
+  json<S extends z.ZodType>(
+    task: JsonTask<S>,
+    model: string | undefined,
+    onEvent?: OnEvent,
+  ): Promise<z.output<S>>;
+  agent(
+    task: AgentTask,
+    model: string | undefined,
+    onEvent?: OnEvent,
+  ): Promise<AgentResult>;
 }

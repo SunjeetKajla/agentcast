@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import {
   Beat,
+  FlowsFile,
   GATE_DECISIONS,
   GateName,
   Job,
@@ -20,14 +21,19 @@ describe("stages", () => {
     expect(STAGES.map((s) => s.name)).toEqual(StageName.options);
     const seen = new Set<string>();
     for (const s of STAGES) {
-      for (const dep of s.after) expect(seen, `${s.name} waits for ${dep}`).toContain(dep);
+      for (const dep of s.after)
+        expect(seen, `${s.name} waits for ${dep}`).toContain(dep);
       seen.add(s.name);
     }
   });
 
   test("gates are the stages flagged as gates, each with a decision schema", () => {
-    expect(STAGES.filter((s) => s.gate).map((s) => s.name)).toEqual(GateName.options);
-    expect(Object.keys(GATE_DECISIONS).sort()).toEqual([...GateName.options].sort());
+    expect(STAGES.filter((s) => s.gate).map((s) => s.name)).toEqual(
+      GateName.options,
+    );
+    expect(Object.keys(GATE_DECISIONS).sort()).toEqual(
+      [...GateName.options].sort(),
+    );
   });
 });
 
@@ -45,8 +51,12 @@ describe("JobConfig", () => {
   });
 
   test("rejects non-http URLs", () => {
-    expect(JobConfig.safeParse({ url: "file:///etc/passwd" }).success).toBe(false);
-    expect(JobConfig.safeParse({ url: "javascript:alert(1)" }).success).toBe(false);
+    expect(JobConfig.safeParse({ url: "file:///etc/passwd" }).success).toBe(
+      false,
+    );
+    expect(JobConfig.safeParse({ url: "javascript:alert(1)" }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -60,9 +70,13 @@ test("a beat's footage span is all or nothing", () => {
     maxSeconds: 2,
   };
   expect(Beat.safeParse(beat).success).toBe(true);
-  expect(Beat.safeParse({ ...beat, flowId: "f", in: 0, out: 2 }).success).toBe(true);
+  expect(Beat.safeParse({ ...beat, flowId: "f", in: 0, out: 2 }).success).toBe(
+    true,
+  );
   expect(Beat.safeParse({ ...beat, flowId: "f", in: 0 }).success).toBe(false);
-  expect(Beat.safeParse({ ...beat, flowId: "f", in: 2, out: 1 }).success).toBe(false);
+  expect(Beat.safeParse({ ...beat, flowId: "f", in: 2, out: 1 }).success).toBe(
+    false,
+  );
 });
 
 test("motion presets are valid tokens for their personality", () => {
@@ -73,37 +87,106 @@ test("motion presets are valid tokens for their personality", () => {
 });
 
 describe("variantMatrix", () => {
-  const ids = (v: Parameters<typeof variantMatrix>[0]) => variantMatrix(v).map((x) => x.id);
+  const ids = (v: Parameters<typeof variantMatrix>[0]) =>
+    variantMatrix(v).map((x) => x.id);
 
   test("desktop footage serves both aspects in every language", () => {
-    expect(ids({ aspects: ["16x9", "9x16"], langs: ["en", "hi"], formFactors: ["desktop"] })).toEqual([
-      "16x9-en",
-      "9x16-en",
-      "16x9-hi",
-      "9x16-hi",
-    ]);
+    expect(
+      ids({
+        aspects: ["16x9", "9x16"],
+        langs: ["en", "hi"],
+        formFactors: ["desktop"],
+      }),
+    ).toEqual(["16x9-en", "9x16-en", "16x9-hi", "9x16-hi"]);
   });
 
   test("mobile footage adds native 9:16 variants only", () => {
-    expect(ids({ aspects: ["16x9", "9x16"], langs: ["en"], formFactors: ["desktop", "mobile"] })).toEqual([
-      "16x9-en",
-      "9x16-en",
-      "9x16-en-mobile",
-    ]);
-    expect(ids({ aspects: ["16x9", "9x16"], langs: ["en"], formFactors: ["mobile"] })).toEqual(["9x16-en-mobile"]);
+    expect(
+      ids({
+        aspects: ["16x9", "9x16"],
+        langs: ["en"],
+        formFactors: ["desktop", "mobile"],
+      }),
+    ).toEqual(["16x9-en", "9x16-en", "9x16-en-mobile"]);
+    expect(
+      ids({
+        aspects: ["16x9", "9x16"],
+        langs: ["en"],
+        formFactors: ["mobile"],
+      }),
+    ).toEqual(["9x16-en-mobile"]);
   });
 
   test("duplicates collapse", () => {
-    expect(ids({ aspects: ["16x9", "16x9"], langs: ["en", "en"], formFactors: ["desktop"] })).toEqual(["16x9-en"]);
+    expect(
+      ids({
+        aspects: ["16x9", "16x9"],
+        langs: ["en", "en"],
+        formFactors: ["desktop"],
+      }),
+    ).toEqual(["16x9-en"]);
   });
 });
 
 describe("Job versions", () => {
   test("a version 2 state.json (made before voiceover could be turned off) is upgraded as it's read", () => {
-    const current = Job.parse(JSON.parse(readFileSync(new URL("../fixtures/job-state.json", import.meta.url), "utf8")));
+    const current = Job.parse(
+      JSON.parse(
+        readFileSync(
+          new URL("../fixtures/job-state.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    );
     const { voiceover: _dropped, ...config } = current.config;
     const old = { ...current, schemaVersion: 2, config };
     expect(() => Job.parse(old)).toThrow();
     expect(StoredJob.parse(old)).toEqual(current);
+  });
+});
+
+describe("local exploration migration", () => {
+  test("upgrades v3 jobs and preserves legacy auth for viewing", () => {
+    const current = Job.parse(
+      JSON.parse(
+        readFileSync(
+          new URL("../fixtures/job-state.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    );
+    const old = {
+      ...current,
+      schemaVersion: 3,
+      config: {
+        ...current.config,
+        auth: { mode: "vault", credentialItemIds: ["legacy-id"] },
+      },
+    };
+    expect(StoredJob.parse(old)).toMatchObject({
+      schemaVersion: 4,
+      config: { auth: { mode: "vault" } },
+    });
+  });
+  test("upgrades legacy flow provenance without keeping the provider field", () => {
+    const current = JSON.parse(
+      readFileSync(
+        new URL("../fixtures/job/explore/flows.json", import.meta.url),
+        "utf8",
+      ),
+    );
+    const old = {
+      schemaVersion: 1,
+      flows: current.flows.map(
+        ({ agentRunId, ...flow }: Record<string, unknown>) => ({
+          ...flow,
+          tinyfishRunId: agentRunId,
+        }),
+      ),
+    };
+    const upgraded = FlowsFile.parse(old);
+    expect(upgraded.schemaVersion).toBe(2);
+    expect(upgraded.flows[0]).toHaveProperty("agentRunId");
+    expect(upgraded.flows[0]).not.toHaveProperty("tinyfishRunId");
   });
 });

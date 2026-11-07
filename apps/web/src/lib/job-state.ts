@@ -19,32 +19,55 @@ export type JobView = {
   /** Every event seen, in order, without duplicates. */
   events: JobEvent[];
   lastSeq: number;
-  /** TinyFish agent runs, for the live views. */
+  /** Local browser agent runs, for the live views. */
   agents: AgentView[];
   /** Job-relative path → seq of its latest write, used to refetch (and cache-bust) artifacts. */
   artifacts: Record<string, number>;
 };
 
-export type JobAction = { type: "snapshot"; job: Job } | { type: "event"; event: JobEvent };
+export type JobAction =
+  { type: "snapshot"; job: Job } | { type: "event"; event: JobEvent };
 
 export function initialView(job: Job): JobView {
   return { job, events: [], lastSeq: 0, agents: [], artifacts: {} };
 }
 
-const stopAgents = (agents: AgentView[]) => agents.map(agent =>
-  agent.status === "started" || agent.status === "step"
-    ? { ...agent, status: "cancelled" as const, streamingUrl: undefined, screenshot: undefined }
-    : agent,
-);
+const stopAgents = (agents: AgentView[]) =>
+  agents.map((agent) =>
+    agent.status === "started" || agent.status === "step"
+      ? {
+          ...agent,
+          status: "cancelled" as const,
+          streamingUrl: undefined,
+          screenshot: undefined,
+        }
+      : agent,
+  );
 
 export function reduceJob(view: JobView, action: JobAction): JobView {
   if (action.type === "snapshot") {
-    if (view.job.status === "cancelled" && action.job.id === view.job.id && action.job.status !== "cancelled") return view;
-    return { ...view, job: action.job, agents: action.job.status === "cancelled" ? stopAgents(view.agents) : view.agents };
+    if (
+      view.job.status === "cancelled" &&
+      action.job.id === view.job.id &&
+      action.job.status !== "cancelled"
+    )
+      return view;
+    return {
+      ...view,
+      job: action.job,
+      agents:
+        action.job.status === "cancelled"
+          ? stopAgents(view.agents)
+          : view.agents,
+    };
   }
   const e = action.event;
   if (e.seq <= view.lastSeq || e.jobId !== view.job.id) return view;
-  const next: JobView = { ...view, events: [...view.events, e], lastSeq: e.seq };
+  const next: JobView = {
+    ...view,
+    events: [...view.events, e],
+    lastSeq: e.seq,
+  };
 
   switch (e.type) {
     case "job":
@@ -69,7 +92,11 @@ export function reduceJob(view: JobView, action: JobAction): JobView {
             error: e.error,
             progress: running ? undefined : prev.progress,
             startedAt: running ? e.at : prev.startedAt,
-            finishedAt: ["done", "failed", "skipped", "cancelled"].includes(e.status) ? e.at : prev.finishedAt,
+            finishedAt: ["done", "failed", "skipped", "cancelled"].includes(
+              e.status,
+            )
+              ? e.at
+              : prev.finishedAt,
           },
         },
       };
@@ -79,7 +106,14 @@ export function reduceJob(view: JobView, action: JobAction): JobView {
       if (view.job.status === "cancelled") break;
       next.job = {
         ...view.job,
-        stages: { ...view.job.stages, [e.stage]: { ...view.job.stages[e.stage], progress: e.progress, message: e.message ?? view.job.stages[e.stage].message } },
+        stages: {
+          ...view.job.stages,
+          [e.stage]: {
+            ...view.job.stages[e.stage],
+            progress: e.progress,
+            message: e.message ?? view.job.stages[e.stage].message,
+          },
+        },
       };
       break;
     case "artifact":
@@ -93,14 +127,22 @@ export function reduceJob(view: JobView, action: JobAction): JobView {
         stage: e.stage,
         title: e.title,
         status: e.status,
-        streamingUrl: e.streamingUrl ?? prev?.streamingUrl,
+        streamingUrl: undefined, // Legacy remote sessions are never contacted.
         screenshot: e.screenshot ?? prev?.screenshot,
         steps: e.step ? [...(prev?.steps ?? []), e.step] : (prev?.steps ?? []),
       };
-      if (view.job.status === "cancelled" && (agent.status === "started" || agent.status === "step")) {
-        agent.status = "cancelled"; agent.streamingUrl = undefined; agent.screenshot = undefined;
+      if (
+        view.job.status === "cancelled" &&
+        (agent.status === "started" || agent.status === "step")
+      ) {
+        agent.status = "cancelled";
+        agent.streamingUrl = undefined;
+        agent.screenshot = undefined;
       }
-      next.agents = i >= 0 ? view.agents.map((a, j) => (j === i ? agent : a)) : [...view.agents, agent];
+      next.agents =
+        i >= 0
+          ? view.agents.map((a, j) => (j === i ? agent : a))
+          : [...view.agents, agent];
       break;
     }
   }
@@ -119,7 +161,9 @@ export function overallProgress(job: Job): number {
 }
 
 /** The gate waiting for the person, if any. */
-export function waitingGate(job: Job): "gate-flows" | "gate-script" | "gate-preview" | undefined {
+export function waitingGate(
+  job: Job,
+): "gate-flows" | "gate-script" | "gate-preview" | undefined {
   for (const gate of ["gate-flows", "gate-script", "gate-preview"] as const) {
     if (job.stages[gate].status === "waiting") return gate;
   }

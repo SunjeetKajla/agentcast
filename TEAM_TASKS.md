@@ -9,7 +9,7 @@ Directory ownership is how we avoid merge conflicts. You can push freely in your
 | Who | Role | Owns (directories) | Plan phases |
 | --- | --- | --- | --- |
 | **Kaustav** | Platform + Director, **merge captain** | root config, `packages/shared`, `apps/worker` (core, not stages), `packages/llm`, `packages/cli`, `packages/director`, `apps/worker/src/stages/{direct,rerun}.ts` | 1, 5b, 7, 8 |
-| **Sunjeet** | Explore + Story + Voice | `packages/tinyfish`, `packages/explore`, `packages/story`, `packages/voice`, `stages/{understand,auth,discover,flow-runs,script,voice}.ts` | 2, 4 |
+| **Sunjeet** | Explore + Story + Voice | `packages/browser`, `packages/explore`, `packages/story`, `packages/voice`, `stages/{understand,auth,discover,flow-runs,script,voice}.ts` | 2, 4 |
 | **Neeraj** | Record + Video | `packages/recorder`, `packages/video`, `assets/music`, `stages/{record,preview,render}.ts` | 3, 5a, 5c, 6 |
 | **Aditya** (UI) | Web app + demo target | `DESIGN.md`, `apps/web`, `apps/demoboard` | 1.5, 1.7, gate UIs, 6.6 |
 
@@ -25,7 +25,7 @@ Directory ownership is how we avoid merge conflicts. You can push freely in your
 
    From then on the whole pipeline "runs" end to end on fakes.
 2. While Kaustav bootstraps, everyone else works only in files they own:
-   - **Sunjeet:** TinyFish and ElevenLabs smoke scripts in `spikes/sunjeet-*`
+   - **Sunjeet:** Browser Harness and ElevenLabs smoke scripts in `spikes/sunjeet-*`
    - **Neeraj:** Playwright screencast → mp4 in `spikes/neeraj-*`
    - **Aditya:** `DESIGN.md` (tokens, screens), then the `apps/demoboard` skeleton
 3. **Your job is to replace your stub with the real stage.** Build against the fixture for your input, not against a teammate's live code. When your stage produces real output, update the fixture so the people downstream get better test data.
@@ -47,19 +47,19 @@ Kaustav: REST + SSE events (§7.4) ─▶ Aditya: web app
 1. Bootstrap (above). Done means `pnpm typecheck && pnpm test` pass on `main`.
 2. Orchestrator: async job store (`state.json` + `events.ndjson`), stage runner with pools, gates (autopilot skips them), retries, cancel, resume on restart.
 3. REST API: `POST /jobs` (202), `GET /jobs/:id`, `POST /jobs/:id/gates/:gate`, gate actions, stage signals, SSE at `GET /jobs/:id/events`, `GET /files/*` (path-traversal safe).
-4. `packages/llm`: claude-code adapter (`json` + `agent`, `--restricted --strict-mcp-config`, never `--bare`), concurrency pool, fake-CLI tests.
+4. `packages/llm`: claude-code adapter (`json` + `agent`, explicit settings and tool isolation, never `--bare`), concurrency pool, fake-CLI tests.
 5. `agentcast doctor [--probe]`, `agentcast record`.
 6. Director: workspace + `DIRECTOR.md` + motion guides, check CLI, repair rounds, stills review, baseline fallback, revise at gate 3 (resumed session).
 7. Re-run on update: `agentcast rerun`, `POST /jobs/:id/rerun`, `remapEdl`, change report, `--skip-if-unchanged`.
 8. Codex adapter, then opencode; `agentcast music add|list`; GitHub Action; guardrails and budget panel data (Phase 8).
 
 **Sunjeet: Explore + Story + Voice**
-1. `packages/tinyfish`: Fetch, Agent (SSE with polling fallback, async, cancel, step screenshots), Vault, Browser, Profiles. `DELETE` sessions in `finally`.
-2. `understand` stage: Fetch → `product-brief.json`; brand kit (`brand.json`: logo, palette, theme, fonts, radius).
+1. `packages/browser`: isolated local Chrome, Browser Harness bridge, task-owned MCP tools, executed-action traces and cleanup in `finally`.
+2. `understand` stage: Local page reader → `product-brief.json`; brand kit (`brand.json`: logo, palette, theme, fonts, radius).
 3. `discover` + `flow-runs`: entrance scout, ≤3 focused runs (2 at a time), local rehearsal, one repair each, durable checkpoints, guided tour fallback, judge + select (§9.2.1).
 4. `packages/story`: creative brief → candidate spans → storyboard (trailer/guide arcs) → `script.en` / `script.hi`, all through `packages/llm`.
 5. `packages/voice` + `voice` stage: ElevenLabs `with-timestamps`, a clip per beat per language, word timings, premade voice fallback, clip reuse.
-6. Sign in once (local) + `auth` stage, Vault mode; gate actions `edit-step` and `add-flow`; then remote sign-in and auto-tighten.
+6. Sign in once (local) + `auth` stage; gate actions `edit-step` and `add-flow`; then auto-tighten.
 
 **Neeraj: Record + Video**
 1. Recorder: local Chromium launcher, CDP screencast → CFR mp4, Live mode with stall check.
@@ -67,7 +67,7 @@ Kaustav: REST + SSE events (§7.4) ─▶ Aditya: web app
 3. Timeline writer (`timeline.json`, `replay-plan.json`); `record` stage.
 4. `packages/video`: VirtualCamera, Cursor + ripple, karaoke Captions, TitleCard and Outro, LowerThird, callouts, transitions, motion tokens, motion lint; `baseline.ts`.
 5. `renderVideo()`; `preview` (540p) and `render` stages (16:9 + 9:16 × EN/HI); loudness pass; sidecars (SRT/VTT, poster, GIF).
-6. Trailer grammar (statement/montage/stat scenes, speed ramps, music bed + ducking, sfx), brand-driven look; then Studio mode, mobile form factor, TinyFish fallback recorder.
+6. Trailer grammar (statement/montage/stat scenes, speed ramps, music bed + ducking, sfx), brand-driven look; then Studio mode, mobile form factor, local access diagnostics.
 
 **Aditya: Web + DemoBoard**
 1. `DESIGN.md`: tokens, components, the 7 screens (PRD §5.1), landing page.

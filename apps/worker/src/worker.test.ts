@@ -1,7 +1,15 @@
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FlowsFile, Job, JobConfig, JobEvent, Script, jobPaths, type JobConfigInput } from "@agentcast/shared";
+import {
+  FlowsFile,
+  Job,
+  JobConfig,
+  JobEvent,
+  Script,
+  jobPaths,
+  type JobConfigInput,
+} from "@agentcast/shared";
 import { readArtifact, writeArtifact } from "@agentcast/shared/node";
 import { pino } from "pino";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
@@ -78,17 +86,23 @@ async function create(worker: Worker, body: JobConfigInput): Promise<Job> {
   return res.json();
 }
 
-async function until(worker: Worker, id: string, done: (job: Job) => boolean): Promise<Job> {
+async function until(
+  worker: Worker,
+  id: string,
+  done: (job: Job) => boolean,
+): Promise<Job> {
   const deadline = Date.now() + 5000;
   for (;;) {
     const job = await worker.orchestrator.get(id);
     if (job && done(job)) return job;
-    if (Date.now() > deadline) throw new Error(`timed out; job is ${JSON.stringify(job?.status)}`);
+    if (Date.now() > deadline)
+      throw new Error(`timed out; job is ${JSON.stringify(job?.status)}`);
     await new Promise((r) => setTimeout(r, 10));
   }
 }
 
-const waitingAt = (gate: string) => (job: Job) => job.stages[gate as keyof Job["stages"]].status === "waiting";
+const waitingAt = (gate: string) => (job: Job) =>
+  job.stages[gate as keyof Job["stages"]].status === "waiting";
 
 function decide(worker: Worker, id: string, gate: string, payload: unknown) {
   return worker.app.inject({
@@ -131,7 +145,9 @@ describe("a job through the stub pipeline", () => {
     });
     expect(res.statusCode).toBe(202);
     const hi = await readArtifact(join(dir, jobPaths.script("hi")), Script);
-    expect(hi.segments.find((s) => s.beatId === "b-cta")!.text).toBe("अभी आज़माएँ।");
+    expect(hi.segments.find((s) => s.beatId === "b-cta")!.text).toBe(
+      "अभी आज़माएँ।",
+    );
 
     // Gate 3: revise once, then approve.
     job = await until(worker, id, waitingAt("gate-preview"));
@@ -141,7 +157,11 @@ describe("a job through the stub pipeline", () => {
       revise: "Zoom harder on the template",
     });
     expect(res.statusCode).toBe(202);
-    job = await until(worker, id, (j) => waitingAt("gate-preview")(j) && j.stages.direct.attempts === 2);
+    job = await until(
+      worker,
+      id,
+      (j) => waitingAt("gate-preview")(j) && j.stages.direct.attempts === 2,
+    );
     expect(job.stages.preview.attempts).toBe(2);
     res = await decide(worker, id, "gate-preview", { action: "approve" });
     expect(res.statusCode).toBe(202);
@@ -153,7 +173,9 @@ describe("a job through the stub pipeline", () => {
 
     // state.json and events.ndjson on disk agree with what the API said.
     await worker.orchestrator.flush();
-    expect((await readArtifact(join(dir, jobPaths.state), Job)).status).toBe("done");
+    expect((await readArtifact(join(dir, jobPaths.state), Job)).status).toBe(
+      "done",
+    );
     const events = (await readFile(join(dir, jobPaths.events), "utf8"))
       .trim()
       .split("\n")
@@ -161,7 +183,9 @@ describe("a job through the stub pipeline", () => {
     expect(events.map((e) => e.seq)).toEqual(events.map((_, i) => i + 1));
     expect(events.at(-1)).toMatchObject({ type: "job", status: "done" });
     expect(events.some((e) => e.type === "agent")).toBe(true);
-    expect(events.some((e) => e.type === "artifact" && e.path === jobPaths.edl)).toBe(true);
+    expect(
+      events.some((e) => e.type === "artifact" && e.path === jobPaths.edl),
+    ).toBe(true);
   });
 
   test("autopilot runs to the end with no decisions", async () => {
@@ -178,8 +202,14 @@ describe("a job through the stub pipeline", () => {
       record: async () => Promise.reject(new Error("Chrome crashed")),
     };
     const orchestrator = new Orchestrator(store, failing, gates, silent);
-    const { id } = await orchestrator.create(JobConfig.parse(config({ autopilot: true })));
-    const job = await until({ orchestrator } as Worker, id, (j) => j.status === "failed");
+    const { id } = await orchestrator.create(
+      JobConfig.parse(config({ autopilot: true })),
+    );
+    const job = await until(
+      { orchestrator } as Worker,
+      id,
+      (j) => j.status === "failed",
+    );
     expect(job.stages.record).toMatchObject({
       status: "failed",
       error: { message: "Chrome crashed" },
@@ -190,28 +220,46 @@ describe("a job through the stub pipeline", () => {
 });
 
 describe("gates", () => {
-  test("keeps review open when a client approves a failed rehearsal or no flows",async()=>{
-    const worker=start();
-    const {id}=await create(worker,config());
-    await until(worker,id,waitingAt("gate-flows"));
-    const path=join(home,"jobs",id,jobPaths.flows);
-    const file=await readArtifact(path,FlowsFile);
-    file.flows[0]!.rehearsal={ok:false,reason:"An overlay prevented the click"};
-    await writeArtifact(path,FlowsFile,file);
-    const response=await decide(worker,id,"gate-flows",{action:"approve",flows:[{id:file.flows[0]!.id,selected:true}]});
+  test("keeps review open when a client approves a failed rehearsal or no flows", async () => {
+    const worker = start();
+    const { id } = await create(worker, config());
+    await until(worker, id, waitingAt("gate-flows"));
+    const path = join(home, "jobs", id, jobPaths.flows);
+    const file = await readArtifact(path, FlowsFile);
+    file.flows[0]!.rehearsal = {
+      ok: false,
+      reason: "An overlay prevented the click",
+    };
+    await writeArtifact(path, FlowsFile, file);
+    const response = await decide(worker, id, "gate-flows", {
+      action: "approve",
+      flows: [{ id: file.flows[0]!.id, selected: true }],
+    });
     expect(response.statusCode).toBe(400);
     expect(response.json().error).toContain("rehearsal failed");
-    expect((await worker.orchestrator.get(id))?.stages["gate-flows"].status).toBe("waiting");
-    const empty=await decide(worker,id,"gate-flows",{action:"approve",flows:file.flows.map(flow=>({id:flow.id,selected:false}))});
+    expect(
+      (await worker.orchestrator.get(id))?.stages["gate-flows"].status,
+    ).toBe("waiting");
+    const empty = await decide(worker, id, "gate-flows", {
+      action: "approve",
+      flows: file.flows.map((flow) => ({ id: flow.id, selected: false })),
+    });
     expect(empty.statusCode).toBe(400);
   });
   test("rejects unknown gates, early decisions, bad bodies and unknown flows", async () => {
     const worker = start();
     const { id } = await create(worker, config());
-    expect((await decide(worker, id, "gate-nope", { action: "approve" })).statusCode).toBe(404);
-    expect((await decide(worker, id, "gate-script", { action: "approve" })).statusCode).toBe(409);
+    expect(
+      (await decide(worker, id, "gate-nope", { action: "approve" })).statusCode,
+    ).toBe(404);
+    expect(
+      (await decide(worker, id, "gate-script", { action: "approve" }))
+        .statusCode,
+    ).toBe(409);
     await until(worker, id, waitingAt("gate-flows"));
-    expect((await decide(worker, id, "gate-flows", { action: "yes" })).statusCode).toBe(400);
+    expect(
+      (await decide(worker, id, "gate-flows", { action: "yes" })).statusCode,
+    ).toBe(400);
     const res = await decide(worker, id, "gate-flows", {
       action: "approve",
       flows: [{ id: "flow-ghost", selected: true }],
@@ -231,29 +279,51 @@ describe("gate actions", () => {
       "gate-flows": {
         "edit-step": {
           schema: z.object({ text: z.string().min(1) }),
-          run: () => new Promise<unknown>((resolve) => (finish = () => resolve({ title: "Create" }))),
+          run: () =>
+            new Promise<unknown>(
+              (resolve) => (finish = () => resolve({ title: "Create" })),
+            ),
           done: (r: unknown) => `edited ${(r as { title: string }).title}`,
         },
         "add-flow": {
           schema: z.object({}),
-          run: async () => Promise.reject(new Error("TinyFish run failed")),
+          run: async () =>
+            Promise.reject(new Error("Browser exploration failed")),
           done: () => "added",
         },
       },
     };
-    const orchestrator = new Orchestrator(store, stages, gates, silent, actions);
+    const orchestrator = new Orchestrator(
+      store,
+      stages,
+      gates,
+      silent,
+      actions,
+    );
     const { id } = await orchestrator.create(JobConfig.parse(config()));
-    await expect(orchestrator.act(id, "gate-flows", "edit-step", { text: "x" })).rejects.toMatchObject({ status: 409 });
+    await expect(
+      orchestrator.act(id, "gate-flows", "edit-step", { text: "x" }),
+    ).rejects.toMatchObject({ status: 409 });
     await until({ orchestrator } as Worker, id, waitingAt("gate-flows"));
-    await expect(orchestrator.act(id, "gate-flows", "nope", {})).rejects.toMatchObject({ status: 404 });
-    await expect(orchestrator.act(id, "gate-flows", "edit-step", { text: "" })).rejects.toMatchObject({ status: 400 });
+    await expect(
+      orchestrator.act(id, "gate-flows", "nope", {}),
+    ).rejects.toMatchObject({ status: 404 });
+    await expect(
+      orchestrator.act(id, "gate-flows", "edit-step", { text: "" }),
+    ).rejects.toMatchObject({ status: 400 });
 
-    await expect(orchestrator.act(id, "gate-flows", "edit-step", { text: "Create" })).resolves.toEqual({
+    await expect(
+      orchestrator.act(id, "gate-flows", "edit-step", { text: "Create" }),
+    ).resolves.toEqual({
       accepted: true,
     });
     // Still working: no second action, no decision.
-    await expect(orchestrator.act(id, "gate-flows", "add-flow", {})).rejects.toMatchObject({ status: 409 });
-    await expect(orchestrator.decide(id, "gate-flows", { action: "approve" })).rejects.toMatchObject({ status: 409 });
+    await expect(
+      orchestrator.act(id, "gate-flows", "add-flow", {}),
+    ).rejects.toMatchObject({ status: 409 });
+    await expect(
+      orchestrator.decide(id, "gate-flows", { action: "approve" }),
+    ).rejects.toMatchObject({ status: 409 });
     finish();
     const bus = (await orchestrator.events(id))!;
     const actionEvents = async (n: number) => {
@@ -264,7 +334,11 @@ describe("gate actions", () => {
       }
       throw new Error("no action events");
     };
-    expect((await actionEvents(2)).map((e) => e.type === "action" && [e.name, e.status, e.message])).toEqual([
+    expect(
+      (await actionEvents(2)).map(
+        (e) => e.type === "action" && [e.name, e.status, e.message],
+      ),
+    ).toEqual([
       ["edit-step", "started", undefined],
       ["edit-step", "done", "edited Create"],
     ]);
@@ -273,9 +347,11 @@ describe("gate actions", () => {
     expect(events.at(-1)).toMatchObject({
       name: "add-flow",
       status: "failed",
-      message: "TinyFish run failed",
+      message: "Browser exploration failed",
     });
-    expect((await orchestrator.get(id))!.stages["gate-flows"].status).toBe("waiting");
+    expect((await orchestrator.get(id))!.stages["gate-flows"].status).toBe(
+      "waiting",
+    );
     await orchestrator.decide(id, "gate-flows", { action: "approve" });
     await orchestrator.cancel(id);
     await orchestrator.flush();
@@ -315,8 +391,12 @@ describe("API", () => {
         })
       ).statusCode,
     ).toBe(400);
-    expect((await worker.app.inject({ url: "/jobs/job_nope" })).statusCode).toBe(404);
-    expect((await worker.app.inject({ url: "/jobs/..%2F..%2Fetc" })).statusCode).toBe(404);
+    expect(
+      (await worker.app.inject({ url: "/jobs/job_nope" })).statusCode,
+    ).toBe(404);
+    expect(
+      (await worker.app.inject({ url: "/jobs/..%2F..%2Fetc" })).statusCode,
+    ).toBe(404);
     const { id } = await create(worker, config());
     const list = (await worker.app.inject({ url: "/jobs" })).json();
     expect(list.jobs.map((j: Job) => j.id)).toEqual([id]);
@@ -343,8 +423,16 @@ describe("API", () => {
     expect(part.rawPayload.length).toBe(100);
     expect(part.headers["content-range"]).toMatch(/^bytes 0-99\/\d+$/);
 
-    for (const path of ["auth/session.enc", "../../secret.key", "%2E%2E/%2E%2E/secret.key", "missing.json"]) {
-      expect((await worker.app.inject({ url: `/files/${id}/${path}` })).statusCode, path).toBe(404);
+    for (const path of [
+      "auth/session.enc",
+      "../../secret.key",
+      "%2E%2E/%2E%2E/secret.key",
+      "missing.json",
+    ]) {
+      expect(
+        (await worker.app.inject({ url: `/files/${id}/${path}` })).statusCode,
+        path,
+      ).toBe(404);
     }
   });
 
@@ -354,13 +442,17 @@ describe("API", () => {
     await until(worker, id, (j) => j.status === "done");
     await worker.app.listen({ host: "127.0.0.1", port: 0 });
     const address = worker.app.server.address() as { port: number };
-    const res = await fetch(`http://127.0.0.1:${address.port}/jobs/${id}/events`, {
-      headers: { "last-event-id": "3" },
-    });
+    const res = await fetch(
+      `http://127.0.0.1:${address.port}/jobs/${id}/events`,
+      {
+        headers: { "last-event-id": "3" },
+      },
+    );
     expect(res.headers.get("content-type")).toMatch(/^text\/event-stream/);
     const reader = res.body!.getReader();
     let text = "";
-    while (!text.includes('"status":"done"}')) text += new TextDecoder().decode((await reader.read()).value);
+    while (!text.includes('"status":"done"}'))
+      text += new TextDecoder().decode((await reader.read()).value);
     await reader.cancel();
     const ids = [...text.matchAll(/^id: (\d+)$/gm)].map((m) => Number(m[1]));
     expect(ids[0]).toBe(4);
@@ -372,15 +464,28 @@ describe("lifecycle", () => {
   test("sign-in signals target the current job/attempt, are idempotent, and expire with the stage", async () => {
     const contexts = new Map<string, StageContext>();
     let release!: () => void;
-    const saving = new Promise<void>((resolve) => { release = resolve; });
-    const worker = startWith({ auth: async (ctx) => {
-      const done = ctx.when("signed-in");
-      contexts.set(ctx.jobId, ctx);
-      await done;
-      await saving;
-    } });
-    const signal = (id: string, attempt = 1, stage = "auth", name = "signed-in") =>
-      worker.app.inject({ method: "POST", url: `/jobs/${id}/stages/${stage}/signals/${name}`, payload: { attempt } });
+    const saving = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const worker = startWith({
+      auth: async (ctx) => {
+        const done = ctx.when("signed-in");
+        contexts.set(ctx.jobId, ctx);
+        await done;
+        await saving;
+      },
+    });
+    const signal = (
+      id: string,
+      attempt = 1,
+      stage = "auth",
+      name = "signed-in",
+    ) =>
+      worker.app.inject({
+        method: "POST",
+        url: `/jobs/${id}/stages/${stage}/signals/${name}`,
+        payload: { attempt },
+      });
     const a = await create(worker, config({ auth: { mode: "sign-in-once" } }));
     const b = await create(worker, config({ auth: { mode: "sign-in-once" } }));
     await until(worker, a.id, () => contexts.has(a.id));
@@ -389,12 +494,22 @@ describe("lifecycle", () => {
     expect((await signal(a.id, 1, "discover")).statusCode).toBe(400);
     expect((await signal(a.id, 1, "auth", "anything")).statusCode).toBe(400);
     expect((await signal(a.id, 2)).statusCode).toBe(409);
-    expect((await worker.app.inject({ method: "POST", url: `/jobs/${a.id}/stages/auth/signals/signed-in`, payload: {} })).statusCode).toBe(400);
+    expect(
+      (
+        await worker.app.inject({
+          method: "POST",
+          url: `/jobs/${a.id}/stages/auth/signals/signed-in`,
+          payload: {},
+        })
+      ).statusCode,
+    ).toBe(400);
     expect((await signal(a.id)).statusCode).toBe(202);
     expect((await signal(a.id)).statusCode).toBe(202);
     release();
     await until(worker, a.id, waitingAt("gate-flows"));
-    expect((await worker.orchestrator.get(b.id))?.stages.auth.status).toBe("running");
+    expect((await worker.orchestrator.get(b.id))?.stages.auth.status).toBe(
+      "running",
+    );
     expect((await signal(a.id)).statusCode).toBe(409);
     await worker.orchestrator.cancel(b.id);
     expect((await signal(b.id)).statusCode).toBe(409);
@@ -402,12 +517,23 @@ describe("lifecycle", () => {
   });
 
   test("public jobs and attempts without a registered waiter reject completion", async () => {
-    const worker = startWith({ auth: async (ctx) => {
-      await new Promise<void>((resolve) => ctx.signal.addEventListener("abort", () => resolve(), { once: true }));
-    } });
-    for (const auth of [{ mode: "public" }, { mode: "sign-in-once" }] as const) {
+    const worker = startWith({
+      auth: async (ctx) => {
+        await new Promise<void>((resolve) =>
+          ctx.signal.addEventListener("abort", () => resolve(), { once: true }),
+        );
+      },
+    });
+    for (const auth of [
+      { mode: "public" },
+      { mode: "sign-in-once" },
+    ] as const) {
       const { id } = await create(worker, config({ auth }));
-      const response = await worker.app.inject({ method: "POST", url: `/jobs/${id}/stages/auth/signals/signed-in`, payload: { attempt: 1 } });
+      const response = await worker.app.inject({
+        method: "POST",
+        url: `/jobs/${id}/stages/auth/signals/signed-in`,
+        payload: { attempt: 1 },
+      });
       expect(response.statusCode).toBe(409);
       await worker.orchestrator.cancel(id);
     }
@@ -415,16 +541,31 @@ describe("lifecycle", () => {
 
   test("a worker restart requires a new completion signal for the new auth attempt", async () => {
     let observed!: StageContext;
-    const auth = async (ctx: StageContext) => { observed = ctx; await ctx.when("signed-in"); };
+    const auth = async (ctx: StageContext) => {
+      observed = ctx;
+      await ctx.when("signed-in");
+    };
     const first = startWith({ auth });
-    const { id } = await create(first, config({ auth: { mode: "sign-in-once" } }));
+    const { id } = await create(
+      first,
+      config({ auth: { mode: "sign-in-once" } }),
+    );
     await until(first, id, () => Boolean(observed));
     const old = observed;
     await first.close();
     const next = startWith({ auth });
     await next.orchestrator.resumeAll();
-    await until(next, id, (job) => job.stages.auth.attempts === 2 && observed !== old);
-    const signal = (attempt: number) => next.app.inject({ method: "POST", url: `/jobs/${id}/stages/auth/signals/signed-in`, payload: { attempt } });
+    await until(
+      next,
+      id,
+      (job) => job.stages.auth.attempts === 2 && observed !== old,
+    );
+    const signal = (attempt: number) =>
+      next.app.inject({
+        method: "POST",
+        url: `/jobs/${id}/stages/auth/signals/signed-in`,
+        payload: { attempt },
+      });
     expect((await signal(1)).statusCode).toBe(409);
     expect((await signal(2)).statusCode).toBe(202);
     await until(next, id, waitingAt("gate-flows"));
@@ -434,15 +575,28 @@ describe("lifecycle", () => {
   test("a stage that fails or finishes by window closure clears its unused signal", async () => {
     for (const fail of [false, true]) {
       let context!: StageContext;
-      const worker = startWith({ auth: async (ctx) => {
-        context = ctx;
-        void ctx.when("signed-in");
-        if (fail) throw new Error("window could not open");
-      } });
-      const { id } = await create(worker, config({ auth: { mode: "sign-in-once" } }));
-      await until(worker, id, (job) => job.stages.auth.status === (fail ? "failed" : "done"));
+      const worker = startWith({
+        auth: async (ctx) => {
+          context = ctx;
+          void ctx.when("signed-in");
+          if (fail) throw new Error("window could not open");
+        },
+      });
+      const { id } = await create(
+        worker,
+        config({ auth: { mode: "sign-in-once" } }),
+      );
+      await until(
+        worker,
+        id,
+        (job) => job.stages.auth.status === (fail ? "failed" : "done"),
+      );
       await expect(context.when("signed-in")).rejects.toThrow("not running");
-      const res = await worker.app.inject({ method: "POST", url: `/jobs/${id}/stages/auth/signals/signed-in`, payload: { attempt: 1 } });
+      const res = await worker.app.inject({
+        method: "POST",
+        url: `/jobs/${id}/stages/auth/signals/signed-in`,
+        payload: { attempt: 1 },
+      });
       expect(res.statusCode).toBe(409);
     }
   });
@@ -557,8 +711,13 @@ describe("lifecycle", () => {
     const job = res.json() as Job;
     expect(job.status).toBe("cancelled");
     expect(job.stages.understand.status).toBe("cancelled");
-    expect((await worker.app.inject({ method: "POST", url: `/jobs/${id}/cancel` })).statusCode).toBe(202);
-    expect((await readArtifact(join(home, "jobs", id, jobPaths.state), Job)).status).toBe("cancelled");
+    expect(
+      (await worker.app.inject({ method: "POST", url: `/jobs/${id}/cancel` }))
+        .statusCode,
+    ).toBe(202);
+    expect(
+      (await readArtifact(join(home, "jobs", id, jobPaths.state), Job)).status,
+    ).toBe("cancelled");
   });
 
   test("a restarted worker resumes running stages and waiting gates", async () => {

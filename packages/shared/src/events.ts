@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { IsoTime } from "./common.ts";
-import { GateName, JobStatus, StageError, StageName, StageStatus } from "./job.ts";
+import {
+  GateName,
+  JobStatus,
+  StageError,
+  StageName,
+  StageStatus,
+} from "./job.ts";
 
 // events.ndjson and the SSE stream (GET /jobs/:id/events). One JSON object per line / message.
 
@@ -12,7 +18,12 @@ const base = {
 };
 
 export const JobEvent = z.discriminatedUnion("type", [
-  z.object({ ...base, type: z.literal("job"), status: JobStatus, message: z.string().optional() }),
+  z.object({
+    ...base,
+    type: z.literal("job"),
+    status: JobStatus,
+    message: z.string().optional(),
+  }),
   z.object({
     ...base,
     type: z.literal("stage"),
@@ -45,7 +56,7 @@ export const JobEvent = z.discriminatedUnion("type", [
     kind: z.enum(["text", "tool_use", "done", "error"]),
     text: z.string(),
   }),
-  /** A TinyFish agent run, for the live agent views. */
+  /** A local browser agent run, for the live agent views. */
   z.object({
     ...base,
     type: z.literal("agent"),
@@ -54,14 +65,19 @@ export const JobEvent = z.discriminatedUnion("type", [
     agentId: z.string(),
     title: z.string(),
     status: z.enum(["started", "step", "done", "failed", "cancelled"]),
-    /** TinyFish live view; safe to send to the browser. */
+    /** Legacy live-view URL; never embedded by the current UI. */
     streamingUrl: z.url().optional(),
     step: z.string().optional(),
-    /** Job-relative path or TinyFish URL of the latest frame. */
+    /** Job-relative path of the latest public exploration frame. */
     screenshot: z.string().optional(),
   }),
   /** An artifact was written; the UI can refetch it from GET /files/<jobId>/<path>. */
-  z.object({ ...base, type: z.literal("artifact"), stage: StageName, path: z.string() }),
+  z.object({
+    ...base,
+    type: z.literal("artifact"),
+    stage: StageName,
+    path: z.string(),
+  }),
   /** Work a waiting gate runs without releasing it (edit-step, add-flow). */
   z.object({
     ...base,
@@ -75,6 +91,8 @@ export const JobEvent = z.discriminatedUnion("type", [
 export type JobEvent = z.infer<typeof JobEvent>;
 export type JobEventType = JobEvent["type"];
 
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
 /** What a stage emits; the event bus adds seq, at and jobId. */
 export type JobEventInput = DistributiveOmit<JobEvent, "seq" | "at" | "jobId">;

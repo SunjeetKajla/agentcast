@@ -37,13 +37,26 @@ const SECRET =
 export function hasSecretTarget(
   step: Pick<Step, "action" | "secret" | "target">,
 ): boolean {
-  if ([step.target?.text, step.target?.label, step.target?.placeholder].some(
+  if (
+    [step.target?.text, step.target?.label, step.target?.placeholder].some(
       (value) => value !== undefined && SECRET.test(value),
-    )) return true;
+    )
+  )
+    return true;
   // Reports sometimes mark every authenticated action secret, even a menu click with no input.
   // Only clear that broad flag for ordinary navigation controls; credential fields remain blocked.
-  const navigation = ["click", "hover"].includes(step.action) &&
-    ["button", "link", "tab", "menuitem", "checkbox", "radio", "switch", "option"].includes(step.target?.role ?? "");
+  const navigation =
+    ["click", "hover"].includes(step.action) &&
+    [
+      "button",
+      "link",
+      "tab",
+      "menuitem",
+      "checkbox",
+      "radio",
+      "switch",
+      "option",
+    ].includes(step.target?.role ?? "");
   return step.secret === true && !navigation;
 }
 /** Labels that make a step destructive or outward-facing; such flows need explicit approval (PRD §9.2.1). */
@@ -120,7 +133,10 @@ export function toFlow(
       // Only text that looks like a URL counts; agents also put link text ("TodoMVC") in these fields.
       const urlish = (u?: string) =>
         u && /^(https?:\/\/|\/)/.test(u) ? u : undefined;
-      const to = abs(urlish(raw.value) ?? urlish(raw.result_url_path), startUrl);
+      const to = abs(
+        urlish(raw.value) ?? urlish(raw.result_url_path),
+        startUrl,
+      );
       if (steps.length === 0) {
         if (to) startUrl = to;
       } else
@@ -187,7 +203,7 @@ export function toFlow(
     selected: false,
     // A flow needs at least one step to be valid; an empty one is kept as a placeholder and gated out.
     steps: steps.length ? steps : [{ id: "s1", action: "wait", value: "1" }],
-    ...(ctx.runId ? { tinyfishRunId: ctx.runId } : {}),
+    ...(ctx.runId ? { agentRunId: ctx.runId } : {}),
     source: "agent",
   });
   return { flow, issues: [...new Set(issues)] };

@@ -77,7 +77,7 @@ const SHARED_HOSTS = [
 ];
 
 /**
- * The site a host belongs to: its registrable domain (tinyfish.ai for agent.tinyfish.ai; foo.co.uk
+ * The site a host belongs to: its registrable domain (product.example for agent.product.example; foo.co.uk
  * for app.foo.co.uk), or the tenant on a shared host (my-app.vercel.app). IPs and single labels are themselves.
  */
 export function siteOf(hostname: string): string {
@@ -97,7 +97,7 @@ export function siteOf(hostname: string): string {
 
 /**
  * A candidate may only send the recorder or agent to the authorized product site: the address the
- * job was given, or another part of the same site (TinyFish's app is agent.tinyfish.ai, its home tinyfish.ai).
+ * job was given, or another part of the same site (The product's app is agent.product.example, its home product.example).
  */
 export function productEntry(value: string, base: string): string {
   const url = new URL(value || base, base);

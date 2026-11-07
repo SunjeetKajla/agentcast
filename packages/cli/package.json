@@ -13,8 +13,9 @@
   "dependencies": {
     "@agentcast/shared": "workspace:*",
     "@agentcast/llm": "workspace:*",
-    "@agentcast/tinyfish": "workspace:*",
     "@agentcast/recorder": "workspace:*",
-    "@agentcast/worker": "workspace:*"
+    "@agentcast/worker": "workspace:*",
+    "@agentcast/browser": "workspace:*",
+    "zod": "^4.6.7"
   }
 }

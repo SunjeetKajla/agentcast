@@ -5,14 +5,27 @@ import { FormFactor, LocatorStrategy, Seconds } from "./common.ts";
 
 export const Expectation = z.discriminatedUnion("type", [
   z.object({ type: z.literal("url"), pattern: z.string() }),
-  z.object({ type: z.literal("text"), text: z.string(), match: z.enum(["loose", "exact"]) }),
+  z.object({
+    type: z.literal("text"),
+    text: z.string(),
+    match: z.enum(["loose", "exact"]),
+  }),
   z.object({ type: z.literal("element"), role: z.string(), name: z.string() }),
   z.object({ type: z.literal("value"), target: z.string(), value: z.string() }),
   z.object({ type: z.literal("changed") }),
 ]);
 export type Expectation = z.infer<typeof Expectation>;
 
-export const StepAction = z.enum(["navigate", "click", "type", "select", "press", "scroll", "hover", "wait"]);
+export const StepAction = z.enum([
+  "navigate",
+  "click",
+  "type",
+  "select",
+  "press",
+  "scroll",
+  "hover",
+  "wait",
+]);
 export type StepAction = z.infer<typeof StepAction>;
 
 /** A semantic target: what a human sees, never a CSS selector (PRD §7.1 row 1). */
@@ -33,7 +46,7 @@ export const Step = z.object({
   secret: z.boolean().optional(),
   expected: z.string().optional(),
   narrationHint: z.string().optional(),
-  /** TinyFish step screenshot. */
+  /** Legacy remote step screenshot; new runs use local frames. */
   screenshotUrl: z.string().optional(),
   /** Rehearsal frame after this step, relative to the job dir. Gate 1 shows it. */
   frame: z.string().optional(),
@@ -71,19 +84,39 @@ export const Flow = z.object({
   scoring: FlowScoring.optional(),
   steps: z.array(Step).min(1),
   /** Missing for guided-tour flows, which no agent ran. */
-  tinyfishRunId: z.string().optional(),
+  agentRunId: z.string().optional(),
   source: z.enum(["agent", "tour", "user"]).default("agent"),
   /** Result of the local rehearsal (§9.2 step 2). Only flows that replay are eligible. */
   rehearsal: z
-    .object({ ok: z.boolean(), seconds: Seconds.optional(), reason: z.string().optional() })
+    .object({
+      ok: z.boolean(),
+      seconds: Seconds.optional(),
+      reason: z.string().optional(),
+    })
     .optional(),
 });
 export type Flow = z.infer<typeof Flow>;
 
-export const FlowsFile = z.object({
-  schemaVersion: z.literal(1),
+const CurrentFlowsFile = z.object({
+  schemaVersion: z.literal(2),
   flows: z.array(Flow),
 });
+/** Read-only compatibility for pre-local-exploration flow artifacts. */
+export const FlowsFile = z.preprocess((raw) => {
+  const value = raw as {
+    schemaVersion?: number;
+    flows?: Array<Record<string, unknown>>;
+  };
+  if (value?.schemaVersion !== 1 || !Array.isArray(value.flows)) return raw;
+  return {
+    ...value,
+    schemaVersion: 2,
+    flows: value.flows.map(({ tinyfishRunId, ...flow }) => ({
+      ...flow,
+      ...(tinyfishRunId ? { agentRunId: tinyfishRunId } : {}),
+    })),
+  };
+}, CurrentFlowsFile);
 export type FlowsFile = z.infer<typeof FlowsFile>;
 
 export const ReplayEntry = z.object({
