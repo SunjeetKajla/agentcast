@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ProductType } from "./art.ts";
 import { Rect, Seconds } from "./common.ts";
 
 // The reference library (assets/references/skeletons.json) and the beat sheet a music-led film is
@@ -18,6 +19,10 @@ export const FilmSkeleton = z.object({
   learnedFrom: z.array(z.object({ film: z.string(), took: z.string() })).min(1),
   /** The product shapes it suits; empty suits any. */
   suits: z.array(ProductShape),
+  /** Kept for these product types (art direction picks it for them); the shape-only pick never chooses it. */
+  types: z.array(ProductType).optional(),
+  /** The music it wants: the track's energy (1–5) and moods, weighed with the personality's when the track is picked. */
+  music: z.object({ energy: z.tuple([z.number().int().min(1).max(5), z.number().int().min(1).max(5)]), moods: z.array(z.string()).min(1) }).optional(),
   /** Beats the opener's line takes. */
   openerBeats: z.number().int().min(4).max(16),
   /** The middle of the film: one module per shot, a label and then its proof. */
@@ -30,7 +35,11 @@ export const FilmSkeleton = z.object({
     maxModules: z.number().int().min(1).max(10),
     /** `path`: the camera travels across the page's regions on the beat instead of holding one. */
     camera: z.enum(["hold", "path"]),
+    /** The shot's title as a headline over its window instead of a label card before it (Superhuman, Notion Mail). */
+    headline: z.boolean().optional(),
   }),
+  /** Before the product's output plays, a beat of the film's own line ("Listen."), so the sound lands as the payoff. */
+  outputLead: z.boolean().optional(),
   /** Each module's look, cycled from a point the brand's seed picks, so two brands don't match. */
   look: z.object({
     labelOpen: z.array(z.enum(["rise", "slit", "iris"])).min(1),
@@ -38,6 +47,8 @@ export const FilmSkeleton = z.object({
     tilts: z.array(z.enum(["none", "soft", "strong"])).min(1),
     /** The whole frame inverts once, on the label nearest the film's middle (with three modules or more). */
     flipMiddle: z.boolean(),
+    /** How a page builds, cycled: cards rising, or accent outlines drawing it first (Framer). Default rise. */
+    reveal: z.array(z.enum(["rise", "wireframe"])).min(1).optional(),
   }),
   /** The product's terms riding a rule before the end card, when there's room. */
   ticker: z.boolean(),

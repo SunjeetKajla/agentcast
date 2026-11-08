@@ -135,7 +135,7 @@ function ticker(c: SceneContext, p: Extract<PrimitiveSegment["primitive"], { typ
     vars,
     `#S-rule { position: absolute; left: 0; right: 0; top: calc(50% + 60 * var(--ac-u)); height: 1px; background: var(--ac-fg); opacity: 0.45; transform-origin: 50% 50%; }
 #S-track { position: absolute; left: 0; top: calc(50% - 70 * var(--ac-u)); white-space: nowrap; display: flex; }
-.ac-term { position: relative; font-family: var(--ac-display); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; color: var(--ac-fg); font-size: calc(92 * var(--ac-u)); padding-right: calc(120 * var(--ac-u)); }
+.ac-term { flex: none; position: relative; font-family: var(--ac-display); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; color: var(--ac-fg); font-size: calc(92 * var(--ac-u)); padding-right: calc(120 * var(--ac-u)); }
 .ac-term::after { content: ""; position: absolute; left: 0; top: calc(130 * var(--ac-u)); width: 1px; height: calc(34 * var(--ac-u)); background: var(--ac-fg); }`,
     `    <div id="S-rule"></div><div id="S-track"></div>`,
     `  var t = S.el("track"), s = AC.size();
@@ -158,10 +158,10 @@ function proof(c: SceneContext, given: Extract<PrimitiveSegment["primitive"], { 
     hops: JSON.stringify(hops),
     times: JSON.stringify(hopTimes(hops.length, c.dur, c.beat).map(r3)),
     field: p.ground === "field" ? 1 : 0,
-    headline: p.headline ?? "",
+    headline: typeof p.headline === "string" ? p.headline : textIn(p.headline, c.lang),
   };
-  // A headline over the window, when art direction gave one: above it if there's room, else on it.
-  const headSize = Math.min(c.canvas.h * 0.07, win.w / Math.max(8, [...(p.headline ?? "")].length * 0.52));
+  // A headline over the window, when there is one: above it if there's room, else on it.
+  const headSize = Math.min(c.canvas.h * 0.07, win.w / Math.max(8, [...String(vars.headline)].length * 0.52));
   const above = win.y >= headSize * 1.9;
   // A camera path: each stop's region filling the window, as far as the footage stays sharp, and never past the page's edges.
   vars.path = JSON.stringify(
@@ -187,7 +187,7 @@ function proof(c: SceneContext, given: Extract<PrimitiveSegment["primitive"], { 
 #S-head { position: absolute; left: ${r1(win.x + (above ? 0 : headSize * 0.6))}px; top: ${r1(above ? win.y - headSize * 1.55 : win.y + win.h - headSize * 2.2)}px; font-family: var(--ac-display); font-weight: 600; letter-spacing: -0.02em; font-size: ${r1(headSize)}px; color: var(--ac-fg); white-space: nowrap; z-index: 3; opacity: 0;${above ? "" : ` background: var(--ac-surface, var(--ac-bg)); border-radius: 999px; padding: ${r1(headSize * 0.2)}px ${r1(headSize * 0.6)}px; box-shadow: 0 calc(16 * var(--ac-u)) calc(40 * var(--ac-u)) var(--ac-shade);`} }
 ${presses.length ? CURSOR_CSS : ""}`,
     `    <div id="S-ground"></div>
-    ${p.headline ? `<div id="S-head"></div>` : ""}
+    ${vars.headline ? `<div id="S-head"></div>` : ""}
     <div id="S-win" class="ac-window"><div id="S-plane"><video id="S-v" class="clip" src="assets/footage.mp4" muted playsinline data-start="0" data-duration="${r3(c.dur)}" data-media-start="${r3(p.in)}"${rate}></video></div><div id="S-hop"></div>${presses.length ? CURSOR_HTML : ""}</div>`,
     `  if (Number(v.field)) S.el("ground").className = "ac-ground-field";
   var win = S.el("win"), pl = AC.json(v.plane, [0, 0, 1]), tp = AC.json(v.tilt, {}), hop = S.el("hop");

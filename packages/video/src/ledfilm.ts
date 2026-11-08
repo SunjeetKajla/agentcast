@@ -43,11 +43,12 @@ export async function planLedFilm(o: {
   signal?: AbortSignal;
 }): Promise<LedFilm> {
   const [music, references] = await Promise.all([loadMusicLibrary().catch(() => undefined), loadReferenceLibrary().catch(() => undefined)]);
-  const track = pickTrack(music, { personality: o.creative.personality, edit: "trailer", seconds: o.creative.targetSeconds, seed: o.seed, led: true });
   const content = o.content ?? (await shotContent(o.recording, o.storyboard, o.timeline, o.signal));
   const wanted = o.direction?.skeletonId ?? o.skeletonId;
   const named = wanted ? references?.skeletons.find((s) => s.id === wanted) : undefined;
   const skeleton = named ?? (references ? chooseSkeleton(references, productShape(o.storyboard, o.timeline, content), o.site) : undefined);
+  // The structure first, then the music it wants: a calm one-take and a rapid-fire film don't share a track.
+  const track = pickTrack(music, { personality: o.creative.personality, edit: "trailer", seconds: o.creative.targetSeconds, seed: o.seed, led: true, ...(skeleton?.music ? { want: skeleton.music } : {}) });
   const grid = track ? beatsOf(track) : { beat: 0.5, bar: 2 };
   // Each output's length and waveform, read from the file itself.
   const outputs = [];

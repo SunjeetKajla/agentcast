@@ -23,7 +23,7 @@ import { scriptCaptions, voiceCaptions } from "./captions.ts";
 import { bezier, moveSeconds } from "./motion.ts";
 import { BED_LUFS, DUCK_DB, musicAutomation, sfxCues, type Sounds } from "./audio.ts";
 import { masteringGainDb } from "./hyperframes/render.ts";
-import { musicStyle } from "./music.ts";
+import { musicStyle, pickTrack } from "./music.ts";
 import { entriesOf, regularGrid } from "./musicanalysis.ts";
 import { beatsOf, ledStyle, planMusic } from "./musicplan.ts";
 import { shapeOf } from "./sound.ts";
@@ -670,7 +670,7 @@ describe("the reference library", () => {
 
   it("is valid, and its label-then-proof entry is the template's default", async () => {
     const library = await loadReferenceLibrary();
-    expect(library!.skeletons.map((s) => s.id)).toEqual(["modules", "rapid", "glide", "type-led"]);
+    expect(library!.skeletons.map((s) => s.id)).toEqual(["modules", "rapid", "glide", "type-led", "showcase", "canvas", "listen"]);
     expect(library!.skeletons.find((s) => s.id === "modules")).toEqual(DEFAULT_SKELETON);
   });
 
@@ -822,6 +822,40 @@ describe("the reference library", () => {
     expect(frame[0]).toBeLessThanOrEqual(170);
     expect(frame[0] + frame[2]).toBeGreaterThanOrEqual(830);
     expect(frame[2]).toBeLessThan(1440);
+  });
+
+  it("gives each structure its own kind of music, and jobs different tracks within it", () => {
+    const track = (id: string, energy: number, mood: string[]) => ({ id, file: `${id}.mp3`, title: id, source: "x", license: "CC0", mood, energy, bpm: 120, firstBeat: 0, seconds: 180, lufs: -14, truePeak: -1, analysis: { confidence: "medium" as const, entries: [0], tailEnd: 170 } });
+    const library = { schemaVersion: 1 as const, tracks: [track("hype", 5, ["energetic", "driving", "electronic"]), track("calm", 2, ["calm", "minimal", "ambient"]), track("warm", 2, ["warm", "calm", "inspiring"]), track("still", 2, ["calm", "minimal", "elegant"])] };
+    const pick = (want: { energy: [number, number]; moods: string[] } | undefined, seed = "job") =>
+      pickTrack(library as never, { personality: "energetic", edit: "trailer", seconds: 25, seed, led: true, ...(want ? { want } : {}) })!.id;
+    expect(pick(undefined)).toBe("hype");
+    // A one-take wants calm music even for an energetic brand; different jobs land on different calm tracks.
+    const calm = { energy: [2, 3] as [number, number], moods: ["calm", "minimal", "ambient", "elegant"] };
+    expect(pick(calm)).not.toBe("hype");
+    expect(new Set(["a", "b", "c", "d", "e", "f", "g", "h"].map((seed) => pick(calm, seed))).size).toBeGreaterThan(1);
+  });
+
+  it("keeps a skeleton for its product types, and builds the films the new structures describe", async () => {
+    const library = (await loadReferenceLibrary())!;
+    for (const seed of ["a", "b", "c", "d", "e", "f"]) expect(chooseSkeleton(library, "prompt", seed).id).not.toBe("listen");
+    const listen = library.skeletons.find((s) => s.id === "listen")!;
+    const t = timeline([
+      { t: 1, kind: "type", stepId: "s2", value: "hello there friend", bbox: [300, 300, 500, 44] },
+      { t: 3, kind: "click", stepId: "s3", bbox: [800, 300, 80, 40] },
+      { t: 5, layout: { panel: [780, 20, 640, 860], groups: [] } },
+    ]);
+    const outputs = [{ file: "record/output/f-01.mp3", flowId: "f", t: 3.5, seconds: 2.4, peaks: Array(16).fill(0.5) }];
+    const film = ledPlan({ timeline: t, storyboard: storyboard([beat("a", 0, 8, "Hear it")]), scripts: { en: script([beat("a", 0, 8, "Hear it")]) }, personality: "premium", targetSeconds: 30, skeleton: listen, prefer: ["pill", "output"], assets: { outputs } });
+    // The film's line gets its own beat, then the product speaks.
+    expect(moves(film.edl)).toEqual(["label", "pill", "label", "output"]);
+    const showcase = library.skeletons.find((s) => s.id === "showcase")!;
+    const quiet = timeline([{ t: 2, layout: { panel: [780, 20, 640, 860], groups: [] } }]);
+    const shown = ledPlan({ timeline: quiet, storyboard: storyboard([beat("a", 0, 8, "Plan it")]), scripts: { en: script([beat("a", 0, 8, "Plan it")]) }, personality: "premium", targetSeconds: 30, skeleton: showcase });
+    // No cards between: the title rides the window.
+    expect(moves(shown.edl)).not.toContain("label");
+    const proof = shown.edl.segments.find((x) => x.kind === "primitive" && x.primitive.type === "proof") as PrimitiveSegment;
+    expect(proof.primitive).toMatchObject({ headline: { en: "Plan it" } });
   });
 
   it("names a recorded choice as a chip", () => {

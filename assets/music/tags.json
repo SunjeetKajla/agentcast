@@ -66,6 +66,415 @@
         ],
         "tailEnd": 165.612
       }
+    },
+    {
+      "id": "high-technologic-beat-explosion",
+      "file": "high-technologic-beat-explosion.mp3",
+      "title": "High Technologic Beat Explosion",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROBOT_DANCE_/Loyalty_Freak_Music_-_ROBOT_DANCE__-_02_High_Technologic_Beat_Explosion/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"High Technologic Beat Explosion\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "energetic",
+        "electronic",
+        "driving",
+        "hype",
+        "tech",
+        "bright"
+      ],
+      "energy": 5,
+      "bpm": 139.99,
+      "firstBeat": 0.01,
+      "seconds": 221.429,
+      "lufs": -17.2,
+      "truePeak": -0.2,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          54.871,
+          123.446,
+          137.161,
+          147.448,
+          192.022
+        ],
+        "tailEnd": 220.793
+      }
+    },
+    {
+      "id": "cant-stop-my-feet",
+      "file": "cant-stop-my-feet.mp3",
+      "title": "Can't Stop My Feet !",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_04_Cant_Stop_My_Feet_/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Can't Stop My Feet !\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "energetic",
+        "upbeat",
+        "driving",
+        "fun",
+        "bright",
+        "sport"
+      ],
+      "energy": 5,
+      "bpm": 130,
+      "firstBeat": 0.932,
+      "seconds": 185.605,
+      "lufs": -12,
+      "truePeak": -0.1,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          0.932,
+          76.626,
+          111.703
+        ],
+        "tailEnd": 183.989
+      }
+    },
+    {
+      "id": "dance-robot-activate",
+      "file": "dance-robot-activate.mp3",
+      "title": "Dance Robot ACTIVATE",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Dance Robot ACTIVATE\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "electronic",
+        "upbeat",
+        "tech",
+        "driving",
+        "playful"
+      ],
+      "energy": 4,
+      "bpm": 120,
+      "firstBeat": 0.016,
+      "seconds": 159,
+      "lufs": -12.6,
+      "truePeak": -1.1,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          8.016,
+          46.016,
+          62.016,
+          78.016,
+          94.016,
+          114.016
+        ],
+        "tailEnd": 154.757
+      }
+    },
+    {
+      "id": "go-to-the-picnic",
+      "file": "go-to-the-picnic.mp3",
+      "title": "Go to the Picnic",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/POSITIVE_ATTITUDE_/Loyalty_Freak_Music_-_POSITIVE_ATTITUDE__-_01_Go_to_the_Picnic/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Go to the Picnic\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "happy",
+        "upbeat",
+        "playful",
+        "positive",
+        "fun"
+      ],
+      "energy": 4,
+      "bpm": 140,
+      "firstBeat": 0.867,
+      "seconds": 187,
+      "lufs": -12.9,
+      "truePeak": 0,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          0.867,
+          4.296,
+          11.153,
+          18.011,
+          24.868,
+          52.297,
+          59.154,
+          83.155,
+          117.441,
+          124.298,
+          131.155,
+          138.013,
+          144.87,
+          151.727
+        ],
+        "tailEnd": 185.809
+      }
+    },
+    {
+      "id": "make-funk",
+      "file": "make-funk.mp3",
+      "title": "Make Funk",
+      "artist": "HoliznaCC0",
+      "source": "https://freemusicarchive.org/music/holiznacc0/bassic/make-funk/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Make Funk\" by HoliznaCC0, via Free Music Archive",
+      "mood": [
+        "playful",
+        "quirky",
+        "fun",
+        "groovy",
+        "upbeat"
+      ],
+      "energy": 4,
+      "bpm": 99,
+      "firstBeat": 1.825,
+      "seconds": 163.02,
+      "lufs": -8.7,
+      "truePeak": 0.5,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          1.825,
+          21.219,
+          40.613,
+          60.008,
+          81.827,
+          98.797,
+          120.615,
+          137.586
+        ],
+        "tailEnd": 161.739
+      }
+    },
+    {
+      "id": "sweet-sun",
+      "file": "sweet-sun.mp3",
+      "title": "Sweet Sun",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/POSITIVE_ATTITUDE_/Loyalty_Freak_Music_-_POSITIVE_ATTITUDE__-_04_Sweet_Sun/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Sweet Sun\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "uplifting",
+        "positive",
+        "happy",
+        "warm",
+        "bright"
+      ],
+      "energy": 3,
+      "bpm": 82.5,
+      "firstBeat": 1.467,
+      "seconds": 119.475,
+      "lufs": -12,
+      "truePeak": 0.5,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          1.467,
+          10.194,
+          24.739,
+          48.011,
+          91.645
+        ],
+        "tailEnd": 118.472
+      }
+    },
+    {
+      "id": "cowork-party-time",
+      "file": "cowork-party-time.mp3",
+      "title": "\uff23\uff4f\uff57\uff4f\uff52\uff4b \uff30\uff41\uff52\uff54\uff59 \uff34\uff49\uff4d\uff45",
+      "artist": "Anonymous420",
+      "source": "https://freemusicarchive.org/music/Anonymous420/Best_Of__Pick_Your_Player/Anonymous420_-_Best_Of_-_Pick_Your_Player_-_05___/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"\uff23\uff4f\uff57\uff4f\uff52\uff4b \uff30\uff41\uff52\uff54\uff59 \uff34\uff49\uff4d\uff45\" by Anonymous420, via Free Music Archive",
+      "mood": [
+        "corporate",
+        "upbeat",
+        "positive",
+        "tech",
+        "bright"
+      ],
+      "energy": 3,
+      "bpm": 85.5,
+      "firstBeat": 0.365,
+      "seconds": 220.058,
+      "lufs": -12.2,
+      "truePeak": -0.9,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          0.365,
+          22.821,
+          56.506,
+          78.963,
+          101.419,
+          168.788,
+          191.245
+        ],
+        "tailEnd": 220.058
+      }
+    },
+    {
+      "id": "chillin-with-a-drink-at-the-club",
+      "file": "chillin-with-a-drink-at-the-club.mp3",
+      "title": "Chillin with a drink at the club",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/TO_CHILL_AND_STAY_AWAKE/Loyalty_Freak_Music_-_TO_CHILL_AND_STAY_AWAKE_-_03_Chillin_with_a_drink_at_the_club/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Chillin with a drink at the club\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "tech",
+        "corporate",
+        "electronic",
+        "cool",
+        "minimal"
+      ],
+      "energy": 3,
+      "bpm": 130,
+      "firstBeat": 0.015,
+      "seconds": 222.538,
+      "lufs": -12.9,
+      "truePeak": 0,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          29.553,
+          40.63,
+          46.168,
+          88.629,
+          206.782
+        ],
+        "tailEnd": 222.529
+      }
+    },
+    {
+      "id": "static-shoes",
+      "file": "static-shoes.mp3",
+      "title": "Static Shoes",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/MINIMAL_AMBIENT_BOUNCE/Loyalty_Freak_Music_-_MINIMAL_AMBIENT_BOUNCE_-_04_Static_Shoes/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Static Shoes\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "minimal",
+        "tech",
+        "elegant",
+        "corporate",
+        "cool"
+      ],
+      "energy": 3,
+      "bpm": 119.99,
+      "firstBeat": 0.011,
+      "seconds": 233.039,
+      "lufs": -15.6,
+      "truePeak": -2.2,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          0.011,
+          4.012,
+          20.013,
+          30.014,
+          36.015,
+          48.016,
+          64.018,
+          104.022,
+          112.023,
+          124.025,
+          152.028,
+          160.029
+        ],
+        "tailEnd": 229.142
+      }
+    },
+    {
+      "id": "traveling-in-your-mind",
+      "file": "traveling-in-your-mind.mp3",
+      "title": "Traveling in your mind",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/TO_CHILL_AND_STAY_AWAKE/Loyalty_Freak_Music_-_TO_CHILL_AND_STAY_AWAKE_-_05_Traveling_in_your_mind/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Traveling in your mind\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "calm",
+        "ambient",
+        "inspiring",
+        "dreamy",
+        "electronic"
+      ],
+      "energy": 2,
+      "bpm": 171.96,
+      "firstBeat": 0.015,
+      "seconds": 236.561,
+      "lufs": -17.2,
+      "truePeak": 0,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          11.18,
+          67.007,
+          117.251,
+          156.33,
+          167.495,
+          212.157
+        ],
+        "tailEnd": 236.132
+      }
+    },
+    {
+      "id": "one-cool-minute",
+      "file": "one-cool-minute.mp3",
+      "title": "One Cool Minute",
+      "artist": "Loyalty Freak Music",
+      "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/MINIMAL_AMBIENT_BOUNCE/Loyalty_Freak_Music_-_MINIMAL_AMBIENT_BOUNCE_-_02_One_Cool_Minute/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"One Cool Minute\" by Loyalty Freak Music, via Free Music Archive",
+      "mood": [
+        "minimal",
+        "ambient",
+        "elegant",
+        "cinematic",
+        "calm"
+      ],
+      "energy": 2,
+      "bpm": 119.99,
+      "firstBeat": 0.006,
+      "seconds": 193,
+      "lufs": -15.6,
+      "truePeak": -0.2,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          0.006,
+          16.007,
+          48.009,
+          80.01,
+          104.011,
+          112.012,
+          144.013,
+          176.015
+        ],
+        "tailEnd": 192.654
+      }
+    },
+    {
+      "id": "roof-tops",
+      "file": "roof-tops.mp3",
+      "title": "Roof Tops",
+      "artist": "HoliznaCC0",
+      "source": "https://freemusicarchive.org/music/holiznacc0/summer-air-lo-fi/roof-tops/",
+      "license": "CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/): public domain, no credit required; \"Roof Tops\" by HoliznaCC0, via Free Music Archive",
+      "mood": [
+        "calm",
+        "warm",
+        "elegant",
+        "inspiring",
+        "lofi"
+      ],
+      "energy": 2,
+      "bpm": 80,
+      "firstBeat": 0.016,
+      "seconds": 214.452,
+      "lufs": -14.9,
+      "truePeak": -0.2,
+      "analysis": {
+        "confidence": "medium",
+        "entries": [
+          12.016,
+          72.016,
+          78.016,
+          156.015
+        ],
+        "tailEnd": 211.089
+      }
     }
   ]
 }

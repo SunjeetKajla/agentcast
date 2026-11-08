@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import {
   access,
   mkdir,
+  readdir,
   readFile,
   readlink,
   rm,
@@ -12,7 +13,7 @@ import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright-core";
 import { SessionState } from "./artifacts";
-import { productEntry } from "./access";
+import { productEntry, siteOf } from "./access";
 
 export type SignInOptions = {
   url: string;
@@ -219,10 +220,13 @@ async function signIn(options: SignInOptions): Promise<SessionState> {
         }),
       );
       const page = context.pages()[0] ?? (await context.newPage());
-      await page.goto(new URL(options.url).origin + "/", {
-        waitUntil: "domcontentloaded",
-        timeout: 15_000,
-      });
+      // Every origin of the product's site that keeps local storage: a sign-in on sarvam.ai lands on
+      // indus.sarvam.ai, whose dashboard keeps its own (an onboarding seen, a workspace chosen).
+      for (const origin of await storageOrigins(options.profileDir, options.url))
+        await page.goto(origin + "/", {
+          waitUntil: "domcontentloaded",
+          timeout: 15_000,
+        });
       const state = SessionState.parse(await context.storageState());
       if (
         !state.cookies.length &&
@@ -241,4 +245,28 @@ async function signIn(options: SignInOptions): Promise<SessionState> {
     options.signal?.removeEventListener("abort", abort);
     await quit(options.signal?.aborted);
   }
+}
+
+/**
+ * The origins on the product's site (its registrable domain) that Chrome's profile holds local storage for,
+ * read from the Local Storage database's keys, the product's own origin first.
+ */
+export async function storageOrigins(profileDir: string, url: string): Promise<string[]> {
+  const home = new URL(url).origin;
+  const site = siteOf(new URL(url).hostname);
+  const dir = join(profileDir, "Default", "Local Storage", "leveldb");
+  const found = new Set<string>([home]);
+  for (const name of await readdir(dir).catch(() => [] as string[])) {
+    if (!/\.(ldb|log)$/.test(name)) continue;
+    const text = (await readFile(join(dir, name)).catch(() => Buffer.alloc(0))).toString("latin1");
+    for (const m of text.matchAll(/(?:META:|_)(https?:\/\/[a-z0-9.-]+(?::\d+)?)/gi)) {
+      try {
+        const origin = new URL(m[1]!).origin;
+        if (siteOf(new URL(origin).hostname) === site) found.add(origin);
+      } catch {
+        // Not an origin after all.
+      }
+    }
+  }
+  return [...found].slice(0, 12);
 }

@@ -1,71 +1,469 @@
 {
-  "schemaVersion": 1,
-  "skeletons": [
+ "schemaVersion": 1,
+ "skeletons": [
+  {
+   "id": "modules",
+   "name": "Label, then proof",
+   "feel": "A short line, then the product proving it, once per feature. Steady and clear.",
+   "learnedFrom": [
     {
-      "id": "modules",
-      "name": "Label, then proof",
-      "feel": "A short line, then the product proving it, once per feature. Steady and clear.",
-      "learnedFrom": [
-        { "film": "linear-for-agents", "took": "a dark lifted UI after each short line" },
-        { "film": "raycast-pro", "took": "the label card before each proof" }
-      ],
-      "suits": [],
-      "openerBeats": 8,
-      "module": { "labelBeats": 2, "proofBeats": 6, "proofsPerShot": 1, "maxModules": 5, "camera": "hold" },
-      "look": { "labelOpen": ["rise"], "grounds": ["base"], "tilts": ["soft", "strong"], "flipMiddle": true },
-      "ticker": true,
-      "endBeats": 8,
-      "target": { "changesPer10s": [2, 4], "stillPct": 10 }
+     "film": "linear-for-agents",
+     "took": "a dark lifted UI after each short line"
     },
     {
-      "id": "rapid",
-      "name": "Rapid-fire",
-      "feel": "A cut on almost every other beat: a word, then two angles on the product. Hype.",
-      "learnedFrom": [
-        { "film": "raycast-pro", "took": "0.5 s labels and 1–1.5 s proofs, 7.7 scene changes per 10 s, no stills" },
-        { "film": "lovable-2", "took": "type and lifted UI alternating, the frame inverting between them" }
-      ],
-      "suits": ["board", "list", "panel", "page"],
-      "openerBeats": 6,
-      "module": { "labelBeats": 1, "proofBeats": 3, "proofsPerShot": 2, "maxModules": 6, "camera": "hold" },
-      "look": { "labelOpen": ["rise", "slit"], "grounds": ["base", "invert"], "tilts": ["strong", "none", "soft"], "flipMiddle": false },
-      "ticker": false,
-      "endBeats": 8,
-      "target": { "changesPer10s": [4, 8], "stillPct": 3 }
-    },
-    {
-      "id": "glide",
-      "name": "One take",
-      "feel": "No labels between proofs: the camera travels the product, diving into each region on the beat. Calm.",
-      "learnedFrom": [
-        { "film": "linear-agent", "took": "one tilted plane, the camera moving to the active part" },
-        { "film": "v0", "took": "zooms into regions of one continuous page" },
-        { "film": "raycast-2026", "took": "holding on one component while it works" }
-      ],
-      "suits": ["prompt", "list", "panel"],
-      "openerBeats": 8,
-      "module": { "labelBeats": 0, "proofBeats": 12, "proofsPerShot": 1, "maxModules": 3, "camera": "path" },
-      "look": { "labelOpen": ["rise"], "grounds": ["base"], "tilts": ["soft", "strong"], "flipMiddle": false },
-      "ticker": false,
-      "endBeats": 8,
-      "target": { "changesPer10s": [0.3, 1.5], "stillPct": 35 }
-    },
-    {
-      "id": "type-led",
-      "name": "Type-led",
-      "feel": "Big words carry the film on alternating grounds; the product answers each one. For thin or sparse pages.",
-      "learnedFrom": [
-        { "film": "attio-ask", "took": "a film that is mostly type, with a ticker of real terms" },
-        { "film": "lovable-2", "took": "huge words on colour fields between lifted UI" },
-        { "film": "arc-1", "took": "words on black, cut hard on the beat" }
-      ],
-      "suits": ["page", "prompt"],
-      "openerBeats": 12,
-      "module": { "labelBeats": 4, "proofBeats": 4, "proofsPerShot": 1, "maxModules": 4, "camera": "hold" },
-      "look": { "labelOpen": ["iris", "rise", "slit"], "grounds": ["invert", "base", "field"], "tilts": ["strong", "soft"], "flipMiddle": false },
-      "ticker": true,
-      "endBeats": 8,
-      "target": { "changesPer10s": [1, 3], "stillPct": 40 }
+     "film": "raycast-pro",
+     "took": "the label card before each proof"
     }
-  ]
+   ],
+   "suits": [],
+   "openerBeats": 8,
+   "module": {
+    "labelBeats": 2,
+    "proofBeats": 6,
+    "proofsPerShot": 1,
+    "maxModules": 5,
+    "camera": "hold"
+   },
+   "look": {
+    "labelOpen": [
+     "rise"
+    ],
+    "grounds": [
+     "base"
+    ],
+    "tilts": [
+     "soft",
+     "strong"
+    ],
+    "flipMiddle": true
+   },
+   "ticker": true,
+   "endBeats": 8,
+   "target": {
+    "changesPer10s": [
+     2,
+     4
+    ],
+    "stillPct": 10
+   },
+   "music": {
+    "energy": [
+     3,
+     4
+    ],
+    "moods": [
+     "corporate",
+     "upbeat",
+     "tech",
+     "positive"
+    ]
+   }
+  },
+  {
+   "id": "rapid",
+   "name": "Rapid-fire",
+   "feel": "A cut on almost every other beat: a word, then two angles on the product. Hype.",
+   "learnedFrom": [
+    {
+     "film": "raycast-pro",
+     "took": "0.5 s labels and 1–1.5 s proofs, 7.7 scene changes per 10 s, no stills"
+    },
+    {
+     "film": "lovable-2",
+     "took": "type and lifted UI alternating, the frame inverting between them"
+    }
+   ],
+   "suits": [
+    "board",
+    "list",
+    "panel",
+    "page"
+   ],
+   "openerBeats": 6,
+   "module": {
+    "labelBeats": 1,
+    "proofBeats": 3,
+    "proofsPerShot": 2,
+    "maxModules": 6,
+    "camera": "hold"
+   },
+   "look": {
+    "labelOpen": [
+     "rise",
+     "slit"
+    ],
+    "grounds": [
+     "base",
+     "invert"
+    ],
+    "tilts": [
+     "strong",
+     "none",
+     "soft"
+    ],
+    "flipMiddle": false
+   },
+   "ticker": false,
+   "endBeats": 8,
+   "target": {
+    "changesPer10s": [
+     4,
+     8
+    ],
+    "stillPct": 3
+   },
+   "music": {
+    "energy": [
+     4,
+     5
+    ],
+    "moods": [
+     "energetic",
+     "driving",
+     "electronic",
+     "hype"
+    ]
+   }
+  },
+  {
+   "id": "glide",
+   "name": "One take",
+   "feel": "No labels between proofs: the camera travels the product, diving into each region on the beat. Calm.",
+   "learnedFrom": [
+    {
+     "film": "linear-agent",
+     "took": "one tilted plane, the camera moving to the active part"
+    },
+    {
+     "film": "v0",
+     "took": "zooms into regions of one continuous page"
+    },
+    {
+     "film": "raycast-2026",
+     "took": "holding on one component while it works"
+    }
+   ],
+   "suits": [
+    "prompt",
+    "list",
+    "panel"
+   ],
+   "openerBeats": 8,
+   "module": {
+    "labelBeats": 0,
+    "proofBeats": 12,
+    "proofsPerShot": 1,
+    "maxModules": 3,
+    "camera": "path"
+   },
+   "look": {
+    "labelOpen": [
+     "rise"
+    ],
+    "grounds": [
+     "base"
+    ],
+    "tilts": [
+     "soft",
+     "strong"
+    ],
+    "flipMiddle": false
+   },
+   "ticker": false,
+   "endBeats": 8,
+   "target": {
+    "changesPer10s": [
+     0.3,
+     1.5
+    ],
+    "stillPct": 35
+   },
+   "music": {
+    "energy": [
+     2,
+     3
+    ],
+    "moods": [
+     "calm",
+     "minimal",
+     "ambient",
+     "elegant",
+     "cinematic"
+    ]
+   }
+  },
+  {
+   "id": "type-led",
+   "name": "Type-led",
+   "feel": "Big words carry the film on alternating grounds; the product answers each one. For thin or sparse pages.",
+   "learnedFrom": [
+    {
+     "film": "attio-ask",
+     "took": "a film that is mostly type, with a ticker of real terms"
+    },
+    {
+     "film": "lovable-2",
+     "took": "huge words on colour fields between lifted UI"
+    },
+    {
+     "film": "arc-1",
+     "took": "words on black, cut hard on the beat"
+    }
+   ],
+   "suits": [
+    "page",
+    "prompt"
+   ],
+   "openerBeats": 12,
+   "module": {
+    "labelBeats": 4,
+    "proofBeats": 4,
+    "proofsPerShot": 1,
+    "maxModules": 4,
+    "camera": "hold"
+   },
+   "look": {
+    "labelOpen": [
+     "iris",
+     "rise",
+     "slit"
+    ],
+    "grounds": [
+     "invert",
+     "base",
+     "field"
+    ],
+    "tilts": [
+     "strong",
+     "soft"
+    ],
+    "flipMiddle": false
+   },
+   "ticker": true,
+   "endBeats": 8,
+   "target": {
+    "changesPer10s": [
+     1,
+     3
+    ],
+    "stillPct": 40
+   },
+   "music": {
+    "energy": [
+     3,
+     5
+    ],
+    "moods": [
+     "upbeat",
+     "bright",
+     "electronic",
+     "playful"
+    ]
+   }
+  },
+  {
+   "id": "showcase",
+   "name": "Headline and window",
+   "feel": "Each feature gets a two-line headline over a big UI window, no cards between: clear, warm, one idea at a time.",
+   "learnedFrom": [
+    {
+     "film": "superhuman",
+     "took": "a headline above a white UI card at 40–55% width, one product per section"
+    },
+    {
+     "film": "notion-mail",
+     "took": "huge cropped components, the card sliding up from below the frame"
+    }
+   ],
+   "suits": [
+    "board",
+    "list",
+    "panel",
+    "page"
+   ],
+   "music": {
+    "energy": [
+     3,
+     4
+    ],
+    "moods": [
+     "uplifting",
+     "positive",
+     "bright",
+     "corporate",
+     "warm"
+    ]
+   },
+   "openerBeats": 8,
+   "module": {
+    "labelBeats": 0,
+    "proofBeats": 8,
+    "proofsPerShot": 1,
+    "maxModules": 4,
+    "camera": "hold",
+    "headline": true
+   },
+   "look": {
+    "labelOpen": [
+     "rise"
+    ],
+    "grounds": [
+     "base"
+    ],
+    "tilts": [
+     "soft",
+     "none"
+    ],
+    "flipMiddle": false
+   },
+   "ticker": false,
+   "endBeats": 8,
+   "target": {
+    "changesPer10s": [
+     1.2,
+     2.5
+    ],
+    "stillPct": 15
+   }
+  },
+  {
+   "id": "canvas",
+   "name": "Drawn, then built",
+   "feel": "The page drawn in accent outlines first, then filled in, then seen at work: precise and calm, for tools that make things.",
+   "learnedFrom": [
+    {
+     "film": "framer",
+     "took": "1-px accent outlines drawing the layout, content fading into the boxes"
+    },
+    {
+     "film": "langease",
+     "took": "near-white ground, shapes settling into the UI in one calm motion"
+    }
+   ],
+   "suits": [
+    "board",
+    "page",
+    "panel"
+   ],
+   "music": {
+    "energy": [
+     2,
+     3
+    ],
+    "moods": [
+     "minimal",
+     "tech",
+     "elegant",
+     "cool",
+     "calm"
+    ]
+   },
+   "openerBeats": 8,
+   "module": {
+    "labelBeats": 2,
+    "proofBeats": 8,
+    "proofsPerShot": 2,
+    "maxModules": 3,
+    "camera": "hold"
+   },
+   "look": {
+    "labelOpen": [
+     "rise",
+     "slit"
+    ],
+    "grounds": [
+     "base"
+    ],
+    "tilts": [
+     "none",
+     "soft"
+    ],
+    "flipMiddle": false,
+    "reveal": [
+     "wireframe",
+     "rise"
+    ]
+   },
+   "ticker": false,
+   "endBeats": 8,
+   "target": {
+    "changesPer10s": [
+     0.5,
+     1.5
+    ],
+    "stillPct": 15
+   }
+  },
+  {
+   "id": "listen",
+   "name": "Type it, hear it",
+   "feel": "For products whose result is a sound: the line typed, a beat of the film's own words, then the product speaks; its terms ride out before the end card.",
+   "learnedFrom": [
+    {
+     "film": "v0",
+     "took": "a line becoming the prompt pill, typed at a readable pace"
+    },
+    {
+     "film": "attio-ask",
+     "took": "type carrying the story, a ticker of the product's terms before the end"
+    },
+    {
+     "film": "notion-mail",
+     "took": "one component huge and alone while it works"
+    }
+   ],
+   "suits": [
+    "prompt",
+    "panel",
+    "page"
+   ],
+   "types": [
+    "voice-audio"
+   ],
+   "music": {
+    "energy": [
+     2,
+     3
+    ],
+    "moods": [
+     "warm",
+     "calm",
+     "inspiring",
+     "minimal",
+     "elegant"
+    ]
+   },
+   "openerBeats": 8,
+   "module": {
+    "labelBeats": 2,
+    "proofBeats": 8,
+    "proofsPerShot": 1,
+    "maxModules": 3,
+    "camera": "hold"
+   },
+   "outputLead": true,
+   "look": {
+    "labelOpen": [
+     "rise",
+     "slit"
+    ],
+    "grounds": [
+     "base"
+    ],
+    "tilts": [
+     "soft"
+    ],
+    "flipMiddle": false
+   },
+   "ticker": true,
+   "endBeats": 8,
+   "target": {
+    "changesPer10s": [
+     0.6,
+     2.0
+    ],
+    "stillPct": 35
+   }
+  }
+ ]
 }
