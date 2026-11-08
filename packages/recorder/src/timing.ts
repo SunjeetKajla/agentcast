@@ -60,11 +60,12 @@ export const watchable = (s: StallReport) =>
     s.p95GapMs <= WATCHABLE.p95GapMs &&
     s.maxGapMs <= WATCHABLE.maxGapMs);
 
-export function checkStalls(
+/** Original-capture gaps clipped to merged measured motion windows, on the scene clock. */
+export function motionFrameGaps(
   frameTimesMs: number[],
   windows: MotionWindow[],
   durationMs: number,
-): StallReport {
+) {
   const merged: MotionWindow[] = [];
   for (const window of [...windows].sort((a, b) => a.startMs - b.startMs)) {
     if (
@@ -82,7 +83,7 @@ export function checkStalls(
   }
   const times = [...new Set(frameTimesMs)].sort((a, b) => a - b);
   if (!times.every(Number.isFinite)) throw new Error("Invalid frame time");
-  const gaps: number[] = [];
+  const gaps: MotionWindow[] = [];
   let motionFrames = 0;
   let motionDurationMs = 0;
   for (const { startMs, endMs } of merged) {
@@ -90,10 +91,22 @@ export function checkStalls(
     // Include both boundaries: a capture that stops producing frames must fail too.
     const boundaries = [startMs, ...inside, endMs];
     for (let i = 1; i < boundaries.length; i++)
-      gaps.push(boundaries[i]! - boundaries[i - 1]!);
+      gaps.push({ startMs: boundaries[i - 1]!, endMs: boundaries[i]! });
     motionFrames += inside.length;
     motionDurationMs += endMs - startMs;
   }
+  return { gaps, motionFrames, motionDurationMs };
+}
+
+/** Evaluate source cadence; navigation evidence never relaxes measured motion limits. */
+export function checkStalls(
+  frameTimesMs: number[],
+  windows: MotionWindow[],
+  durationMs: number,
+): StallReport {
+  const measured = motionFrameGaps(frameTimesMs, windows, durationMs);
+  const { motionFrames, motionDurationMs } = measured;
+  const gaps = measured.gaps.map((gap) => gap.endMs - gap.startMs);
   const sorted = [...gaps].sort((a, b) => a - b);
   const p95GapMs = sorted[Math.ceil(sorted.length * 0.95) - 1] ?? 0;
   const maxGapMs = sorted.at(-1) ?? 0;

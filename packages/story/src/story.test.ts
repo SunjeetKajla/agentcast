@@ -210,6 +210,17 @@ describe("segmenter", () => {
 });
 
 describe("storyboard", () => {
+  it("keeps the music-led fallback's copy tied to footage, without unrelated product claims", () => {
+    const board = plainStoryboard({ mode: "launch", led: true, spans, creative: brief, product,
+      cardSeconds: { intro: 3, outro: 3 } });
+    expect(board.beats.filter((b) => b.flowId)).toHaveLength(spans.length);
+    expect(board.beats.filter((b) => !b.flowId).map((b) => b.role)).toEqual(["hook", "cta"]);
+    for (const b of board.beats.filter((b) => b.flowId)) {
+      expect(b.onScreen[0]?.kind).toBe("title");
+      expect(b.onScreen[0]!.text.split(/\s+/).length).toBeLessThanOrEqual(4);
+      expect(b.onScreen[0]!.text).not.toBe(product.valueProps[0]);
+    }
+  });
   const spans = candidateSpans([
     { flowId: "f1", title: "Make a project", timeline },
   ]);
@@ -568,10 +579,10 @@ describe("art direction", () => {
     expect(checked.changed.join("\n")).toMatch(/not in the compiler yet[\s\S]*doesn't have what it needs[\s\S]*wordmark[\s\S]*no recorded clicks/);
   });
 
-  it("grounds a brand with its own objects in them, and only then", () => {
+  it("keeps captured objects optional and validates deliberate imagery choices", () => {
     const sv = rulesDirection({ productType: "voice-audio", inventory: inv({ typing: true, imagery: 5, colourful: true, theme: "light", logoKind: "wordmark" }), skeletons, shape: "prompt", seed: "sarvam.ai" });
-    expect(sv.brand.world).toBe("imagery");
-    const one = checkDirection({ ...sv }, { inventory: inv({ imagery: 1, colourful: true, theme: "light" }), skeletons, shape: "prompt", seed: "x" });
+    expect(sv.brand.world).toBe("field");
+    const one = checkDirection({ ...sv, brand: { ...sv.brand, world: "imagery" } }, { inventory: inv({ imagery: 1, colourful: true, theme: "light" }), skeletons, shape: "prompt", seed: "x" });
     expect(one.brand.world).toBe("field");
     expect(one.changed.join()).toMatch(/one object isn't a world/);
   });

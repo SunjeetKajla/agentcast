@@ -114,6 +114,8 @@ export function toFlow(
   const steps: Step[] = [];
   for (const [i, reported] of r.steps.entries()) {
     const raw = clean(reported);
+    if (raw.outcome === "unverified")
+      issues.push(`step ${i + 1} executed without a verified outcome`);
     const action = ACTIONS[raw.action.trim().toLowerCase()];
     if (!action) {
       issues.push(
@@ -149,6 +151,7 @@ export function toFlow(
     const target = targetOf(raw, act);
     const secret = hasSecretTarget({ action: act, target, secret: raw.secret });
     const step: Step = { id: `s${steps.length + 1}`, action: act };
+    if (raw.expect?.length) step.expect = raw.expect;
     if (target) step.target = target;
     if (act === "press" && !secret) step.value = raw.value ?? "Enter";
     else if (raw.value && !secret && !raw.secret) step.value = raw.value;

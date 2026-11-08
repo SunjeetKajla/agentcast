@@ -186,6 +186,47 @@ describe("runDirector", () => {
     expect(JSON.parse(await readFile(join(dir, "edl.json"), "utf8"))).toEqual(baseline);
   });
 
+  it("repairs invalid changes from the still review before accepting them", async () => {
+    const original = firstShot(baseline).out;
+    const { llm, tasks } = fakeAgent([
+      () => edit((edl) => (edl.style.motion.hold = 1.5)),
+      () => edit((edl) => (firstShot(edl).out = 999)),
+      () => edit((edl) => (firstShot(edl).out = original)),
+    ]);
+    const run = await runDirector({ llm, dir, renderStills: async () => [join(dir, "frame.jpg")] });
+    expect(tasks).toHaveLength(3);
+    expect(tasks[2]!.prompt).toContain("still-review changes");
+    expect(run).toMatchObject({ fellBack: false, reviewedStills: true, repairRounds: 1 });
+    expect(run.edl.style.motion.hold).toBe(1.5);
+    expect(errorsOf(await checkWorkspace(dir))).toEqual([]);
+  });
+
+  it("retains the checked first pass when still-review repairs remain invalid", async () => {
+    const broken = () => edit((edl) => (firstShot(edl).out = 999));
+    const { llm } = fakeAgent([
+      () => edit((edl) => (edl.style.motion.hold = 1.5)), broken, broken, broken,
+    ]);
+    const run = await runDirector({ llm, dir, renderStills: async () => [join(dir, "frame.jpg")] });
+    expect(run).toMatchObject({ fellBack: false, repairRounds: 2 });
+    expect(run.edl.style.motion.hold).toBe(1.5);
+    expect(firstShot(run.edl).out).toBe(firstShot(baseline).out);
+    expect(run.warnings.join()).toContain("retained the last checked director edit");
+    expect(errorsOf(await checkWorkspace(dir))).toEqual([]);
+  });
+
+  it("keeps the valid director edit if its still-review turn hits a usage limit", async () => {
+    const { llm } = fakeAgent([
+      () => edit((edl) => (edl.style.motion.hold = 1.5)),
+      async () => { await edit((edl) => (firstShot(edl).out = 999)); throw new Error("llm.limit: usage limit reached"); },
+    ]);
+    const run = await runDirector({ llm, dir, renderStills: async () => [join(dir, "frame.jpg")] });
+    expect(run.fellBack).toBe(false);
+    expect(run.edl.style.motion.hold).toBe(1.5);
+    expect(firstShot(run.edl).out).toBe(firstShot(baseline).out);
+    expect(run.warnings.join()).toContain("usage limit");
+    expect(errorsOf(await checkWorkspace(dir))).toEqual([]);
+  });
+
   it("is fixed by a repair round", async () => {
     const shot = firstShot(baseline);
     const { llm } = fakeAgent([

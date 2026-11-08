@@ -65,7 +65,9 @@ function windowFor(frame: Rect, c: SceneContext) {
   const tall = c.canvas.h > c.canvas.w;
   const wide = c.canvas.w * (tall ? 0.94 : 0.78);
   const high = c.canvas.h * (tall ? 0.7 : 0.92);
-  const scale = Math.min(wide / frame[2], maxScale(c));
+  // Fit both dimensions: limiting only width silently clipped the bottom of tall
+  // document crops, particularly in the landscape export.
+  const scale = Math.min(wide / frame[2], high / frame[3], maxScale(c));
   const w = frame[2] * scale;
   const h = Math.min(frame[3] * scale, high);
   return { scale, w, h, x: (c.canvas.w - w) / 2, y: (c.canvas.h - h) / 2 };
@@ -225,16 +227,26 @@ function build(c: SceneContext, p: Extract<PrimitiveSegment["primitive"], { type
   const x1 = Math.max(...items.map((i) => i[0] + i[2]));
   const y1 = Math.max(...items.map((i) => i[1] + i[3]));
   const panning = tall && items.length > 2 && items.every((r) => r[3] > r[2]);
+  const stacked = tall && items.length === 2;
+  const gap = stacked ? c.canvas.h * 0.035 : 0;
   const shown = panning ? sorted[1]![0] + sorted[1]![2] - sorted[0]![0] : x1 - x0;
-  const scale = Math.min((c.canvas.w * 0.92) / shown, (c.canvas.h * 0.84) / (y1 - y0), maxScale(c));
+  const scale = stacked
+    ? Math.min(c.canvas.w * 0.88 / Math.max(...items.map((r) => r[2])), (c.canvas.h * 0.82 - gap) / items.reduce((h, r) => h + r[3], 0), maxScale(c))
+    : Math.min((c.canvas.w * 0.92) / shown, (c.canvas.h * 0.84) / (y1 - y0), maxScale(c));
   const left = (c.canvas.w - shown * scale) / 2;
   const top = (c.canvas.h - (y1 - y0) * scale) / 2;
   const pan = panning ? ((x1 - x0) - shown) * scale : 0;
   const image = `url(assets/${stillFile(c.id)})`;
   const size = `${r1(c.viewport.w * scale)}px ${r1(c.viewport.h * scale)}px`;
-  const place = (r: Rect) => `left: ${r1(left + (r[0] - x0) * scale)}px; top: ${r1(top + (r[1] - y0) * scale)}px; width: ${r1(r[2] * scale)}px; height: ${r1(r[3] * scale)}px; background-image: ${image}; background-size: ${size}; background-position: ${r1(-r[0] * scale)}px ${r1(-r[1] * scale)}px;`;
+  const place = (r: Rect) => {
+    const index = sorted.indexOf(r);
+    const stackHeight = sorted.reduce((h, item) => h + item[3] * scale, gap);
+    const x = stacked ? (c.canvas.w - r[2] * scale) / 2 : left + (r[0] - x0) * scale;
+    const y = stacked ? (c.canvas.h - stackHeight) / 2 + sorted.slice(0, index).reduce((h, item) => h + item[3] * scale + gap, 0) : top + (r[1] - y0) * scale;
+    return `left: ${r1(x)}px; top: ${r1(y)}px; width: ${r1(r[2] * scale)}px; height: ${r1(r[3] * scale)}px; background-image: ${image}; background-size: ${size}; background-position: ${r1(-r[0] * scale)}px ${r1(-r[1] * scale)}px;`;
+  };
   // The lifted piece has to be among what's shown.
-  const lift = p.lift && items.some((r) => p.lift![0] >= r[0] - 1 && p.lift![0] + p.lift![2] <= r[0] + r[2] + 1) ? p.lift : undefined;
+  const lift = !stacked && p.lift && items.some((r) => p.lift![0] >= r[0] - 1 && p.lift![0] + p.lift![2] <= r[0] + r[2] + 1) ? p.lift : undefined;
   const when = lift ? liftAt(items.length, c.dur, c.beat) : undefined;
   const liftTo = lift ? Math.min(2.3, (c.canvas.w * 0.55) / (lift[2] * scale)) : 1;
   const middle: [number, number] = lift

@@ -16,6 +16,7 @@ import {
   type LiveRecording,
 } from "../live.ts";
 import { watchable } from "../timing.ts";
+import type { CaptureDiagnostic, NavigationInterval } from "../diagnostics.ts";
 import { createActuator, type CursorSample } from "./act.ts";
 import { abortable } from "./control.ts";
 import { redactor, type RepairContext } from "./heal.ts";
@@ -75,6 +76,10 @@ export interface FlowTake {
   status: "failed" | "ok";
   stepId?: string;
   reason?: string;
+  kind?: "success" | "locator" | "action" | "outcome" | "capture-stall";
+  retryable?: boolean;
+  diagnostics?: CaptureDiagnostic[];
+  navigation?: NavigationInterval[];
 }
 export interface FlowRecording extends LiveRecording {
   timeline: Timeline;
@@ -94,6 +99,8 @@ class StepFailure extends Error {
   constructor(
     public readonly stepId: string,
     public readonly repair: RepairContext,
+    public readonly kind: "locator" | "action" | "outcome" = "locator",
+    public readonly navigation: NavigationInterval[] = [],
   ) {
     super(repair.reason);
   }
@@ -247,7 +254,7 @@ export async function recordFlow(
           },
           async (controls) => {
             const { page, signal, now } = controls;
-            if (options.outputs) await watchOutputs(page, { ...options.outputs, flowId: flow.id, now });
+            const stopOutputs = options.outputs ? await watchOutputs(page, { ...options.outputs, flowId: flow.id, now }) : undefined;
             // The page as an action finds it: what the action does next may cover this up.
             let found: Layout | undefined;
             const actuator = createActuator(page, {
@@ -262,185 +269,200 @@ export async function recordFlow(
               random: options.random,
             });
             cursorSamples = actuator.samples;
-            for (const step of flow.steps) {
-              signal.throwIfAborted();
-              let before: OutcomeState | undefined,
-                beforeImage: Buffer | undefined,
-                target: ResolvedTarget | undefined;
-              const tracker = trackSettle(page, {
-                signal,
-                now,
-                timeoutMs: options.settleTimeoutMs,
-              });
-              try {
-                const lookupStart = now();
-                if (step === flow.steps[0] && preparedTarget) {
-                  const verified = await abortable(
-                    selectMatch(
-                      page,
-                      preparedTarget.locator,
-                      step,
-                      options.locate?.maxCandidates ?? 100,
-                    ),
-                    signal,
-                  );
-                  if (verified.match)
-                    target = { ...preparedTarget, ...verified.match };
-                }
-                if (step.target && !target)
-                  target = await resolveTarget(page, step, {
-                    ...options.locate,
-                    signal,
-                    flowId: flow.id,
-                    formFactor,
-                    replayPlanPath,
-                    persist: false,
-                    secretValues: secrets,
-                    repair: step.id === repairStep ? repair : undefined,
-                  });
-                if (now() - lookupStart > 600)
-                  dead.push([(lookupStart + 600) / 1000, now() / 1000]);
-                if (step.secret && target)
-                  await target.locator.evaluate(
-                    (element) =>
-                      element.setAttribute("data-agentcast-redact", ""),
-                    undefined,
-                    { timeout: 1000 },
-                  );
-                before = await abortable(
-                  snapshotOutcome(page, secrets),
-                  signal,
-                );
-                if (options.locate?.heal)
-                  beforeImage = await maskedScreenshot(page, secrets, signal);
-                const url = redact(page.url());
-                found = undefined;
-                const action = await actuator.run(step, target);
-                const waitStart = now();
-                const immediate = await abortable(
-                  snapshotOutcome(page, secrets),
-                  signal,
-                );
-                let firstChangeMs =
-                  immediate.signature !== before.signature ||
-                  immediate.url !== before.url
-                    ? waitStart
-                    : undefined;
-                const settled = await tracker.wait();
-                firstChangeMs ??= settled.firstChangeMs;
-                for (const window of settled.motion)
-                  controls.markMotion(window.startMs, window.endMs);
-                const previous = await cachedLocator(
-                  replayPlanPath,
-                  formFactor,
-                  replayKey(step.id, flow.id),
-                );
-                const outcome = await verifyOutcome(page, step, before, {
-                  signal,
-                  timeoutMs: options.outcomeTimeoutMs,
-                  secretValues: secrets,
-                  locator: target?.locator,
-                  selectedValue: action.selectedValue,
-                  learned: previous?.learnedExpect,
-                  onObservation: (state) => {
-                    if (
-                      state.signature !== before!.signature ||
-                      state.url !== before!.url
-                    )
-                      firstChangeMs ??= now();
-                  },
-                });
-                // Conservatively cut only genuinely static waits, never observed animation/result changes.
-                if (
-                  !settled.motion.length &&
-                  (firstChangeMs === undefined ? now() : firstChangeMs - 200) >
-                    waitStart + 600
-                )
-                  dead.push([
-                    (waitStart + 600) / 1000,
-                    (firstChangeMs === undefined
-                      ? now()
-                      : firstChangeMs - 200) / 1000,
-                  ]);
-                const label = redact(
-                  step.narrationHint ??
-                    step.target?.text ??
-                    step.target?.label ??
-                    step.expected ??
-                    step.action,
-                );
-                events.push({
-                  t: action.at,
-                  flowId: flow.id,
-                  stepId: step.id,
-                  kind: step.action,
-                  label,
-                  url,
-                  ...action,
-                  ...(found ? { layout: found } : {}),
-                  value:
-                    step.value === undefined
-                      ? undefined
-                      : step.secret || redact(step.value) !== step.value
-                        ? { redacted: true }
-                        : step.value,
-                });
-                const settledAt = now() / 1000;
-                const layout = await abortable(
-                  pageLayout(page, action.bbox),
-                  signal,
-                );
-                events.push({
-                  t: settledAt,
-                  flowId: flow.id,
-                  stepId: step.id,
-                  kind: "settled",
-                  label,
-                  url: outcome.after.url,
-                  bbox: action.bbox,
-                  ...(layout ? { layout } : {}),
-                });
-                const entry =
-                  target?.entry ??
-                  (!step.target
-                    ? {
-                        strategy: "text" as const,
-                        locator: "",
-                        lastOk: new Date().toISOString(),
-                      }
-                    : undefined);
-                if (entry)
-                  entries[replayKey(step.id, flow.id)] = {
-                    ...entry,
-                    learnedExpect: outcome.learned,
-                  };
-              } catch (error) {
+            try {
+              for (const step of flow.steps) {
                 signal.throwIfAborted();
-                // Corrupt artifacts/provider/configuration errors must not be misreported as UI failures.
-                if (!before && !(error instanceof LocatorResolutionError))
-                  throw error;
-                const after =
-                  error instanceof OutcomeError
-                    ? error.after
-                    : await snapshotOutcome(page, secrets).catch(() => before);
-                const reason = redact(
-                  error instanceof Error ? error.message : "Action failed",
-                ).slice(0, 2000);
-                const afterImage = options.locate?.heal
-                  ? await maskedScreenshot(page, secrets, signal).catch(
-                      () => undefined,
-                    )
-                  : undefined;
-                throw new StepFailure(step.id, {
-                  reason,
-                  before: before?.aria ?? "",
-                  after: after?.aria ?? "",
-                  beforeImage,
-                  afterImage,
+                controls.markStep?.(step.id);
+                let phase: "locator" | "action" | "outcome" = "locator";
+                let before: OutcomeState | undefined,
+                  beforeImage: Buffer | undefined,
+                  target: ResolvedTarget | undefined;
+                const tracker = trackSettle(page, {
+                  signal,
+                  now,
+                  timeoutMs: options.settleTimeoutMs,
                 });
-              } finally {
-                tracker.dispose();
+                try {
+                  const lookupStart = now();
+                  if (step === flow.steps[0] && preparedTarget) {
+                    const verified = await abortable(
+                      selectMatch(
+                        page,
+                        preparedTarget.locator,
+                        step,
+                        options.locate?.maxCandidates ?? 100,
+                      ),
+                      signal,
+                    );
+                    if (verified.match)
+                      target = { ...preparedTarget, ...verified.match };
+                  }
+                  if (step.target && !target)
+                    target = await resolveTarget(page, step, {
+                      ...options.locate,
+                      signal,
+                      flowId: flow.id,
+                      formFactor,
+                      replayPlanPath,
+                      persist: false,
+                      secretValues: secrets,
+                      repair: step.id === repairStep ? repair : undefined,
+                    });
+                  if (now() - lookupStart > 600)
+                    dead.push([(lookupStart + 600) / 1000, now() / 1000]);
+                  if (step.secret && target)
+                    await target.locator.evaluate(
+                      (element) =>
+                        element.setAttribute("data-agentcast-redact", ""),
+                      undefined,
+                      { timeout: 1000 },
+                    );
+                  before = await abortable(
+                    snapshotOutcome(page, secrets),
+                    signal,
+                  );
+                  if (options.locate?.heal)
+                    beforeImage = await maskedScreenshot(page, secrets, signal);
+                  const url = redact(page.url());
+                  found = undefined;
+                  phase = "action";
+                  const action = await actuator.run(step, target);
+                  phase = "outcome";
+                  const waitStart = now();
+                  const immediate = await abortable(
+                    snapshotOutcome(page, secrets),
+                    signal,
+                  );
+                  let firstChangeMs =
+                    immediate.signature !== before.signature ||
+                    immediate.url !== before.url
+                      ? waitStart
+                      : undefined;
+                  const settled = await tracker.wait();
+                  firstChangeMs ??= settled.firstChangeMs;
+                  for (const window of settled.motion)
+                    controls.markMotion(window.startMs, window.endMs);
+                  const previous = await cachedLocator(
+                    replayPlanPath,
+                    formFactor,
+                    replayKey(step.id, flow.id),
+                  );
+                  const outcome = await verifyOutcome(page, step, before, {
+                    signal,
+                    timeoutMs: options.outcomeTimeoutMs,
+                    secretValues: secrets,
+                    locator: target?.locator,
+                    selectedValue: action.selectedValue,
+                    learned: previous?.learnedExpect,
+                    onObservation: (state) => {
+                      if (
+                        state.signature !== before!.signature ||
+                        state.url !== before!.url
+                      )
+                        firstChangeMs ??= now();
+                    },
+                  });
+                  // Conservatively cut only genuinely static waits, never observed animation/result changes.
+                  if (
+                    !settled.motion.length &&
+                    (firstChangeMs === undefined ? now() : firstChangeMs - 200) >
+                      waitStart + 600
+                  )
+                    dead.push([
+                      (waitStart + 600) / 1000,
+                      (firstChangeMs === undefined
+                        ? now()
+                        : firstChangeMs - 200) / 1000,
+                    ]);
+                  const label = redact(
+                    step.narrationHint ??
+                      step.target?.text ??
+                      step.target?.label ??
+                      step.expected ??
+                      step.action,
+                  );
+                  events.push({
+                    t: action.at,
+                    flowId: flow.id,
+                    stepId: step.id,
+                    kind: step.action,
+                    label,
+                    url,
+                    ...action,
+                    ...(found ? { layout: found } : {}),
+                    value:
+                      step.value === undefined
+                        ? undefined
+                        : step.secret || redact(step.value) !== step.value
+                          ? { redacted: true }
+                          : step.value,
+                  });
+                  const settledAt = now() / 1000;
+                  const layout = await abortable(
+                    pageLayout(page, action.bbox),
+                    signal,
+                  );
+                  events.push({
+                    t: settledAt,
+                    flowId: flow.id,
+                    stepId: step.id,
+                    kind: "settled",
+                    label,
+                    url: outcome.after.url,
+                    bbox: action.bbox,
+                    ...(layout ? { layout } : {}),
+                  });
+                  const entry =
+                    target?.entry ??
+                    (!step.target
+                      ? {
+                          strategy: "text" as const,
+                          locator: "",
+                          lastOk: new Date().toISOString(),
+                        }
+                      : undefined);
+                  if (entry)
+                    entries[replayKey(step.id, flow.id)] = {
+                      ...entry,
+                      learnedExpect: outcome.learned,
+                    };
+                } catch (error) {
+                  signal.throwIfAborted();
+                  // Corrupt artifacts/provider/configuration errors must not be misreported as UI failures.
+                  if (!before && !(error instanceof LocatorResolutionError))
+                    throw error;
+                  const after =
+                    error instanceof OutcomeError
+                      ? error.after
+                      : await snapshotOutcome(page, secrets).catch(() => before);
+                  const reason = redact(
+                    error instanceof Error ? error.message : "Action failed",
+                  ).slice(0, 2000);
+                  const afterImage = options.locate?.heal
+                    ? await maskedScreenshot(page, secrets, signal).catch(
+                        () => undefined,
+                      )
+                    : undefined;
+                  throw new StepFailure(
+                    step.id,
+                    {
+                      reason,
+                      before: before?.aria ?? "",
+                      after: after?.aria ?? "",
+                      beforeImage,
+                      afterImage,
+                    },
+                    error instanceof LocatorResolutionError
+                      ? "locator"
+                      : error instanceof OutcomeError ? "outcome" : phase,
+                    tracker.navigation().map((interval) => ({ ...interval, stepId: step.id })),
+                  );
+                } finally {
+                  tracker.dispose();
+                }
               }
+            } finally {
+              await stopOutputs?.();
             }
           },
         );
@@ -489,6 +511,10 @@ export async function recordFlow(
                 reason: `kept although uneven: ${stall.effectiveFps.toFixed(1)} fps while moving, p95 frame gap ${Math.round(stall.p95GapMs)} ms, longest ${Math.round(stall.maxGapMs)} ms`,
               }
             : { attempt, status: "ok" };
+        take.kind = "success";
+        take.retryable = false;
+        take.diagnostics = recording.takes.at(-1)?.diagnostics;
+        take.navigation = recording.takes.at(-1)?.navigation;
         takes.push(take);
         options.onTake?.(take);
         return {
@@ -508,12 +534,19 @@ export async function recordFlow(
         const take: FlowTake = {
           attempt,
           status: "failed",
-          stepId: error instanceof StepFailure ? error.stepId : undefined,
+          stepId: error.stepId,
+          kind: error.kind,
+          retryable: error instanceof LiveStallError || !!options.locate?.heal,
+          diagnostics: error instanceof LiveStallError ? error.diagnostics : undefined,
+          navigation: error.navigation,
           reason: redact(error.message),
         };
         takes.push(take);
         options.onTake?.(take);
         if (error instanceof StepFailure) {
+          // Deterministic resolution/action/outcome errors have already exhausted local polling
+          // and recovery. Replaying unchanged mutating steps cannot repair them.
+          if (!options.locate?.heal) break;
           repairStep = error.stepId;
           repair = error.repair;
         }

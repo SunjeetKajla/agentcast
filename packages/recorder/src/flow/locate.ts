@@ -213,6 +213,8 @@ export async function resolveTarget(
       : undefined;
   const cachedSpec = cached ? parseLocator(cached.locator) : undefined;
   let ambiguous = false;
+  let ambiguousThisPass = false,
+    ambiguousSince: number | undefined;
   type Found = {
     match: Match;
     spec: SemanticLocator;
@@ -240,6 +242,7 @@ export async function resolveTarget(
       maxCandidates,
     );
     ambiguous ||= selected.ambiguous;
+    ambiguousThisPass ||= selected.ambiguous;
     return selected.match
       ? { match: selected.match, spec, method, strategy }
       : undefined;
@@ -251,6 +254,7 @@ export async function resolveTarget(
       found = await abortable(
         (async () => {
           while (true) {
+            ambiguousThisPass = false;
             signal.throwIfAborted();
             if (page.isClosed())
               throw new Error("The page closed during locator resolution");
@@ -298,6 +302,13 @@ export async function resolveTarget(
                 const match = await check(best, exact?.kind ?? "fuzzy");
                 if (match) return match;
               } else if (ranked.length) ambiguous = true;
+              // Multiple eligible exact targets need new context, not a 30-second hydration wait.
+              // Give transient duplicates a short chance to settle; absent targets retain the full budget.
+              if (ambiguousThisPass) {
+                ambiguousSince ??= performance.now();
+                if (performance.now() - ambiguousSince >= 1500)
+                  return undefined;
+              } else ambiguousSince = undefined;
             } catch (error) {
               signal.throwIfAborted();
               if (page.isClosed())

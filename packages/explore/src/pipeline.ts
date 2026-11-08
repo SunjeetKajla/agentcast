@@ -14,7 +14,7 @@ import {
   Candidate,
   FlowRunResult,
   ScoutResult,
-  SCOUT_SCHEMA,
+  scoutSchema,
   FLOW_RUN_SCHEMA,
   flowGoal,
   scoutGoal,
@@ -33,6 +33,19 @@ import type {
 } from "./runtime";
 import type { Llm } from "./llm";
 import { PageAccessError, safeId } from "./local";
+import {
+  COVERAGE_PATH,
+  CoverageReport,
+  explorationBudget,
+  navigationInventory,
+  collectTaskCoverage,
+  coverageUrl,
+  coverageArea,
+  noteInspection,
+  noteReplay,
+  summarizeCoverage,
+  type ExploreBudget,
+} from "./coverage";
 
 export type ExploreOptions = {
   url: string;
@@ -55,6 +68,29 @@ export type ExploreOptions = {
   ) => void;
   progress?: (value: number, message: string) => void;
   deadlines?: { scoutMs?: number; flowMs?: number; intervalMs?: number };
+  budget?: ExploreBudget;
+};
+const budgetOf = (o: ExploreOptions) =>
+  explorationBudget({
+    ...o.budget,
+    ...(o.deadlines?.scoutMs ? { scoutTimeoutMs: o.deadlines.scoutMs } : {}),
+    ...(o.deadlines?.flowMs ? { flowTimeoutMs: o.deadlines.flowMs } : {}),
+  });
+async function readCoverage(o: ExploreOptions) {
+  try {
+    return await o.io.read(COVERAGE_PATH, CoverageReport);
+  } catch (error) {
+    if (!missing(error)) throw error;
+    return undefined;
+  }
+}
+const coverageWrites = new WeakMap<CoverageReport, Promise<unknown>>();
+const saveCoverage = (o: ExploreOptions, report: CoverageReport) => {
+  const next = (coverageWrites.get(report) ?? Promise.resolve()).then(() =>
+    o.io.write(COVERAGE_PATH, CoverageReport, summarizeCoverage(report)),
+  );
+  coverageWrites.set(report, next);
+  return next;
 };
 const browserOptions = (o: ExploreOptions): BrowserOptions => ({
   ...o.browserOptions,
@@ -99,7 +135,25 @@ async function agent<S extends typeof ScoutResult | typeof FlowRunResult>(
   request: ExplorationRequest,
   schema: S,
   scout = false,
+  coverage?: CoverageReport,
 ) {
+  const budget = budgetOf(o);
+  const maxMs = scout ? budget.scoutTimeoutMs : budget.flowTimeoutMs;
+  const maxSteps = scout ? budget.scoutMaxActions : budget.flowMaxActions;
+  let status: "done" | "failed" | "interrupted" = "failed";
+  if (coverage) {
+    await collectTaskCoverage(coverage, o.io, {
+      id,
+      source: scout ? "scout" : "flow",
+      requestedUrl: request.url,
+      status: "running",
+      maxActions: maxSteps,
+      timeoutMs: maxMs,
+      actions: 0,
+      traceAvailable: false,
+    });
+    await saveCoverage(o, coverage);
+  }
   o.onAgent?.(id, title, "started");
   try {
     const result = await runTask({
@@ -110,10 +164,8 @@ async function agent<S extends typeof ScoutResult | typeof FlowRunResult>(
       agent: o.agent,
       storageState: o.browserOptions?.storageState,
       signal: o.signal,
-      maxMs: scout
-        ? (o.deadlines?.scoutMs ?? 240_000)
-        : (o.deadlines?.flowMs ?? 300_000),
-      maxSteps: scout ? 18 : 32,
+      maxMs,
+      maxSteps,
       onUpdate: (run) =>
         o.onAgent?.(
           id,
@@ -122,11 +174,27 @@ async function agent<S extends typeof ScoutResult | typeof FlowRunResult>(
           run,
         ),
     });
+    status = "done";
     o.onAgent?.(id, title, "done");
     return result;
   } catch (error) {
+    if (o.signal?.aborted) status = "interrupted";
     o.onAgent?.(id, title, o.signal?.aborted ? "cancelled" : "failed");
     throw error;
+  } finally {
+    if (coverage) {
+      await collectTaskCoverage(coverage, o.io, {
+        id,
+        source: scout ? "scout" : "flow",
+        requestedUrl: request.url,
+        status,
+        maxActions: maxSteps,
+        timeoutMs: maxMs,
+        actions: 0,
+        traceAvailable: false,
+      });
+      await saveCoverage(o, coverage);
+    }
   }
 }
 
@@ -135,59 +203,97 @@ export async function discoverProduct(
   o: ExploreOptions,
 ): Promise<ExplorationPlan> {
   const local = await o.browser.inspect(o.url, browserOptions(o));
-  let scout: ReturnType<typeof ScoutResult.parse> | undefined;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const coverage = navigationInventory(o.url, local.facts, budgetOf(o));
+  await saveCoverage(o, coverage);
+  const budget = coverage.budget;
+  let entryUrl = o.url;
+  const candidates: Candidate[] = [];
+  const seenCandidates = new Set<string>();
+  const blocked: string[] = [];
+  let firstScout: ScoutResult | undefined;
+  const targetIds = new Set<string>();
+  const sections = coverage.areas.map((a) => ({
+    label: a.label,
+    url: a.entryUrl,
+  }));
+  const pendingSections = () =>
+    coverage.areas.filter(
+      (area) =>
+        !targetIds.has(area.id) &&
+        coverageUrl(area.entryUrl, o.url) &&
+        !coverage.paths.some(
+          (p) =>
+            p.areaId === area.id &&
+            p.evidence.some(
+              (e) => e.source === "scout" && (e.observed || e.attempted),
+            ),
+        ),
+    );
+  for (let index = 0; index < budget.maxScouts; index++) {
+    o.signal?.throwIfAborted();
+    // Reserve candidate slots for actual visits to additional major sections.
+    const target = index === 0 ? undefined : pendingSections()[0];
+    if (index && !target) break;
+    const requested = target?.entryUrl ?? o.url;
+    targetIds.add(coverageArea(requested));
+    const remaining = budget.maxFlows - candidates.length;
+    if (remaining <= 0) break;
+    const futureScouts = Math.min(
+      budget.maxScouts - index,
+      1 + pendingSections().length,
+    );
+    const candidateLimit = Math.max(1, Math.ceil(remaining / futureScouts));
+    let scout: ScoutResult;
     try {
       const result = await agent(
         o,
-        attempt ? "scout-retry" : "scout",
-        "Find the product entrance",
+        index ? `scout-section-${index}` : "scout",
+        target
+          ? `Explore ${target.label}`
+          : "Find product sections and entrance",
         {
-          url: o.url,
+          url: requested,
           goal: scoutGoal({
-            url: o.url,
+            url: requested,
             domain: new URL(o.url).hostname,
             product: o.product.name,
             focus: o.creative.mustShow.join("; "),
             signedIn: !o.publicMode,
-            ...(attempt
-              ? {
-                  retry: "no-flows" as const,
-                  entrances: local.facts.links
-                    .slice(0, 8)
-                    .map((link) => link.href),
-                }
+            maxCandidates: candidateLimit,
+            sections,
+            ...(target
+              ? { targetSection: { label: target.label, url: requested } }
               : {}),
           }),
-          output_schema: SCOUT_SCHEMA,
+          output_schema: scoutSchema(candidateLimit),
         },
         ScoutResult,
         true,
+        coverage,
       );
       scout = ScoutResult.parse(result.result);
-      if (
-        scout.candidates.length ||
-        scout.access === "blocked" ||
-        scout.access === "sign-in-required"
-      )
-        break;
+      if (!firstScout) firstScout = scout;
+      blocked.push(...(scout.blockers ?? []));
     } catch (error) {
       o.signal?.throwIfAborted();
-      // A second attempt after an interrupted browser could duplicate mutations; retain the task instead.
       const reason =
         error instanceof Error
           ? error.message.split("\n")[0]
           : "Unknown provider failure";
       o.log?.(
-        `The browser scout did not produce usable candidates (${reason?.slice(0, 200)}). Its checkpoint is retained; local tour candidates will be rehearsed.`,
+        `Browser scout ${index + 1} stopped (${reason?.slice(0, 200)}). Its checkpoint is retained without retry; other inventory sections remain eligible.`,
       );
-      break;
+      // A different section is new work, never a retry of interrupted browser actions.
+      continue;
     }
-  }
-  let entryUrl = o.url;
-  if (scout?.entry_url) {
+    let scoutEntry = requested;
     try {
-      entryUrl = await verifyFlowEntry(o, productEntry(scout.entry_url, o.url));
+      scoutEntry = await verifyFlowEntry(
+        o,
+        productEntry(scout.entry_url, requested),
+      );
+      noteInspection(coverage, scoutEntry);
+      if (index === 0) entryUrl = scoutEntry;
     } catch (error) {
       o.signal?.throwIfAborted();
       if (
@@ -197,38 +303,74 @@ export async function discoverProduct(
         throw new Error(
           "The saved session no longer opens the authenticated product. Sign in again before exploring authenticated flows.",
         );
-      entryUrl = o.url;
     }
-  }
-  const candidates = (scout?.candidates ?? [])
-    .filter(
-      (candidate) =>
-        !offSite(candidate, o.url) &&
-        !(o.publicMode && candidate.needs_sign_in) &&
-        !DESTRUCTIVE.test([candidate.title, ...candidate.outline].join(" ")),
-    )
-    .slice(0, 3)
-    .map((candidate) =>
-      Candidate.parse({
+    const safe: Candidate[] = [];
+    for (const candidate of scout.candidates) {
+      if (
+        offSite(candidate, o.url) ||
+        (o.publicMode && candidate.needs_sign_in) ||
+        DESTRUCTIVE.test([candidate.title, ...candidate.outline].join(" "))
+      )
+        continue;
+      const start = coverageUrl(candidate.start_url || scoutEntry, scoutEntry);
+      if (!start || !coverageUrl(start, o.url)) continue;
+      const normalized = Candidate.parse({
         ...candidate,
-        start_url: productEntry(candidate.start_url || entryUrl, entryUrl),
+        start_url: start,
         needs_sign_in: !o.publicMode && Boolean(candidate.needs_sign_in),
         performed: false,
         steps: [],
-      }),
-    );
+      });
+      const key = `${start}|${candidate.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()}`;
+      if (seenCandidates.has(key)) continue;
+      seenCandidates.add(key);
+      safe.push(normalized);
+    }
+    // Round-robin areas, so a long list from one family cannot crowd out other sections.
+    const groups = new Map<string, Candidate[]>();
+    for (const candidate of safe) {
+      const key = coverageArea(candidate.start_url);
+      const group = groups.get(key) ?? [];
+      group.push(candidate);
+      groups.set(key, group);
+    }
+    for (
+      let row = 0;
+      candidates.length < budget.maxFlows && row < safe.length;
+      row++
+    ) {
+      for (const group of groups.values()) {
+        if (
+          candidates.length >= budget.maxFlows ||
+          candidates.length >= budget.maxFlows - remaining + candidateLimit
+        )
+          break;
+        if (group[row]) candidates.push(group[row]!);
+      }
+      if (candidates.length >= budget.maxFlows - remaining + candidateLimit)
+        break;
+    }
+    coverage.limits.candidateFlows = candidates.length;
+    await saveCoverage(o, coverage);
+    // Access barriers stop this section only. Other authorized sections can still be public.
+  }
+  coverage.limits.candidateFlows = candidates.length;
+  await saveCoverage(o, coverage);
   const plan = ExplorationPlan.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     entryUrl,
     access: o.publicMode
       ? "public"
-      : scout?.access === "authenticated"
+      : firstScout?.access === "authenticated"
         ? "authenticated"
         : "public",
     reason: candidates.length
       ? "The entrance opens independently in local Chrome; candidates still require focused execution and rehearsal."
       : "Local Chrome confirmed a usable public surface; independently rehearsed guided tours will supplement agent discovery.",
-    blockers: [],
+    blockers: [...new Set(blocked)],
     candidates,
   });
   await o.io.write("explore/plan.json", ExplorationPlan, plan);
@@ -264,12 +406,15 @@ export async function rehearseCandidate(
 /** Focused runs execute independently; each successful rehearsal is durable before another completes. */
 export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
   const plan = await o.io.read("explore/plan.json", ExplorationPlan);
+  const coverage = await readCoverage(o);
   // This also catches an authenticated session expiring between discovery and rehearsal.
   o.progress?.(
     0.02,
     "Checking the product page locally before rehearsing flows",
   );
   const page = await o.browser.inspect(plan.entryUrl, browserOptions(o));
+  if (coverage) noteInspection(coverage, page.facts.url);
+  const candidates = plan.candidates.slice(0, budgetOf(o).maxFlows);
   const entries = new Map<string, Promise<string>>([
     [plan.entryUrl, Promise.resolve(productEntry(plan.entryUrl, o.url))],
   ]);
@@ -299,14 +444,18 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
       result.replay?.byFormFactor.desktop ?? {},
     );
     await save();
+    if (coverage) {
+      noteReplay(coverage, result.flow);
+      await saveCoverage(o, coverage);
+    }
   };
   let next = 0;
   let completed = 0;
   const perform = async () => {
-    while (next < plan.candidates.length) {
+    while (next < candidates.length) {
       o.signal?.throwIfAborted();
       const index = next++;
-      const candidate = plan.candidates[index]!;
+      const candidate = candidates[index]!;
       const id = `f${index + 1}`;
       let startUrl: string;
       try {
@@ -343,7 +492,7 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
           },
         });
         o.progress?.(
-          ++completed / Math.max(1, plan.candidates.length),
+          ++completed / Math.max(1, candidates.length),
           `Checked ${completed} candidate flows`,
         );
         continue;
@@ -366,6 +515,8 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
               output_schema: FLOW_RUN_SCHEMA,
             },
             FlowRunResult,
+            false,
+            coverage,
           );
           const normalized = toFlow(FlowRunResult.parse(run.result), {
             id,
@@ -399,13 +550,13 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
         }
       }
       o.progress?.(
-        ++completed / Math.max(1, plan.candidates.length),
+        ++completed / Math.max(1, candidates.length),
         `Rehearsed ${completed} candidate flows`,
       );
     }
   };
   await Promise.all(
-    Array.from({ length: Math.min(2, plan.candidates.length) }, perform),
+    Array.from({ length: Math.min(2, candidates.length) }, perform),
   );
   if ([...results.values()].filter((flow) => flow.rehearsal?.ok).length < 2) {
     const tours = tourFlows(page.facts, o.product.name).slice(0, 4);
@@ -499,5 +650,11 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
     schemaVersion: 2,
     flows: selected,
   });
+  if (coverage) {
+    coverage.limits.selectedFlows = selected.filter(
+      (flow) => flow.selected,
+    ).length;
+    await saveCoverage(o, coverage);
+  }
   return selected;
 }

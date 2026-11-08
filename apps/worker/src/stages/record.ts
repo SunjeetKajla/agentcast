@@ -1,10 +1,25 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { execFile } from "node:child_process";
-import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { FlowsFile, ProductOutputs, Timeline, jobPaths } from "@agentcast/shared";
+import {
+  FlowsFile,
+  ProductOutputs,
+  FlowAudioFiles,
+  Timeline,
+  RecordingDiagnostics,
+  RecordingTakeDiagnostic,
+  jobPaths,
+} from "@agentcast/shared";
 import { fixtureStages } from "@agentcast/explore";
 import {
   recordFlow,
@@ -14,6 +29,7 @@ import {
 import type { StageFn } from "./types.ts";
 import { sessionFor } from "./auth.ts";
 import { stub } from "./stub.ts";
+import { optional } from "./preview.ts";
 
 // record: film each approved flow in local Chromium (PRD §9.3). Owner: Neeraj. Desktop only for now.
 // Each flow is its own Live take (up to three tries); the takes are joined into one recording.mp4 and
@@ -64,6 +80,7 @@ export function makeRecord(
       .sort((a, b) => a.rank - b.rank);
     if (!approved.length) throw new Error("No approved flows to record.");
     const storageState = await sessionFor(ctx);
+    const diagnostics: RecordingDiagnostics = { schemaVersion: 1, takes: [] };
     if (ctx.config.auth.mode !== "public" && !storageState)
       throw new Error(
         "The signed-in session is missing. Sign in before recording.",
@@ -102,6 +119,13 @@ export function makeRecord(
             outputs: { dir: ctx.path("record/output") },
             signal: ctx.signal,
             onTake: (take) => {
+              diagnostics.takes.push(
+                RecordingTakeDiagnostic.parse({
+                  flowId: flow.id,
+                  dpr,
+                  ...take,
+                }),
+              );
               if (take.status === "ok" && take.reason)
                 ctx.log(
                   `"${flow.title}" take ${take.attempt} ${take.reason}.`,
@@ -109,8 +133,13 @@ export function makeRecord(
                 );
               if (take.status === "failed")
                 ctx.log(
-                  `"${flow.title}" take ${take.attempt} failed: ${take.reason ?? "unknown"}`,
+                  `"${flow.title}" take ${take.attempt} failed (${take.kind ?? "unknown"}${take.stepId ? ` at ${take.stepId}` : ""}; ${take.retryable ? "capture/repair retry eligible" : "needs a changed plan"}): ${take.reason ?? "unknown"}`,
                   "warn",
+                );
+              for (const detail of take.diagnostics ?? [])
+                ctx.log(
+                  `Capture evidence: ${detail.kind}${detail.stepId ? ` at ${detail.stepId}` : ""}, ${Math.round(detail.startMs)}–${Math.round(detail.endMs)} ms. ${detail.reason}`,
+                  detail.kind === "capture-stall" ? "warn" : "info",
                 );
             },
           };
@@ -131,6 +160,14 @@ export function makeRecord(
           }
           try {
             if (saved) {
+              diagnostics.takes.push({
+                flowId: flow.id,
+                dpr,
+                attempt: 0,
+                status: "ok",
+                kind: "reused",
+                retryable: false,
+              });
               recorded.push({
                 flowId: flow.id,
                 take: { path: options.outputPath, timeline: saved.timeline },
@@ -144,6 +181,9 @@ export function makeRecord(
               ])
                 await rm(path, { force: true });
               const take = await film(flow, options);
+              const detail = diagnostics.takes.at(-1);
+              if (detail?.flowId === flow.id && detail.status === "ok")
+                detail.gpu = take.gpu;
               ctx.signal.throwIfAborted();
               await ctx.write(checkpoint, RecordedTake, {
                 schemaVersion: 1,
@@ -169,6 +209,12 @@ export function makeRecord(
             ctx.log(
               `Skipped "${flow.title}": ${reason}. Keeping completed takes.`,
               "warn",
+            );
+          } finally {
+            await ctx.write(
+              jobPaths.recordingDiagnostics("desktop"),
+              RecordingDiagnostics,
+              diagnostics,
             );
           }
         }
@@ -231,18 +277,27 @@ export const record = makeRecord();
 async function keepOutputs(ctx: Parameters<StageFn>[0], timeline: Timeline) {
   const outputs: ProductOutputs["outputs"] = [];
   for (const flow of timeline.flows) {
-    const list = await readFile(ctx.path(`record/output/${flow.flowId}.json`), "utf8").then(
-      (text) => JSON.parse(text) as { file: string; type: string; t: number }[],
-      () => [],
-    );
+    const list = await optional(ctx.read(`record/output/${flow.flowId}.json`, FlowAudioFiles)) ?? [];
     for (const out of list) {
       const file = `record/output/${out.file}`;
-      outputs.push({ file, kind: "audio", type: out.type, flowId: flow.flowId, t: Math.round((flow.in + out.t) * 1000) / 1000 });
+      outputs.push({
+        file,
+        kind: "audio",
+        type: out.type,
+        flowId: flow.flowId,
+        t: Math.round((flow.in + out.t) * 1000) / 1000,
+      });
       ctx.artifact(file);
     }
   }
-  await ctx.write(jobPaths.outputs, ProductOutputs, { schemaVersion: 1, outputs });
-  if (outputs.length) ctx.log(`Kept ${outputs.length} output(s) the product made while it was recorded.`);
+  await ctx.write(jobPaths.outputs, ProductOutputs, {
+    schemaVersion: 1,
+    outputs,
+  });
+  if (outputs.length)
+    ctx.log(
+      `Kept ${outputs.length} output(s) the product made while it was recorded.`,
+    );
 }
 
 /** One timeline for the joined recording: each take's times move by the length of the takes before it. */

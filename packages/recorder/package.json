@@ -5,7 +5,12 @@
   "type": "module",
   "description": "Local Chromium recorder: Live/Studio capture, locator chain, takes, timeline.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./gpu": "./src/gpu.ts",
+    "./flow/locate": "./src/flow/locate.ts",
+    "./flow/settle": "./src/flow/settle.ts",
+    "./flow/semantic": "./src/flow/semantic.ts",
+    "./flow/outcome": "./src/flow/outcome.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

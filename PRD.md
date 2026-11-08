@@ -329,7 +329,7 @@ Priority: **P0** = required for the hackathon demo · **P1** = should have, buil
 | 7   | Orchestrator is a job pipeline                                        | **Resumable stage graph** with content-addressed artifacts                                                                                                                                                                                                                                                             | Enables crash recovery, re-run on update and CI with minimal recompute.                                                                                                                                                                                                                                                                                                                           |
 | 8 | — | Local-browser brand kit and product brief. | Reuses the same local environment as rehearsal. |
 | 9 | Remote browser recording | Dedicated local Chrome for exploration and recording. | Keeps execution and capture local and avoids remote screencast latency. |
-| 10  | One discovery run performs every flow                                 | **Short entrance scout, then up to three focused flow runs**, two at a time, each rehearsed in fresh local Chrome. Save run IDs and results incrementally.                                                                                                                                                             | Broad exploration loops, mismatched browser access and lost completion responses cost more than the extra agent startup. Focused tasks bound wasted work; durable polling avoids duplicate paid starts.                                                                                                                                     |
+| 10  | One discovery run performs every flow                                 | **Bounded section inventory and scouts, then up to six focused flow runs by default**, two at a time, each rehearsed in fresh local Chrome. Save run IDs and results incrementally.                                                                                                                                                             | Broad exploration loops, mismatched browser access and lost completion responses cost more than the extra agent startup. Focused tasks bound wasted work; durable polling avoids duplicate paid starts.                                                                                                                                     |
 | 11  | A style prompt shapes the director's edit                             | An optional **video prompt** becomes a **creative brief**, then a **storyboard** (beats with narration and motion intent). The director plans motion with the **motion design skill** as its rulebook, writes **motion tokens** every primitive obeys, and is held to the skill's critical rules by a **motion lint**. | A free-text style prompt gives the director taste but no discipline, so edit quality varies. The skill turns taste into checkable rules (one personality, directional easing, the 1/3 rules, three layers), and the brief lets the user's intent reach every stage, not just the edit.                                                                                                         |
 | 12  | Remotion renders the EDL against a fixed primitives library (Oct 2026: our outputs measured 57–69% still frames against 2–13% in the reference films) | **HyperFrames** renders a composition compiled from the EDL; the director edits its HTML scenes free-form under checked contracts (§9.7.5) | The look we want (§9.7.4) is GSAP-on-DOM motion design; HyperFrames is built for agents editing HTML (no build step, `check --json` with selectors and boxes, snapshots), it's Apache 2.0, and the pure edit math (`plan`, `camera`, `retime`, `captions`, `audio`) carries over. Remotion was removed once HyperFrames was the only path in use. |
 
@@ -401,9 +401,13 @@ Recording and exploration run locally; blocked access fails explicitly. Explorat
 
 ### 8.1 Browser tools and evidence
 
-The task-owned MCP server offers observe, navigate, act and submit. Observe returns bounded visible text, semantic target IDs and PNG image content. Act supports click, type, select, press, scroll, hover and wait. Only observed, authorized-site links may be navigated. Arbitrary Python, JavaScript, raw CDP, shell, cookie export and file access are not model tools.
+The task-owned MCP server offers observe, navigate, act, act_sequence and submit. Browser Harness supplies bounded observations and observed-link navigation; trusted worker-side Playwright executes UI actions using the recorder's semantic resolver and outcome checks. Observations preserve accessible names (including `aria-labelledby`), input labels, nearby section headings, native option values and viewport membership. Observe can omit PNG content for text-only checks. Act supports click, type, select, press, scroll, hover and wait, with optional explicit `waitFor` outcomes. A sequence contains at most three type/press/scroll/wait actions: every action is independently resolved, verified and traced; errors or an early navigation stop it. Intermediate sequence screenshots are omitted. Clicks and hover decisions remain separate. Only observed, authorized-site links may be navigated. Arbitrary Python, JavaScript, raw CDP, shell, cookie export and file access are not model tools.
 
 The worker validates tool inputs, rejects credential and destructive targets, records actual actions and observed results, and validates the submitted scout/flow report. Actual execution supplies flow steps. Independent Playwright rehearsal remains the eligibility gate for selection. Public progress frames are served from job-local files; authenticated live frames and credential forms are omitted. Historical remote live-view URLs are never embedded.
+
+For coverage inspection, `AGENTCAST_EXPLORE_VIDEO=1` retains actual public Browser Harness sessions in `explore/videos/<task>/` as WebM files, independently of the clean replay recordings. This includes scout and repair attempts and model thinking time. Tasks with restored sign-in state never enable this capture. Video files are finalized when the owned browser context closes.
+
+Exploration Chrome now uses the recorder's verified dGPU → iGPU → CPU launcher with an isolated persistent profile. Routing flags are not evidence of acceleration: WebGL rendering and CDP compositing are probed before any session state is restored. The actual renderer, feature status and fallback attempts are validated in `explore/runtime/<task>.json` and logged. `AGENTCAST_BROWSER_GPU=auto|dgpu|igpu|cpu` selects a preference; unavailable hardware falls back explicitly. GPU acceleration improves browser painting, not model thinking time.
 
 ### 8.2 Authentication and lifecycle
 
@@ -420,10 +424,14 @@ Read the actual landing page and up to nine relevant same-site linked pages with
 ### 9.2 Discover and flow runs, rehearse-first
 
 1. Independently inspect the entrance locally.
-2. Run a bounded scout through the selected logged-in CLI and Browser Harness (240 seconds, 18 actions). Propose up to three independent same-site candidates; a second scout may supplement a completed empty result.
-3. Execute focused candidates in fresh isolated browser sessions, at most two concurrently (300 seconds and 32 actions each). Record execution evidence and validate reports.
+2. Build a bounded navigation inventory from safe same-site root links, grouping major product/route families. Run up to three scouts through the selected logged-in CLI and Browser Harness (240 seconds, 18 actions each), targeting additional unvisited sections and reserving candidate slots for breadth. Default inventory: 12 sections; default candidate budget: six flows. Worker settings `AGENTCAST_EXPLORE_MAX_SECTIONS`, `AGENTCAST_EXPLORE_MAX_SCOUTS` and `AGENTCAST_EXPLORE_MAX_FLOWS` cap at 24, four and 12 respectively. Discovery budgets are independent of film selection.
+3. Execute focused candidates in fresh isolated browser sessions, at most two concurrently (300 seconds and 32 actions each). Record execution evidence and validate reports. Write `explore/coverage.json` incrementally: inventory, deterministic inspection, actual agent observations/actions, rehearsals, access barriers, tours and unvisited areas remain distinct. It explicitly reports bounded coverage, never a whole-site completeness percentage.
 4. Normalize and independently rehearse each report locally. Only clean rehearsals are eligible. Allow one separate repair for a completed report that fails normalization or rehearsal; never automatically repeat an interrupted browser task.
 5. Save results incrementally. Supplement with locally rehearsed guided tours when fewer than two candidates replay. Score and select using the existing judge. Gate edits and user-added flows use the same boundaries and rehearsal checks.
+
+Discovery, rehearsal and filming share `resolveTarget`; exact nearby headings take precedence over partial-text anchors. Stable ambiguous exact targets stop after a short grace period, while absent targets retain their hydration deadline. Executed actions whose outcomes fail verification remain in the trace and cannot be submitted as completed. Explicit checks and checks learned from real execution survive normalization into `Step.expect`.
+
+Execution evidence is independent of screenshots: confirmed actions and navigation are retained if the subsequent observation fails, without reusing an old frame as an after-state. A native action that times out after dispatch may have executed; it is traced as uncertain/unverified and cannot produce a completed flow. Keyboard activation checks the actual focused control, implicit form submissions and link destination; native submit-button clicks share that guard. Destructive/outward-facing controls and credential input remain unavailable, including through keyboard or batched actions.
 
 
 
@@ -543,6 +551,8 @@ Learned expectations are stored per form factor in `replay-plan.json`, next to t
 **Implemented flow API:** `recordFlow(flow, options)` (alias `compileFlow`) composes the existing resolver and Live recorder for one subclip. It uses a single outer maximum of three takes for locator, action, outcome and stall failures; `recordLive` receives one take per attempt. Every take starts in a fresh browser and navigates to `startUrl`, or calls a supplied `prepare` that resets server data and navigates. `locate.heal` can re-pick a still-valid but semantically wrong target using sanitized before/after ARIA, masked screenshots and the failed check. Automatic prerequisite clicks remain pending. Cancellation and infrastructure failures stop immediately.
 
 The actuator dispatches Bézier mouse movement with slight overshoot over 300–700 ms at roughly 60 Hz, hover dwell 150 ms, keyboard typing with 35–70 ms jitter and eased wheel scroll. It records cursor segments/bboxes in the timeline and returns detailed samples; a visible cursor overlay and native mobile gestures remain separate work. Settle uses DOM quiet 300 ms or request inactivity 500 ms, capped at 4 s; finite running animations supply measured motion windows excluding static tails. Checks poll up to 5 s, always enforce actual typed/selected values, ignore spinner/timestamp-only changes and require text/elements in the viewport. Hover/wait holds may omit expectations. The descriptive `expected` field is not an assertion; use `step.expect` for one.
+
+Retakes distinguish causes. Deterministic locator/action/outcome failures stop after one take unless locator healing is explicitly enabled; capture stalls retain their existing bounded retakes. Main-document request, commit and DOM-content-loaded intervals provide numeric, step-scoped diagnostics without URLs, headers or field values. A gap outside measured motion is labeled navigation/loading only when lifecycle evidence covers the whole interval. Navigation never excuses missing frames during measured motion; the 400 ms maximum and 73 ms p95 motion limits remain unchanged. The worker validates and persists every reported take in `record/desktop/diagnostics.json`, including failure kind, retry eligibility, lifecycle intervals and the selected renderer for successful new takes.
 
 Only a fully verified take, including video/stall validation, commits learned checks and locators. Failed strong checks are never weakened or replaced by newly observed wrong results. JSON artifacts use the existing version-1 schemas; non-locator steps store an empty non-executable locator with their learned checks. The API publishes the video and per-flow timeline exclusively, preserves unrelated replay entries, and removes failed scratch footage. Static resolution/outcome waits beyond 600 ms are marked conservatively as dead, preserving animation/result arrival. Hygiene installs before navigation and on subsequent documents, hides carets/scrollbars, waits for fonts, dismisses an unambiguous cookie banner, and blurs password/email/secret/PII/custom selectors including dynamic content. Secret targets are masked before typing and values become `{ "redacted": true }` in the timeline. Multi-flow joining and the worker/CLI record wiring remain pending.
 
@@ -731,7 +741,7 @@ copies a file in and measures tempo and first beat (onset envelope, autocorrelat
 toward 120, then a joint tempo-and-phase search; target accuracy 0.1 BPM and 10 ms on test tracks). Audio files aren't
 committed; `tags.json` is. The direct stage picks a track by personality moods and grammar energy, preferring
 tracks long enough not to loop (seeded by job id), and copies it into the job (`render/audio/`). With an empty
-library the video simply has no music. Tracks whose audio files are absent locally are excluded from selection. Levels: each track's gain brings it to the grammar's bed (trailer −24 LUFS,
+library a voiced video has no music; a music-led video stops with setup instructions rather than exporting without its music bed. Tracks whose audio files are absent locally are excluded from selection. Levels: each track's gain brings it to the grammar's bed (trailer −24 LUFS,
 guide −36 LUFS), under −1 dBTP. A trailer's bed starts 10 dB down and builds to full level 60% through the film.
 Ducking: the bed eases down 6 dB over 0.15 s before each line and back up over 0.5 s after, stays down between lines
 under 1.5 s apart, and is never pushed below that duck by the build. Fades in over 0.5 s, and out over the end card
@@ -864,8 +874,10 @@ The design varies by what the product is and what we actually captured (`docs/BR
     a margin of the page and keyed off it, labelled integrations or customers from the text around it. A film shows
     them only when the job allows it (`JobConfig.thirdPartyLogos`, off by default).
 - **Product outputs** (`record/outputs.json`, written by the record stage): audio the product made while it was
-  recorded. The recorder keeps what the page fetches after the flow starts (`flow/output.ts`), including base64 audio
-  in a JSON reply, with the second it arrived. Audio the page preloads for its own players never counts.
+  recorded or actually played in a recorded demo. The recorder keeps audio fetched after the flow starts
+  (`flow/output.ts`), including base64 audio in a JSON reply, with its recording time. A preloaded media sample
+  counts only after an observed playback event; unplayed preload assets are excluded. The watcher drains pending
+  writes before Chrome closes. These samples demonstrate playback, not newly generated speech.
 - **Layers** (`render/layers.json`, written by the script stage): panels, components, cards, columns and rows cut
   out of the recording from the element map, each at its latest settle.
 - **Inventory:** what a job has, computed and never written by an LLM (`inventoryOf`). It covers:
@@ -885,7 +897,7 @@ The design varies by what the product is and what we actually captured (`docs/BR
   - **The check** (`checkDirection`) changes anything the job or the compiler can't back, and records why. Moves not
     in the compiler yet (wall, glow pill, mockup, output, orbit, mascot) are never featured. Lockup needs a mark and a
     wordmark. A colour field needs a colourful brand. The imagery world needs two or more brand objects (the rules
-    choose it whenever there are). The hand needs recorded clicks.
+    do not choose it automatically: repeating decorative objects can compete with detailed UI). The hand needs recorded clicks.
   - **Shot calls** (`shots`, the director only): for a shot, a crop (`acted`: just where things were clicked, typed
     and chosen; `focus`; `page`) and a headline over it. `checkShots` keeps a headline only if it appears word for
     word in the site's text (`brief/pages/*.md`) or the script, and an `acted` crop only on a shot where something
@@ -1020,9 +1032,12 @@ Exploration contracts (`packages/shared/src/exploration.ts`, registered in the s
 | Artifact | Version | Contents |
 | --- | --- | --- |
 | `explore/tasks/<taskId>.json` | 2 | Attempt ID, input hash, state, timestamps, optional CLI session ID, validated result and safe error. |
-| `explore/plan.json` | 1 | Independently verified entrance, access classification, reason, blockers and candidate outlines. |
+| `explore/plan.json` | 2 | Independently verified entrance, access classification, reason, blockers and up to 12 candidate outlines; lightweight v1 read upgrade. |
 | `explore/rehearsals/<flowId>.json` | 2 | Flow/session input hash, independently rehearsed flow and optional replay plan. |
-| `explore/traces/<taskId>.json` | 1 | Executed actions and observed outcomes with semantic targets. |
+| `explore/traces/<taskId>.json` | 2 | Confirmed/uncertain execution, accessible semantic targets and nearby context, verified checks, sanitized URL, executor duration and settle outcome; lightweight v1 read upgrade. |
+| `explore/runtime/<taskId>.json` | 1 | Actual owned Chrome renderer, hardware-acceleration/compositing evidence and fallback attempts. |
+| `explore/coverage.json` | 1 | Bounded navigation inventory, section/path evidence, task status, action/time budgets, replay results and unvisited areas; explicitly non-exhaustive. |
+| `record/desktop/diagnostics.json` | 1 | Per-take failure kinds, retry decisions, numeric main-document lifecycle and capture-gap evidence, plus GPU facts when a new take succeeds. |
 | `auth/state.json` | 2 | Local sign-in-once metadata and sealed session filename, never served as a downloadable artifact. |
 
 `explore/flows.json` is v2 (generic agent provenance); `record/replay-plan.json` remains v1 (each wraps its contents in an object so it can carry the version); `flow-review.json` is defined with the explore stage. All validate on read/write. Task IDs distinguish scout, focused flow, repair and user-added requests. Completed matching results can be reused; interrupted tasks require a new job.

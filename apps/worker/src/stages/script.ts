@@ -125,7 +125,7 @@ export const script: StageFn = async (ctx) => {
   } catch (error) {
     ctx.signal.throwIfAborted();
     ctx.log(
-      "The storyboard writer could not produce a valid plan; using the recorded shots in order.",
+      `The storyboard writer could not produce a valid plan (${(error as Error).message.slice(0, 600)}); using the recorded shots in order.`,
       "warn",
     );
     board = plainStoryboard(input);

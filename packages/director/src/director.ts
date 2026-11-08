@@ -2,7 +2,13 @@ import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { UNTRUSTED_RULE, type Llm, type OnEvent } from "@agentcast/llm";
 import { Edl } from "@agentcast/shared";
-import { checkWorkspace, describeIssues, errorsOf, type CheckResult, type Issue } from "./check.ts";
+import {
+  checkWorkspace,
+  describeIssues,
+  errorsOf,
+  type CheckResult,
+  type Issue,
+} from "./check.ts";
 import { COMPOSITION } from "./composition.ts";
 import { CHECK_COMMAND, SNAPSHOT_COMMAND } from "./workspace.ts";
 
@@ -51,29 +57,45 @@ type Scenes = { files: Map<string, string>; compiled?: string };
 
 async function sceneFiles(dir: string): Promise<Scenes> {
   const files = new Map<string, string>();
-  for (const name of await readdir(join(dir, SCENES)).catch(() => [] as string[]))
-    if (name.endsWith(".html")) files.set(name, await readFile(join(dir, SCENES, name), "utf8"));
-  const compiled = await readFile(join(dir, COMPILED), "utf8").catch(() => undefined);
+  for (const name of await readdir(join(dir, SCENES)).catch(
+    () => [] as string[],
+  ))
+    if (name.endsWith(".html"))
+      files.set(name, await readFile(join(dir, SCENES, name), "utf8"));
+  const compiled = await readFile(join(dir, COMPILED), "utf8").catch(
+    () => undefined,
+  );
   return { files, ...(compiled === undefined ? {} : { compiled }) };
 }
 
 async function restoreScenes(dir: string, { files, compiled }: Scenes) {
   if (!files.size) return;
-  for (const name of await readdir(join(dir, SCENES)).catch(() => [] as string[]))
-    if (name.endsWith(".html") && !files.has(name)) await rm(join(dir, SCENES, name), { force: true });
+  for (const name of await readdir(join(dir, SCENES)).catch(
+    () => [] as string[],
+  ))
+    if (name.endsWith(".html") && !files.has(name))
+      await rm(join(dir, SCENES, name), { force: true });
   await mkdir(join(dir, SCENES), { recursive: true });
-  for (const [name, text] of files) await writeFile(join(dir, SCENES, name), text);
+  for (const [name, text] of files)
+    await writeFile(join(dir, SCENES, name), text);
   if (compiled !== undefined) await writeFile(join(dir, COMPILED), compiled);
 }
 
 /** Puts one scene file back as it was, with its line in the compiler's list. */
-export async function restoreScene(dir: string, id: string, { files, compiled }: Scenes) {
+export async function restoreScene(
+  dir: string,
+  id: string,
+  { files, compiled }: Scenes,
+) {
   const name = `${id}.html`;
   const text = files.get(name);
   if (text === undefined) return rm(join(dir, SCENES, name), { force: true });
   await writeFile(join(dir, SCENES, name), text);
   if (compiled === undefined) return;
-  const now = await readFile(join(dir, COMPILED), "utf8").then((t) => JSON.parse(t) as Record<string, string>, () => ({}) as Record<string, string>);
+  const now = await readFile(join(dir, COMPILED), "utf8").then(
+    (t) => JSON.parse(t) as Record<string, string>,
+    () => ({}) as Record<string, string>,
+  );
   const hash = (JSON.parse(compiled) as Record<string, string>)[id];
   if (hash) now[id] = hash;
   else delete now[id];
@@ -83,13 +105,31 @@ export async function restoreScene(dir: string, id: string, { files, compiled }:
 /** What changed outside the one part a scene revision may change. */
 export function scopeIssues(before: Edl, after: Edl, scene: string): Issue[] {
   const issues: Issue[] = [];
-  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-  const err = (at: string, message: string) => issues.push({ severity: "error", at, message });
-  if (!same(before.style, after.style)) err("style", `only ${scene} may change in this revision: put style back as it was`);
-  if (scene !== "intro" && !same(before.intro, after.intro)) err("intro", `only ${scene} may change in this revision: put the intro back as it was`);
-  if (scene !== "outro" && !same(before.outro, after.outro)) err("outro", `only ${scene} may change in this revision: put the outro back as it was`);
+  const same = (a: unknown, b: unknown) =>
+    JSON.stringify(a) === JSON.stringify(b);
+  const err = (at: string, message: string) =>
+    issues.push({ severity: "error", at, message });
+  if (!same(before.style, after.style))
+    err(
+      "style",
+      `only ${scene} may change in this revision: put style back as it was`,
+    );
+  if (scene !== "intro" && !same(before.intro, after.intro))
+    err(
+      "intro",
+      `only ${scene} may change in this revision: put the intro back as it was`,
+    );
+  if (scene !== "outro" && !same(before.outro, after.outro))
+    err(
+      "outro",
+      `only ${scene} may change in this revision: put the outro back as it was`,
+    );
   const others = (edl: Edl) => edl.segments.filter((s) => s.id !== scene);
-  if (!same(others(before), others(after))) err("segments", `only ${scene} may change in this revision: every other segment stays as it was, in the same order`);
+  if (!same(others(before), others(after)))
+    err(
+      "segments",
+      `only ${scene} may change in this revision: every other segment stays as it was, in the same order`,
+    );
   return issues;
 }
 
@@ -97,8 +137,8 @@ export function scopeIssues(before: Edl, after: Edl, scene: string): Issue[] {
  * The Claude Code director (PRD §9.7): one agent turn improves edl.json in the workspace; the worker
  * then checks it itself and sends any errors back to the same session, at most `maxRepairRounds`
  * times. With a stills renderer it then looks at frames of its edit once and fixes what it sees. If
- * the edit still doesn't pass, the edit it started from is put back, so a weak run never makes the
- * video worse. A revision resumes the session with the person's words.
+ * the edit still doesn't pass, the last checked edit is put back. A revision resumes the session
+ * with the person's words.
  */
 export async function runDirector(o: DirectorOptions): Promise<DirectorRun> {
   const before = await readFile(join(o.dir, "edl.json"), "utf8");
@@ -113,9 +153,15 @@ export async function runDirector(o: DirectorOptions): Promise<DirectorRun> {
   }
 }
 
-async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes): Promise<DirectorRun> {
+async function direct(
+  o: DirectorOptions,
+  before: string,
+  scenesBefore: Scenes,
+): Promise<DirectorRun> {
   const hasScenes = scenesBefore.files.size > 0;
-  const commands = hasScenes ? [CHECK_COMMAND, SNAPSHOT_COMMAND] : [CHECK_COMMAND];
+  const commands = hasScenes
+    ? [CHECK_COMMAND, SNAPSHOT_COMMAND]
+    : [CHECK_COMMAND];
   // Codex has no shell: say so up front, so it doesn't plan around the check and snapshots.
   const shell = o.llm.resolve
     ? await o.llm.resolve("smart").then(
@@ -127,10 +173,24 @@ async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes):
     ? ""
     : "\nYou can't run commands in this workspace: ignore the check and snapshot commands in DIRECTOR.md. The worker runs the same check after your turn and sends you anything it finds.";
   const what = hasScenes ? "edl.json and your scene files" : "edl.json";
+  const checkedTurn = shell
+    ? `Run \`${CHECK_COMMAND}\` until it passes.`
+    : "Commands are unavailable. The worker checks your files after this turn; fix the reported errors in the files.";
   const scoped = o.revise && o.scene ? o.scene : undefined;
   const check = async (): Promise<CheckResult> => {
-    const result = await checkWorkspace(o.dir, { ...(o.secrets ? { secrets: o.secrets } : {}), ...(o.signal ? { signal: o.signal } : {}) });
-    return scoped && result.edl ? { ...result, issues: [...result.issues, ...scopeIssues(Edl.parse(JSON.parse(before)), result.edl, scoped)] } : result;
+    const result = await checkWorkspace(o.dir, {
+      ...(o.secrets ? { secrets: o.secrets } : {}),
+      ...(o.signal ? { signal: o.signal } : {}),
+    });
+    return scoped && result.edl
+      ? {
+          ...result,
+          issues: [
+            ...result.issues,
+            ...scopeIssues(Edl.parse(JSON.parse(before)), result.edl, scoped),
+          ],
+        }
+      : result;
   };
   let sessionId = o.resume;
   const turn = async (prompt: string, images?: string[]) => {
@@ -151,7 +211,10 @@ async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes):
     return result.text.trim();
   };
 
-  const part = scoped === "intro" || scoped === "outro" ? `the ${scoped} (\`${scoped}\` in edl.json)` : `the segment \`${scoped}\` in edl.json`;
+  const part =
+    scoped === "intro" || scoped === "outro"
+      ? `the ${scoped} (\`${scoped}\` in edl.json)`
+      : `the segment \`${scoped}\` in edl.json`;
   let summary = await turn(
     o.revise
       ? scoped
@@ -165,12 +228,18 @@ async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes):
   while (errorsOf(result).length && rounds < (o.maxRepairRounds ?? 2)) {
     rounds++;
     summary = await turn(
-      `The worker checked ${what} and found these problems. Fix them, run \`${CHECK_COMMAND}\` until it passes, and reply with what you changed:\n${describeIssues(errorsOf(result))}`,
+      `The worker checked ${what} and found these problems. Fix them. ${checkedTurn} Reply with what you changed:\n${describeIssues(errorsOf(result))}`,
     );
     result = await check();
   }
   // Scene files that still break the contract go back to the catalogue's; the rest of the edit stands.
-  const brokenScenes = [...new Set(errorsOf(result).map((i) => /^composition\/compositions\/([\w-]+)\.html/.exec(i.at)?.[1]))];
+  const brokenScenes = [
+    ...new Set(
+      errorsOf(result).map(
+        (i) => /^composition\/compositions\/([\w-]+)\.html/.exec(i.at)?.[1],
+      ),
+    ),
+  ];
   if (errorsOf(result).length && brokenScenes.every(Boolean)) {
     for (const id of brokenScenes) await restoreScene(o.dir, id!, scenesBefore);
     summary = `${summary}\n\n(Scene file(s) ${brokenScenes.join(", ")} didn't pass the scene contract and went back to the catalogue's.)`;
@@ -178,20 +247,51 @@ async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes):
   }
 
   let reviewedStills = false;
+  const reviewWarnings: string[] = [];
   if (!errorsOf(result).length && result.edl && o.renderStills) {
     const stills = await o.renderStills(result.edl);
     if (stills.length) {
-      const review = await turn(
-        [
-          `These ${stills.length} images are frames of your edit as rendered, at key moments; each file name says which (a card, a shot's opening, a camera move after it lands, a callout).`,
-          `Look at each one against guides/reference-look.md where there is one. Fix what you see in ${what}: the element that matters cut off or off-centre, a callout covering what it points at, the camera resting on empty space, text that's hard to read, a frame that looks like a screen recording rather than the reference films.`,
-          `If you change anything, run \`${CHECK_COMMAND}\` until it passes. Reply with what you changed, or "No changes".`,
-        ].join("\n"),
-        stills,
-      );
-      summary = `${summary}\n\nAfter looking at stills: ${review}`;
-      reviewedStills = true;
-      result = await check();
+      // Keep the last checked edit, including custom scenes. A failed visual revision
+      // must not throw away the entire valid first pass and return to the baseline.
+      const accepted = await readFile(join(o.dir, "edl.json"), "utf8");
+      const acceptedScenes = await sceneFiles(o.dir);
+      try {
+        const review = await turn(
+          [
+            `These ${stills.length} images are frames of your edit as rendered, at key moments; each file name says which (a card, a shot's opening, a camera move after it lands, a callout).`,
+            `Look at each one against guides/reference-look.md where there is one. Fix what you see in ${what}: the element that matters cut off or off-centre, a callout covering what it points at, the camera resting on empty space, text that's hard to read, a frame that looks like a screen recording rather than the reference films.`,
+            `If you change anything, ${checkedTurn} Reply with what you changed, or "No changes".`,
+          ].join("\n"),
+          stills,
+        );
+        summary = `${summary}\n\nAfter looking at stills: ${review}`;
+        reviewedStills = true;
+        result = await check();
+        while (errorsOf(result).length && rounds < (o.maxRepairRounds ?? 2)) {
+          rounds++;
+          const repair = await turn(
+            `The worker checked your still-review changes and found these problems. Fix them. ${checkedTurn}\n${describeIssues(errorsOf(result))}`,
+          );
+          summary += `\n\nAfter repairing the still review: ${repair}`;
+          result = await check();
+        }
+        if (errorsOf(result).length || !result.edl) {
+          const warning = `The still-review changes failed validation; retained the last checked director edit. ${describeIssues(errorsOf(result))}`;
+          await writeFile(join(o.dir, "edl.json"), accepted);
+          await restoreScenes(o.dir, acceptedScenes);
+          result = await check();
+          reviewWarnings.push(warning);
+          summary += `\n\n${warning}`;
+        }
+      } catch (error) {
+        if (o.signal?.aborted) throw error;
+        await writeFile(join(o.dir, "edl.json"), accepted);
+        await restoreScenes(o.dir, acceptedScenes);
+        result = await check();
+        const warning = `The still review did not finish (${(error as Error).message}); retained the last checked director edit.`;
+        reviewWarnings.push(warning);
+        summary += `\n\n${warning}`;
+      }
     }
   }
 
@@ -215,6 +315,11 @@ async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes):
     repairRounds: rounds,
     reviewedStills,
     summary,
-    warnings: result.issues.filter((i) => i.severity === "warn").map((i) => `${i.at}: ${i.message}`),
+    warnings: [
+      ...reviewWarnings,
+      ...result.issues
+        .filter((i) => i.severity === "warn")
+        .map((i) => `${i.at}: ${i.message}`),
+    ],
   };
 }

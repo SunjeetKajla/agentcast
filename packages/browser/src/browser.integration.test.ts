@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { mkdtemp, rm, readFile } from "node:fs/promises";
+import { mkdtemp, rm, readFile, readdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it, expect } from "vitest";
@@ -97,6 +97,7 @@ describe.runIf(enabled)("Browser Harness with dedicated Chrome", () => {
         dir,
         authorizedUrl: url,
         siteOf: (h) => h,
+        recordVideo: true,
       }).run({
         id: "test",
         request: { url, goal: "Show a preview" },
@@ -118,6 +119,12 @@ describe.runIf(enabled)("Browser Harness with dedicated Chrome", () => {
           await readFile(join(dir, "explore/traces/test.json"), "utf8"),
         ).steps,
       ).toHaveLength(3);
+      const videos = await readdir(join(dir, "explore/videos/test"));
+      expect(videos.some((file) => file.endsWith(".webm"))).toBe(true);
+      for (const file of videos)
+        expect(
+          (await stat(join(dir, "explore/videos/test", file))).size,
+        ).toBeGreaterThan(0);
     } finally {
       server.closeAllConnections();
       server.close();
@@ -214,6 +221,7 @@ it.runIf(enabled)(
           dir,
           authorizedUrl: url,
           siteOf: (h) => h,
+          recordVideo: true,
         }).run({
           id: "private",
           request: { url, goal: "Observe" },
@@ -254,6 +262,9 @@ it.runIf(enabled)(
       );
       expect(trace).not.toContain("private-session-value");
       expect(trace).not.toContain("private-token");
+      await expect(readdir(join(dir, "explore/videos"))).rejects.toMatchObject({
+        code: "ENOENT",
+      });
     } finally {
       server.closeAllConnections();
       server.close();

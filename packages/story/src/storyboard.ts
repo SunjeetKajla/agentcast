@@ -227,7 +227,10 @@ export async function writeStoryboard(
       input.led
         ? "- intent: what this beat must get across, one sentence."
         : "- intent: what the narration over this beat must get across, one sentence (not the narration itself).",
-      "- onScreen: at most 2 short texts (≤ 6 words): a title, a callout on an element (give its stepId), or a lower third. Most beats need none.",
+      input.led
+        ? "- onScreen: exactly one title (≤ 4 words) for each footage beat, describing only what its span shows. No callouts or lower thirds."
+        : "- onScreen: at most 2 short texts (≤ 6 words): a title, a callout on an element (give its stepId), or a lower third. Most beats need none.",
+      "- The brief's must-show list is a wish list: omit anything the available spans do not demonstrate. Never label a shot with a different product capability.",
       `- motion: kind (reveal: something new appears; emphasis: draw attention to an element; transition: move between ideas; hold: let a result sink in), emotion (one word that fits the ${input.creative.personality} personality), and focusStepId (a stepId from the span) when one element matters most.`,
     ]
       .filter(Boolean)
@@ -324,13 +327,13 @@ export function toStoryboard(
 export function plainStoryboard(
   input: Pick<
     StoryboardInput,
-    "mode" | "spans" | "cardSeconds" | "creative" | "product"
+    "mode" | "spans" | "cardSeconds" | "creative" | "product" | "led"
   >,
 ): Storyboard {
   const shots: Draft["beats"] = input.spans.map((s) => ({
     role: "core" as const,
     spanId: s.id,
-    onScreen: [],
+    onScreen: input.led ? [{ kind: "title", text: s.flowTitle.split(/\s+/).slice(0, 4).join(" ") }] : [],
     motion: {
       kind: "emphasis" as const,
       emotion: "confident",
@@ -338,7 +341,7 @@ export function plainStoryboard(
     },
     intent: `${s.flowTitle}: ${s.actions.join(", ")}`,
   }));
-  if (editFor(input.mode) === "trailer" && shots.length >= 2) {
+  if (!input.led && editFor(input.mode) === "trailer" && shots.length >= 2) {
     const props = (input.product?.valueProps ?? [])
       .map((v) =>
         v

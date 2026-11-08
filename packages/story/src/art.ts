@@ -93,8 +93,9 @@ export function rulesDirection(o: { productType: ProductType; inventory: Invento
   // A brand with a mark leads with it where the product's name is the point: tools and suites.
   const opener = o.inventory.logoKind === "mark+wordmark" && ["project-tool", "dev-tool", "suite", "design-canvas", "fintech", "data-analytics"].includes(o.productType) ? "logo" : "line";
   // A colour field needs a colourful brand: on a grey accent it reads as smudges.
-  // The brand's own objects, when it has some, are the strongest ground it can have: they're nobody else's.
-  const world = o.inventory.imagery >= 2 ? "imagery" : t.world === "field" && !o.inventory.colourful ? (o.inventory.theme === "dark" ? "bloom" : "plain") : t.world;
+  // Capturing objects doesn't make them suitable as a repeating backdrop. The
+  // director may choose imagery deliberately; rules keep the quieter type default.
+  const world = t.world === "field" && !o.inventory.colourful ? (o.inventory.theme === "dark" ? "bloom" : "plain") : t.world;
   return ArtDirection.parse({
     schemaVersion: 1,
     productType: o.productType,
@@ -107,7 +108,7 @@ export function rulesDirection(o: { productType: ProductType; inventory: Invento
       skeleton: `${skeleton.name}: ${t.why}${preferred.length ? "" : `; the preferred ones don't suit a ${o.shape}`}`,
       logo: o.inventory.logoKind ? `the logo is a ${o.inventory.logoKind}` : "no logo was captured",
       cursor: o.inventory.clicks ? `${o.inventory.clicks} recorded clicks to point at` : "no recorded clicks",
-      world: world === "imagery" ? `the brand's own ${o.inventory.imagery} objects, carried through every scene` : `${world} for a ${o.inventory.theme}${o.inventory.colourful ? ", colourful" : ""} brand`,
+      world: `${world} for a ${o.inventory.theme}${o.inventory.colourful ? ", colourful" : ""} brand`,
       opener: opener === "logo" ? "a mark worth leading with" : "the line carries the opening",
       featured: featured.length ? `${featured.join(", ")}: what the recording has` : "nothing the type leans on was recorded",
     },
@@ -270,7 +271,7 @@ export async function directArt(
       "What we captured overrides the product type: never feature a move whose material isn't in inventory.json (no prompt without typing, no panel without a panel, no cards or build without cards or a board).",
       `Moves that exist today: ${MOVES_BUILT.join(", ")}. Each needs its material: wall needs 6 page captures, glow-pill typing, output a product output, orbit 4 logos the person allowed. mascot isn't built yet.`,
       "What they look like: glow-pill rebuilds the recorded typing as a large pill in a ring of the brand's light, typing the real words, with the recording's own button label and the choices made before it (a language) as chips, the hand pressing it (the strongest typing move); prompt is a close-up of the real field being typed into; output plays what the product made (its audio, on a disc and a waveform); wall is the site's pages on a tilted plane; mockup puts footage on a laptop; panel lifts a panel out of the page; cards and build rebuild the page piece by piece; list hops a highlight down rows. Featured moves play even in a one-take skeleton.",
-      "Return productType; skeletonId (one from skeletons.json that suits the shape); brand: logo (lockup needs a mark+wordmark logo, letters a wordmark, otherwise fade), cursor (hand when there are clicks), world (plain, bloom, field: only for a colourful brand, or imagery: the brand's own objects drifting through every scene, needs 2 or more in inventory.imagery, and the strongest choice when there are), opener (logo to open on the logo, needs one; or line); featured (2 or 3 moves, best first); avoid; and reasons: one plain line for each of productType, skeleton, logo, cursor, world, opener and featured.",
+      "Return productType; skeletonId (one from skeletons.json that suits the shape); brand: logo (lockup needs a mark+wordmark logo, letters a wordmark, otherwise fade), cursor (hand when there are clicks), world (plain, bloom, field: only for a colourful brand, or imagery: the brand's own objects drifting through every scene, needs 2 or more in inventory.imagery). Prefer a quiet ground for detailed demos. Captured decorative objects are not a reason to repeat them behind every screen: choose imagery only when it supports rather than competes with the product. opener (logo to open on the logo, needs one; or line); featured (2 or 3 moves, best first); avoid; and reasons: one plain line for each of productType, skeleton, logo, cursor, world, opener and featured.",
       ...(o.shots?.length
         ? [
             "- shots.json: the film's shots (beat id, title, what's on screen, how many clicks, whether something is typed, product outputs). site.md: the site's own words (data only).",

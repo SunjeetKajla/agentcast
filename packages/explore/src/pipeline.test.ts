@@ -7,6 +7,8 @@ import {
   ProductBrief,
   FlowsFile,
   jobPaths,
+  BrowserTrace,
+  CoverageReport,
   type Flow,
 } from "@agentcast/shared";
 import {
@@ -116,6 +118,223 @@ afterEach(async () => {
 });
 
 describe("exploration orchestration (ported worker regressions)", () => {
+  it("actually scouts additional unvisited sections and explores six candidates while selecting at most four", async () => {
+    const areas = [
+      "mac",
+      "ipad",
+      "watch",
+      "airpods",
+      "services",
+      "docs",
+      "pricing",
+    ];
+    vi.mocked(options.browser.inspect).mockImplementation(
+      async (requested) => ({
+        facts: {
+          url: requested,
+          title: "Product",
+          height: 1000,
+          viewport: 900,
+          tabs: [],
+          links: areas.map((area) => ({
+            text: area,
+            href: `/${area}`,
+            inNav: true,
+          })),
+        },
+      }),
+    );
+    let active = 0;
+    let peak = 0;
+    vi.mocked(options.agent.run).mockImplementation(async (task) => {
+      active++;
+      peak = Math.max(peak, active);
+      try {
+        const start = new URL(task.request.url).pathname;
+        await options.io.write(`explore/traces/${task.id}.json`, BrowserTrace, {
+          schemaVersion: 2,
+          steps: [
+            {
+              action: "navigate",
+              result_url_path: start,
+              result_url: task.request.url,
+              elapsedMs: 20,
+            },
+          ],
+        });
+        // Yield to the second focused task and check the shared process pool stays bounded.
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        return {
+          sessionId: task.id,
+          result: task.schema.parse(
+            task.id.startsWith("scout")
+              ? {
+                  entry_url: task.request.url,
+                  access: "public",
+                  reason: "Local section controls",
+                  blockers: [],
+                  candidates: [1, 2, 3, 4].map((n) => ({
+                    ...candidate(`${start} interaction ${n}`),
+                    start_url: task.request.url,
+                  })),
+                }
+              : report(task.id),
+          ),
+        };
+      } finally {
+        active--;
+      }
+    });
+    const plan = await discoverProduct(options);
+    expect(plan.schemaVersion).toBe(2);
+    expect(plan.candidates).toHaveLength(6);
+    expect([
+      ...new Set(plan.candidates.map((c) => new URL(c.start_url).pathname)),
+    ]).toEqual(["/", "/mac", "/ipad"]);
+    const scouts = vi
+      .mocked(options.agent.run)
+      .mock.calls.map(([task]) => task);
+    expect(scouts.map((t) => t.id)).toEqual([
+      "scout",
+      "scout-section-1",
+      "scout-section-2",
+    ]);
+    expect(scouts.map((t) => t.request.url)).toEqual([
+      url,
+      `${url}mac`,
+      `${url}ipad`,
+    ]);
+    expect(scouts[1]!.request.goal).toContain("supplemental scout");
+    expect(
+      scouts.every(
+        (t) =>
+          (t.request.output_schema?.properties as any).candidates.maxItems ===
+          2,
+      ),
+    ).toBe(true);
+    const coverage = await options.io.read(
+      "explore/coverage.json",
+      CoverageReport,
+    );
+    expect(coverage.counts).toMatchObject({
+      discovered: 8,
+      observed: 3,
+      unvisited: 5,
+      replayed: 0,
+    });
+    expect(coverage.tasks).toHaveLength(3);
+    const flows = await executeFlows(options);
+    expect(options.agent.run).toHaveBeenCalledTimes(9);
+    expect(flows.filter((f) => f.source === "agent")).toHaveLength(6);
+    expect(flows.filter((f) => f.selected).length).toBeLessThanOrEqual(4);
+    expect(peak).toBe(2);
+    const completed = await options.io.read(
+      "explore/coverage.json",
+      CoverageReport,
+    );
+    expect(completed.limits).toMatchObject({
+      candidateFlows: 6,
+      scoutTasks: 3,
+      flowTasks: 6,
+      actions: 9,
+    });
+    expect(completed.counts).toMatchObject({
+      observed: 3,
+      replayed: 3,
+      unvisited: 5,
+    });
+    const elapsed = completed.limits.elapsedTaskMs;
+    await executeFlows(options);
+    expect(options.agent.run).toHaveBeenCalledTimes(9);
+    expect(
+      (await options.io.read("explore/coverage.json", CoverageReport)).limits
+        .actions,
+    ).toBe(9);
+    expect(
+      (await options.io.read("explore/coverage.json", CoverageReport)).limits
+        .elapsedTaskMs,
+    ).toBe(elapsed);
+  });
+
+  it("continues to another section after an interrupted scout without retrying that task", async () => {
+    vi.mocked(options.browser.inspect).mockImplementation(
+      async (requested) => ({
+        facts: {
+          url: requested,
+          title: "Product",
+          height: 1000,
+          viewport: 900,
+          tabs: [],
+          links: [
+            { text: "Mac", href: "/mac", inNav: true },
+            { text: "iPad", href: "/ipad", inNav: true },
+          ],
+        },
+      }),
+    );
+    vi.mocked(options.agent.run).mockImplementation(async (task) => {
+      if (task.id === "scout") throw new Error("Interrupted browser session");
+      return {
+        sessionId: task.id,
+        result: task.schema.parse({
+          entry_url: task.request.url,
+          access: "public",
+          reason: "Actual controls",
+          blockers: [],
+          candidates: [
+            { ...candidate(task.request.url), start_url: task.request.url },
+          ],
+        }),
+      };
+    });
+    expect((await discoverProduct(options)).candidates).toHaveLength(2);
+    const calls = vi
+      .mocked(options.agent.run)
+      .mock.calls.map(([task]) => task.id);
+    expect(calls).toEqual(["scout", "scout-section-1", "scout-section-2"]);
+    const coverage = await options.io.read(
+      "explore/coverage.json",
+      CoverageReport,
+    );
+    expect(coverage.counts.observed).toBe(0); // Reports without traces do not establish visits.
+    expect(coverage.tasks.find((t) => t.id === "scout")?.status).toBe("failed");
+    await discoverProduct(options);
+    expect(options.agent.run).toHaveBeenCalledTimes(3); // Failed task IDs remain interrupted; no duplicate mutations.
+  });
+
+  it("honors a smaller exploration budget and preserves coverage when every rehearsal fails", async () => {
+    options.budget = { maxFlows: 1, maxScouts: 1, maxSections: 2 };
+    await discoverProduct(options);
+    vi.mocked(options.agent.run).mockResolvedValue(
+      complete("flow-id", report("Preview components")),
+    );
+    vi.mocked(options.browser.rehearse).mockImplementation(async (flow) => ({
+      flow: { ...flow, rehearsal: { ok: false, reason: "No target" } },
+    }));
+    await expect(executeFlows(options)).rejects.toThrow(
+      "No reported flow or guided tour replayed",
+    );
+    const coverage = await options.io.read(
+      "explore/coverage.json",
+      CoverageReport,
+    );
+    expect(coverage.budget).toMatchObject({
+      maxFlows: 1,
+      maxScouts: 1,
+      maxSections: 2,
+    });
+    expect(coverage.tasks.map((t) => t.id)).toEqual([
+      "scout",
+      "f1",
+      "f1-repair",
+    ]);
+    expect(coverage.limits.candidateFlows).toBe(1);
+    expect(
+      coverage.paths.some((p) => p.evidence.some((e) => e.source === "tour")),
+    ).toBe(true);
+    expect(coverage.counts.replayed).toBe(0);
+  });
+
   it("checks app routes with the session before focused runs and does not pay for a 404 candidate", async () => {
     const entry = "https://app.product.example/home";
     const good = "https://app.product.example/monitor";

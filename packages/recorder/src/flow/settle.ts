@@ -2,6 +2,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import type { Page, Request } from "playwright-core";
 import type { MotionWindow } from "../timing.ts";
 import { abortable } from "./control.ts";
+import { trackNavigation, type NavigationInterval } from "../diagnostics.ts";
 
 export interface SettleOptions {
   timeoutMs?: number;
@@ -17,13 +18,20 @@ export interface SettleReport {
   motion: MotionWindow[];
   /** First observed DOM mutation after the initial sample, on the supplied scene clock. */
   firstChangeMs?: number;
+  /** Scene-clock, main-document evidence only; does not exempt animation gaps. */
+  navigation?: NavigationInterval[];
 }
 
 /** Start tracking before the action so short requests are not missed. Dispose after verification. */
 export function trackSettle(page: Page, defaults: SettleOptions = {}) {
+  const trackedAt = performance.now();
+  const navigation = trackNavigation(
+    page, defaults.now ?? (() => performance.now() - trackedAt), undefined, false,
+  );
   const pending = new Set<Request>();
   let lastNetwork = performance.now();
   const begin = (request: Request) => {
+    navigation.requestStarted(request);
     if (["websocket", "eventsource", "media"].includes(request.resourceType()))
       return;
     pending.add(request);
@@ -32,9 +40,13 @@ export function trackSettle(page: Page, defaults: SettleOptions = {}) {
   const end = (request: Request) => {
     if (pending.delete(request)) lastNetwork = performance.now();
   };
+  const failed = (request: Request) => {
+    navigation.requestFailed(request);
+    end(request);
+  };
   page.on("request", begin);
   page.on("requestfinished", end);
-  page.on("requestfailed", end);
+  page.on("requestfailed", failed);
   return {
     async wait(overrides: SettleOptions = {}): Promise<SettleReport> {
       const options = { ...defaults, ...overrides };
@@ -91,7 +103,7 @@ export function trackSettle(page: Page, defaults: SettleOptions = {}) {
                     Number.isFinite(timing.endTime)
                   );
                 });
-                return { signature: String(hash), moving };
+                return { signature: String(hash), moving, ready: document.readyState !== "loading" };
               }),
               signal,
             );
@@ -104,14 +116,20 @@ export function trackSettle(page: Page, defaults: SettleOptions = {}) {
               previous = state.signature;
               changed = performance.now();
             }
-            if (!state.moving && performance.now() - changed >= domQuietMs)
+            if (
+              state.ready && !navigation.pending && !state.moving &&
+              performance.now() - changed >= domQuietMs
+            )
               return {
                 reason: "dom-stable",
                 elapsedMs: performance.now() - start,
                 motion,
                 firstChangeMs,
+                navigation: navigation.snapshot(),
               };
             if (
+              state.ready &&
+              !navigation.pending &&
               !state.moving &&
               !pending.size &&
               performance.now() - Math.max(start, lastNetwork) >= networkQuietMs
@@ -121,6 +139,7 @@ export function trackSettle(page: Page, defaults: SettleOptions = {}) {
                 elapsedMs: performance.now() - start,
                 motion,
                 firstChangeMs,
+                navigation: navigation.snapshot(),
               };
           } catch (error) {
             options.signal?.throwIfAborted();
@@ -149,12 +168,15 @@ export function trackSettle(page: Page, defaults: SettleOptions = {}) {
         elapsedMs: performance.now() - start,
         motion,
         firstChangeMs,
+        navigation: navigation.snapshot(),
       };
     },
+    navigation: () => navigation.snapshot(),
     dispose() {
+      navigation.dispose();
       page.off("request", begin);
       page.off("requestfinished", end);
-      page.off("requestfailed", end);
+      page.off("requestfailed", failed);
       pending.clear();
     },
   };

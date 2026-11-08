@@ -18,7 +18,7 @@ import {
   it,
   vi,
 } from "vitest";
-import { ReplayPlan, Timeline, type Flow, type Step } from "@agentcast/shared";
+import { FlowAudioFiles, ReplayPlan, Timeline, type Flow, type Step } from "@agentcast/shared";
 import { readArtifact, writeArtifact } from "@agentcast/shared/node";
 import { runMediaCommand } from "../encode.ts";
 import { createActuator } from "./act.ts";
@@ -27,6 +27,7 @@ import { installRecordingHygiene, dismissCookieBanner } from "./hygiene.ts";
 import { snapshotOutcome, verifyOutcome, OutcomeError } from "./outcome.ts";
 import { resolveTarget } from "./locate.ts";
 import { waitForSettle, trackSettle } from "./settle.ts";
+import { watchOutputs } from "./output.ts";
 
 const executablePath = process.env.AGENTCAST_TEST_CHROMIUM;
 const available = await access(
@@ -65,6 +66,22 @@ describe.skipIf(!available)("flow behavior in Chromium", () => {
   afterEach(async () => {
     await context?.close();
     await rm(directory, { recursive: true, force: true });
+  });
+
+  it("keeps a preloaded sample only after it is played, and drains it before closing", async () => {
+    const wav = join(directory, "sample.wav");
+    await runMediaCommand("ffmpeg", ["-y", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=0.5", wav]);
+    const data = (await readFile(wav)).toString("base64");
+    await page.setContent(`<audio preload="auto" src="data:audio/wav;base64,${data}"></audio><button onclick="document.querySelector('audio').play()">Play</button>`);
+    await page.locator("audio").evaluate((el: HTMLAudioElement) => el.readyState >= 2 ? undefined : new Promise<void>((resolve) => el.addEventListener("loadeddata", () => resolve(), { once: true })));
+    const stop = await watchOutputs(page, { dir: directory, flowId: "sample", now: () => 2000 });
+    expect(await readArtifact(join(directory, "sample.json"), FlowAudioFiles)).toEqual([]);
+    await page.getByRole("button", { name: "Play" }).click();
+    await expect.poll(async () => (await readArtifact(join(directory, "sample.json"), FlowAudioFiles)).length).toBe(1);
+    await stop();
+    const [audio] = await readArtifact(join(directory, "sample.json"), FlowAudioFiles);
+    expect(audio).toMatchObject({ t: 2, type: "audio/wav" });
+    expect((await readFile(join(directory, audio!.file))).subarray(0, 4).toString()).toBe("RIFF");
   });
 
   it("settles after delayed DOM updates and finite animation, with measured motion windows", async () => {
@@ -213,20 +230,35 @@ describe.skipIf(!available)("flow behavior in Chromium", () => {
     expect(result.learned).toEqual([]);
     expect(JSON.stringify(result)).not.toContain("fresh-private-value");
   });
-  it.each([true,false])("handles an intercepting overlay (Escape dismisses it: %s) without forced clicks",async(dismissable)=>{
-    await page.setContent(`<h1>Public product</h1><button onclick="document.querySelector('h1').textContent='Visible result'">Open</button><div id="cover" style="position:fixed;inset:0;background:white;z-index:100"></div><script>${dismissable?"document.addEventListener('keydown',event=>{if(event.key==='Escape')document.getElementById('cover')?.remove()})":""}</script>`);
-    const action:Step={id:"open",action:"click",target:{role:"button",text:"Open"}};
-    const target=await resolveTarget(page,action,{settle:false});
-    const started=performance.now();
-    const actuator=createActuator(page,{signal:signal(),now:()=>performance.now()-started,motion:async work=>work(),random:()=>0.5});
-    if(dismissable){
-      await actuator.run(action,target);
-      expect(await page.locator("h1").innerText()).toBe("Visible result");
-    }else{
-      await expect(actuator.run(action,target)).rejects.toThrow();
-      expect(await page.locator("h1").innerText()).toBe("Public product");
-    }
-  },15000);
+  it.each([true, false])(
+    "handles an intercepting overlay (Escape dismisses it: %s) without forced clicks",
+    async (dismissable) => {
+      await page.setContent(
+        `<h1>Public product</h1><button onclick="document.querySelector('h1').textContent='Visible result'">Open</button><div id="cover" style="position:fixed;inset:0;background:white;z-index:100"></div><script>${dismissable ? "document.addEventListener('keydown',event=>{if(event.key==='Escape')document.getElementById('cover')?.remove()})" : ""}</script>`,
+      );
+      const action: Step = {
+        id: "open",
+        action: "click",
+        target: { role: "button", text: "Open" },
+      };
+      const target = await resolveTarget(page, action, { settle: false });
+      const started = performance.now();
+      const actuator = createActuator(page, {
+        signal: signal(),
+        now: () => performance.now() - started,
+        motion: async (work) => work(),
+        random: () => 0.5,
+      });
+      if (dismissable) {
+        await actuator.run(action, target);
+        expect(await page.locator("h1").innerText()).toBe("Visible result");
+      } else {
+        await expect(actuator.run(action, target)).rejects.toThrow();
+        expect(await page.locator("h1").innerText()).toBe("Public product");
+      }
+    },
+    15000,
+  );
 
   it("dispatches paced mouse and key events, then verifies selection by label", async () => {
     await page.setContent(
@@ -392,27 +424,33 @@ describe.skipIf(!available || mediaAvailable.includes(false))(
     afterEach(async () => {
       await rm(directory, { recursive: true, force: true });
     });
-    it("discards the wrong outcome, restarts fresh and commits only clean learning and timeline", async () => {
+    it("discards a wrong outcome and commits clean learning only after an explicit fresh retry", async () => {
       const contexts: BrowserContext[] = [],
         progress = vi.fn();
-      const result = await recordFlow(flow, {
+      const options = {
         outputPath: join(directory, "recording.mp4"),
         browser: browserOptions,
-        encoding: { encoder: "libx264" },
+        encoding: { encoder: "libx264" as const },
         outcomeTimeoutMs: 200,
         onTake: progress,
-        prepare: async ({ page, context }, attempt) => {
+        prepare: async ({
+          page,
+          context,
+        }: {
+          page: Page;
+          context: BrowserContext;
+        }) => {
           contexts.push(context);
           expect(await readdir(directory)).not.toContain("replay-plan.json");
           await page.setContent(
-            `<button onclick="document.querySelector('h1').textContent='${attempt === 1 ? "Upgrade to Pro" : "Q4 Launch"}'">Create project</button><h1></h1>`,
+            `<button onclick="document.querySelector('h1').textContent='${contexts.length === 1 ? "Upgrade to Pro" : "Q4 Launch"}'">Create project</button><h1></h1>`,
           );
         },
-      });
-      expect(result.flowTakes.map((take) => take.status)).toEqual([
-        "failed",
-        "ok",
-      ]);
+      };
+      await expect(recordFlow(flow, options)).rejects.toThrow("after 1 take");
+      expect(await readdir(directory)).not.toContain("replay-plan.json");
+      const result = await recordFlow(flow, options);
+      expect(result.flowTakes.map((take) => take.status)).toEqual(["ok"]);
       expect(new Set(contexts).size).toBe(2);
       expect(contexts.every((context) => context.pages().length === 0)).toBe(
         true,
@@ -443,7 +481,7 @@ describe.skipIf(!available || mediaAvailable.includes(false))(
         "timeline.json",
       ]);
     }, 30000);
-    it("never replaces an existing learned expectation after three wrong takes", async () => {
+    it("preserves learned expectations and stops after one deterministic wrong outcome", async () => {
       const planPath = join(directory, "replay-plan.json");
       await writeArtifact(planPath, ReplayPlan, {
         schemaVersion: 1,
@@ -475,8 +513,8 @@ describe.skipIf(!available || mediaAvailable.includes(false))(
         },
       ).catch((error: unknown) => error);
       expect(error).toBeInstanceOf(FlowRecordingError);
-      expect((error as FlowRecordingError).takes).toHaveLength(3);
-      expect(prepare).toHaveBeenCalledTimes(3);
+      expect((error as FlowRecordingError).takes).toHaveLength(1);
+      expect(prepare).toHaveBeenCalledTimes(1);
       expect(await readFile(planPath, "utf8")).toBe(original);
       expect(await readdir(directory)).toEqual(["replay-plan.json"]);
     }, 30000);

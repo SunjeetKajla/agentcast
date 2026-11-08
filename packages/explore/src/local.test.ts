@@ -59,6 +59,8 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
           return res.end(
             "<script>setTimeout(() => { document.body.innerHTML=\"<h1>Hydrated component library</h1><a href='/'>Examples</a>\" }, 200)</script>",
           );
+        if (req.url === "/fading-loader")
+          return res.end('<svg width="40" height="40"><circle cx="20" cy="20" r="10"/></svg><main style="opacity:0"><h1>Animated component library ready</h1><button>Explore previews</button></main><script>setTimeout(()=>document.querySelector("main").style.opacity="1",700)</script>');
         if (req.url === "/duplicate")
           return res.end(
             "<h1>Two visible buttons</h1><button>Continue</button><button>Continue</button>",
@@ -140,6 +142,11 @@ describe.skipIf(process.env.AGENTCAST_BROWSER_TESTS !== "1")(
         (await browser.readPage(url + "/public", options())).text,
       ).not.toContain("Access denied");
     }, 30_000);
+    it("waits past a loading screen when mounted controls still have zero opacity", async () => {
+      const result = await browser.readPage(url + "/fading-loader", options());
+      expect(result.text).toContain("Animated component library ready");
+      expect(result.text).toContain("Explore previews");
+    }, 15_000);
     it("captures styled SVG and touch-icon logos plus hero gradients as safe image assets", async () => {
       const svg = await browser.inspect(url + "/svg-brand", options());
       expect(svg.logo?.from).toBe("inline-svg");

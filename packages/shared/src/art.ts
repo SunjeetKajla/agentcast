@@ -110,6 +110,8 @@ export const ProductOutputs = z.object({
   ),
 });
 export type ProductOutputs = z.infer<typeof ProductOutputs>;
+/** Recorder's per-flow index, before the worker moves times onto the joined recording. */
+export const FlowAudioFiles = z.array(ProductOutputs.shape.outputs.element.omit({ kind: true, flowId: true }));
 
 /** The film's brand settings, carried in the EDL's style so every variant draws them. */
 export const BrandMotion = z.object({

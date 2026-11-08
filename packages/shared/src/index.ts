@@ -19,3 +19,5 @@ export * from "./variants.ts";
 export * from "./paths.ts";
 
 export * from "./exploration.ts";
+export * from "./coverage.ts";
+export * from "./recording-diagnostics.ts";

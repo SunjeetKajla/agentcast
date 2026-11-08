@@ -34,7 +34,9 @@ export async function selectMatch(
                 href: element instanceof HTMLAnchorElement ? element.href : "",
                 main: !!element.closest('main,[role="main"]'),
                 // Inside an open modal: what's behind it can't be clicked.
-                modal: !!element.closest('dialog[open],[role="dialog"],[role="alertdialog"],[aria-modal="true"]'),
+                modal: !!element.closest(
+                  'dialog[open],[role="dialog"],[role="alertdialog"],[aria-modal="true"]',
+                ),
               }),
               undefined,
               { timeout: 500 },
@@ -87,7 +89,10 @@ export async function selectMatch(
 
   // Explicit context outranks incidental viewport position (e.g. invoice rows).
   if (step.target?.near) {
-    const anchors = page.getByText(step.target.near, { exact: false });
+    const exact = page.getByText(step.target.near, { exact: true });
+    const anchors = (await exact.count())
+      ? exact
+      : page.getByText(step.target.near, { exact: false });
     const n = Math.min(await anchors.count(), maxCandidates);
     const boxes = (
       await Promise.all(

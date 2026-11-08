@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Flow, ReplayPlan } from "./flow.ts";
+import { Expectation, Flow, ReplayPlan } from "./flow.ts";
 
 const ENTITIES: Record<string, string> = {
   amp: "&",
@@ -37,6 +37,9 @@ export const ExploreAgentStep = z
     result_url_path: optStr,
     result_visible_text: optStr,
     narration_hint: optStr,
+    /** Checks learned by the trusted browser executor, never invented by the model. */
+    expect: z.array(Expectation).optional(),
+    outcome: z.enum(["verified", "unverified"]).optional(),
   })
   .transform(({ value, ...step }) => ({
     ...step,
@@ -91,8 +94,8 @@ export const ExplorationTask = z.preprocess((raw) => {
     : raw;
 }, CurrentExplorationTask);
 export type ExplorationTask = z.infer<typeof ExplorationTask>;
-export const ExplorationPlan = z.object({
-  schemaVersion: z.literal(1),
+const CurrentExplorationPlan = z.object({
+  schemaVersion: z.literal(2),
   entryUrl: z.url(),
   access: z.enum([
     "public",
@@ -103,8 +106,12 @@ export const ExplorationPlan = z.object({
   ]),
   reason: z.string(),
   blockers: z.array(z.string()),
-  candidates: z.array(ExploreCandidate).max(3),
+  candidates: z.array(ExploreCandidate).max(12),
 });
+export const ExplorationPlan = z.preprocess((raw) => {
+  const plan = raw as { schemaVersion?: number } | undefined;
+  return plan?.schemaVersion === 1 ? { ...plan, schemaVersion: 2 } : raw;
+}, CurrentExplorationPlan);
 export type ExplorationPlan = z.infer<typeof ExplorationPlan>;
 export const RehearsalFile = z.object({
   schemaVersion: z.literal(2),
@@ -158,11 +165,43 @@ export const BrowserTraceStep = z.object({
   target_role: z.string().optional(),
   target_label: z.string().optional(),
   target_placeholder: z.string().optional(),
+  near_text: z.string().optional(),
   value: z.string().optional(),
   result_url_path: z.string(),
+  result_url: z.url().optional(),
   result_visible_text: z.string().optional(),
+  expect: z.array(Expectation).optional(),
+  elapsedMs: z.number().nonnegative().optional(),
+  settle: z.enum(["dom-stable", "network-idle", "timeout"]).optional(),
+  outcome: z.enum(["verified", "unverified"]).optional(),
+  execution: z.enum(["confirmed", "uncertain"]).optional(),
 });
-export const BrowserTrace = z.object({
-  schemaVersion: z.literal(1),
+const CurrentBrowserTrace = z.object({
+  schemaVersion: z.literal(2),
   steps: z.array(BrowserTraceStep),
+});
+export const BrowserTrace = z.preprocess((raw) => {
+  const trace = raw as { schemaVersion?: number } | undefined;
+  return trace?.schemaVersion === 1 ? { ...trace, schemaVersion: 2 } : raw;
+}, CurrentBrowserTrace);
+
+/** Facts from the actual owned Chrome process; flags alone never establish GPU use. */
+export const BrowserRuntime = z.object({
+  schemaVersion: z.literal(1),
+  taskId: z.string(),
+  gpu: z.object({
+    backend: z.enum(["dgpu", "igpu", "cpu"]),
+    channel: z.string(),
+    renderer: z.string(),
+    vendor: z.string(),
+    hardwareAccelerated: z.boolean(),
+    featureStatus: z.record(z.string(), z.string()),
+    attempts: z.array(
+      z.object({
+        backend: z.enum(["dgpu", "igpu", "cpu"]),
+        status: z.enum(["selected", "failed", "skipped"]),
+        reason: z.string().optional(),
+      }),
+    ),
+  }),
 });

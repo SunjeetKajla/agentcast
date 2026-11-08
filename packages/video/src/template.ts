@@ -147,8 +147,8 @@ function optionsFor(shot: Shot, timeline: Timeline, tilt: "soft" | "strong", bea
   const options: Option[] = [];
   const span = (from: number, seconds: number, firstNeeded = 0) => {
     // Starts so the footage has reached `from` by `firstNeeded` seconds in, stays in the flow.
-    const limit = flow?.out ?? shot.out;
-    const start = Math.max(flow?.in ?? shot.in, Math.min(from - firstNeeded, limit - seconds));
+    const limit = Math.min(flow?.out ?? shot.out, shot.out);
+    const start = Math.max(flow?.in ?? shot.in, shot.in, Math.min(from - firstNeeded, limit - seconds));
     return { in: r2(start), out: r2(Math.min(limit, start + seconds)) };
   };
 
@@ -249,7 +249,7 @@ function optionsFor(shot: Shot, timeline: Timeline, tilt: "soft" | "strong", bea
   }
 
   // No structure to go on: what's actually on the screen, around what was acted on.
-  const acted = shot.events.find((e) => e.layout?.component && worthFraming(e.layout.component, view)) ?? shot.events.find((e) => e.bbox);
+  const acted = [...shot.events].reverse().find((e) => e.layout?.component && worthFraming(e.layout.component, view)) ?? [...shot.events].reverse().find((e) => e.bbox);
   const component = acted?.layout?.component && worthFraming(acted.layout.component, view) ? acted.layout.component : undefined;
   if (component) options.push({ kind: "proof", make: (seconds) => ({ type: "proof", flowId: shot.flowId, ...span(acted!.t, seconds, seconds * 0.5), frame: frameAround(component, view), tilt }) });
   if (content && content.fill >= MIN_FILL) {
@@ -437,6 +437,8 @@ export function ledPlan(o: LedInput): LedPlan {
     const option = glide ? undefined : (options.find((c) => c.kind !== last) ?? options[0]!);
     const middle = look.flipMiddle && index === Math.floor(count / 2) && count >= 3;
     if (label) {
+      const words = Math.max(...Object.values(label).map((text) => text.split(/\s+/).filter(Boolean).length));
+      const readingSeconds = Math.ceil((0.35 + words * 0.28) / beat) * beat;
       segments.push({
         kind: "primitive",
         id: slug(shot.id, "label"),
@@ -448,7 +450,7 @@ export function ledPlan(o: LedInput): LedPlan {
           ground: middle ? "invert" : cycle(look.grounds, labels),
           open: labels === 0 ? "slit" : middle ? "iris" : cycle(look.labelOpen, labels),
         },
-        seconds: r2(labelSeconds),
+        seconds: r2(Math.max(labelSeconds, readingSeconds)),
         transitionIn: "cut",
       });
       labels++;
@@ -464,7 +466,14 @@ export function ledPlan(o: LedInput): LedPlan {
     // A second angle on the same shot: another kind of move, or the same kind on another region.
     if (module.proofsPerShot > 1 && option) {
       const frameOf = (p: Primitive) => ("frame" in p ? p.frame : undefined);
-      const second = options.find((c) => c !== option && (c.kind !== option.kind || JSON.stringify(frameOf(c.make(proofSeconds))) !== JSON.stringify(frameOf(first))));
+      const sourceAt = (p: Primitive) => "in" in p ? p.in : "at" in p ? p.at : undefined;
+      const firstAt = sourceAt(first);
+      const second = options.find((c) => {
+        const candidate = c.make(proofSeconds);
+        const at = sourceAt(candidate);
+        return c !== option && (firstAt === undefined || at === undefined || at >= firstAt)
+          && (c.kind !== option.kind || JSON.stringify(frameOf(candidate)) !== JSON.stringify(frameOf(first)));
+      });
       if (second) {
         const made = second.make(proofSeconds);
         segments.push({ kind: "primitive", id: slug(shot.id, "angle"), beatId: shot.id, primitive: "tilt" in made ? { ...made, tilt: cycle(look.tilts, index + 1) } : made, seconds: r2(proofSeconds), transitionIn: "cut" });

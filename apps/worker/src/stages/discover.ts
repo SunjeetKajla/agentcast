@@ -14,6 +14,21 @@ import type { StageFn } from "./types.ts";
 import { pretend } from "./stub.ts";
 import { sessionFor } from "./auth.ts";
 
+/** Worker-only controls; clamp valid integers and fall back on malformed input. */
+export function explorationBudgetFromEnv(env: NodeJS.ProcessEnv = process.env) {
+  const integer = (name: string, fallback: number, max: number) => {
+    const value = env[name]?.trim();
+    return value && /^\d+$/.test(value) && Number.isSafeInteger(Number(value))
+      ? Math.max(1, Math.min(max, Number(value)))
+      : fallback;
+  };
+  return {
+    maxFlows: integer("AGENTCAST_EXPLORE_MAX_FLOWS", 6, 12),
+    maxSections: integer("AGENTCAST_EXPLORE_MAX_SECTIONS", 12, 24),
+    maxScouts: integer("AGENTCAST_EXPLORE_MAX_SCOUTS", 3, 4),
+  };
+}
+
 export async function explorationOptions(
   ctx: StageContext,
   deps: { agent?: ExplorationAgent; browser?: BrowserAdapter } = {},
@@ -38,11 +53,17 @@ export async function explorationOptions(
         dir: ctx.dir,
         authorizedUrl: ctx.config.url,
         siteOf,
+        recordVideo: process.env.AGENTCAST_EXPLORE_VIDEO === "1",
+        onRuntime: (gpu) =>
+          ctx.log(
+            `Exploration Chrome: ${gpu.renderer}; GPU compositing ${gpu.hardwareAccelerated ? "enabled" : "software fallback"}.`,
+          ),
       }),
     llm: workspaceLlm(ctx.llm, ctx.llmProgress),
     browser: deps.browser ?? (await recorderAdapter()),
     product,
     creative,
+    budget: explorationBudgetFromEnv(),
     publicMode: ctx.config.auth.mode === "public",
     browserOptions: { storageState: state },
     signal: ctx.signal,

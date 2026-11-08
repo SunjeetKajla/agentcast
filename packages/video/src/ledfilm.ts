@@ -44,6 +44,7 @@ export async function planLedFilm(o: {
 }): Promise<LedFilm> {
   const [music, references] = await Promise.all([loadMusicLibrary().catch(() => undefined), loadReferenceLibrary().catch(() => undefined)]);
   const track = pickTrack(music, { personality: o.creative.personality, edit: "trailer", seconds: o.creative.targetSeconds, seed: o.seed, led: true });
+  if (!track) throw new Error("A music-led video needs a local music file with a dependable beat grid. Add and analyze a licensed track with `pnpm agentcast music`, or set AGENTCAST_MUSIC_DIR to your prepared library.");
   const content = o.content ?? (await shotContent(o.recording, o.storyboard, o.timeline, o.signal));
   const wanted = o.direction?.skeletonId ?? o.skeletonId;
   const named = wanted ? references?.skeletons.find((s) => s.id === wanted) : undefined;

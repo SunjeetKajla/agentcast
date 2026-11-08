@@ -124,7 +124,7 @@ export function makeDirect(
       ctx.log(
         revising
           ? `Revising ${scene ? `"${scene}"` : "the edit"}: "${revise}"`
-          : "The director is planning the edit (Claude Code, a few minutes).",
+          : "The director is planning the edit (a few minutes).",
       );
       let turns = 0;
       try {

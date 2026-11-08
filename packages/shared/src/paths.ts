@@ -10,11 +10,14 @@ import {
   RehearsalFile,
   AuthState,
   BrowserTrace,
+  BrowserRuntime,
 } from "./exploration.ts";
 import { Job } from "./job.ts";
 import { MusicPlan } from "./music.ts";
 import { BeatSheet } from "./reference.ts";
-import { ArtDirection, BrandKit, LayerList, ProductOutputs } from "./art.ts";
+import { ArtDirection, BrandKit, LayerList, ProductOutputs, FlowAudioFiles } from "./art.ts";
+import { CoverageReport } from "./coverage.ts";
+import { RecordingDiagnostics } from "./recording-diagnostics.ts";
 import { Script, Storyboard } from "./story.ts";
 import { Timeline } from "./timeline.ts";
 import { Voiceover } from "./voice.ts";
@@ -32,8 +35,11 @@ export const jobPaths = {
   hero: "brief/hero.jpg",
   flows: "explore/flows.json",
   explorationTrace: (taskId: string) => `explore/traces/${taskId}.json`,
+  browserRuntime: (taskId: string) => `explore/runtime/${taskId}.json`,
+  coverage: "explore/coverage.json",
   recording: (ff: FormFactor) => `record/${ff}/recording.mp4`,
   timeline: (ff: FormFactor) => `record/${ff}/timeline.json`,
+  recordingDiagnostics: (ff: FormFactor) => `record/${ff}/diagnostics.json`,
   replayPlan: "record/replay-plan.json",
   outputs: "record/outputs.json",
   changes: "record/changes.json",
@@ -66,10 +72,14 @@ export const ARTIFACTS: { pattern: RegExp; schema: z.ZodType }[] = [
     schema: RehearsalFile,
   },
   { pattern: /^explore\/traces\/[a-z0-9_-]+\.json$/i, schema: BrowserTrace },
+  { pattern: /^explore\/runtime\/[a-z0-9_-]+\.json$/i, schema: BrowserRuntime },
+  { pattern: /^explore\/coverage\.json$/, schema: CoverageReport },
   { pattern: /^auth\/state\.json$/, schema: AuthState },
   { pattern: /^record\/(desktop|mobile)\/timeline\.json$/, schema: Timeline },
+  { pattern: /^record\/(desktop|mobile)\/diagnostics\.json$/, schema: RecordingDiagnostics },
   { pattern: /^record\/replay-plan\.json$/, schema: ReplayPlan },
   { pattern: /^record\/outputs\.json$/, schema: ProductOutputs },
+  { pattern: /^record\/output\/[a-z0-9_-]+\.json$/i, schema: FlowAudioFiles },
   { pattern: /^record\/changes\.json$/, schema: ChangeReport },
   { pattern: /^script\/storyboard\.json$/, schema: Storyboard },
   { pattern: /^script\/script\.[a-z-]+\.json$/, schema: Script },

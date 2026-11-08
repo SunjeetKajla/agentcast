@@ -23,6 +23,12 @@ import {
   type StallReport,
 } from "./timing.ts";
 import type { GpuInfo } from "./gpu.ts";
+import {
+  diagnoseCapture,
+  trackNavigation,
+  type CaptureDiagnostic,
+  type NavigationInterval,
+} from "./diagnostics.ts";
 
 export interface LiveControls extends RecorderBrowser {
   attempt: number;
@@ -33,6 +39,8 @@ export interface LiveControls extends RecorderBrowser {
   motion<T>(run: () => Promise<T>): Promise<T>;
   /** Register measured animation windows without including their static settle tail. */
   markMotion(startMs: number, endMs: number): void;
+  /** Assign subsequent capture/lifecycle evidence to a sanitized flow step. */
+  markStep?(stepId: string): void;
 }
 
 export interface LiveOptions {
@@ -62,13 +70,31 @@ export interface LiveRecording extends EncodedVideo {
   sourceDurationMs: number;
   sourceFrameCount: number;
   stall: StallReport;
-  takes: { attempt: number; stall: StallReport }[];
+  takes: LiveTake[];
   gpu: GpuInfo;
 }
 
+export interface LiveTake {
+  attempt: number;
+  stall: StallReport;
+  diagnostics?: CaptureDiagnostic[];
+  navigation?: NavigationInterval[];
+}
+
 export class LiveStallError extends Error {
+  readonly kind = "capture-stall";
+  readonly retryable = true;
+  get diagnostics() {
+    return this.takes.at(-1)?.diagnostics ?? [];
+  }
+  get navigation() {
+    return this.takes.at(-1)?.navigation ?? [];
+  }
+  get stepId() {
+    return this.diagnostics.find((d) => d.kind === "capture-stall")?.stepId;
+  }
   constructor(
-    public readonly takes: { attempt: number; stall: StallReport }[],
+    public readonly takes: LiveTake[],
   ) {
     const last = takes.at(-1)?.stall;
     super(
@@ -181,6 +207,9 @@ export async function recordLive(
           }
           const windows: MotionWindow[] = [];
           const now = () => performance.now() - capture!.startedAtMs;
+          let stepId: string | undefined;
+          const steps: (MotionWindow & { stepId: string })[] = [];
+          const navigation = trackNavigation(session.page, now, () => stepId);
           const onNewPage = () =>
             deadline.abort(
               new Error("Live capture requires one page; a new tab was opened"),
@@ -194,6 +223,12 @@ export async function recordLive(
                   attempt,
                   signal,
                   now,
+                  markStep: (id) => {
+                    const at = now();
+                    if (steps.length) steps[steps.length - 1]!.endMs = at;
+                    stepId = id;
+                    steps.push({ stepId: id, startMs: at, endMs: at });
+                  },
                   markMotion: (startMs, endMs) => {
                     if (
                       !Number.isFinite(startMs) ||
@@ -225,9 +260,16 @@ export async function recordLive(
               windows,
               recorded.durationMs,
             );
-            takes.push({ attempt, stall });
+            if (steps.length) steps[steps.length - 1]!.endMs = recorded.durationMs;
+            const evidence = navigation.snapshot(recorded.durationMs);
+            const diagnostics = diagnoseCapture(
+              frames.map((frame) => frame.sceneMs), windows,
+              recorded.durationMs, stall, evidence, steps,
+            );
+            takes.push({ attempt, stall, diagnostics, navigation: evidence });
             return { recorded, stall, gpu: session.gpu };
           } finally {
+            navigation.dispose();
             session.context.off("page", onNewPage);
             // Drain capture before closing its page, including when cancellation
             // wins the race, so intentional shutdown cannot reject orphaned work.

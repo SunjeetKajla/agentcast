@@ -693,13 +693,21 @@ describe("the reference library", () => {
     expect(productShape(storyboard(beats), timeline([]))).toBe("page");
   });
 
-  it("cuts a rapid film to two angles a shot, on short beats", async () => {
+  it("cuts a rapid film to available forward angles, with readable labels", async () => {
     const beats = [beat("a", 0, 10, "Plan it"), beat("b", 10, 20, "Ship it")];
     const t = timeline([{ t: 2, layout: { panel: [780, 20, 640, 860], groups: [columns, rows] } }, { t: 12, layout: { panel: [700, 20, 700, 860], groups: [rows] } }]);
     const { edl } = await plan("rapid", beats, t);
-    expect(moves(edl)).toEqual(["label", "build", "proof", "label", "proof", "proof"]);
+    expect(moves(edl)).toEqual(["label", "build", "proof", "label", "proof"]);
     const proofs = edl.segments.filter((s) => s.kind === "primitive" && s.primitive.type !== "label");
     expect(proofs.every((s) => (s as PrimitiveSegment).seconds === 1.5)).toBe(true);
+    expect(edl.segments.every((s) => s.kind !== "primitive" || s.primitive.type !== "label" || s.seconds >= 1)).toBe(true);
+    for (const s of proofs) {
+      if (s.kind === "primitive" && "in" in s.primitive) {
+        const beat = beats.find((b) => b.id === s.beatId)!;
+        expect(s.primitive.in).toBeGreaterThanOrEqual(beat.in!);
+        expect(s.primitive.out).toBeLessThanOrEqual(beat.out!);
+      }
+    }
   });
 
   it("glides the camera across a shot's regions on the beat, with no labels", async () => {

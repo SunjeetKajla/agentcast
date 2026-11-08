@@ -176,7 +176,12 @@ function frameAt(file: string, t: number, signal?: AbortSignal, size: [number, n
     const chunks: Buffer[] = [];
     child.stdout.on("data", (c: Buffer) => chunks.push(c));
     child.on("error", fail);
-    child.on("close", (code) => (code === 0 ? done(new Uint8Array(Buffer.concat(chunks))) : fail(new Error(`ffmpeg couldn't read ${file}`))));
+    child.on("close", (code) => {
+      const bytes = Buffer.concat(chunks);
+      if (code !== 0 || bytes.length !== size[0] * size[1])
+        fail(new Error(`ffmpeg couldn't read a complete frame at ${t}s from ${file}`));
+      else done(new Uint8Array(bytes));
+    });
   });
 }
 
@@ -187,7 +192,10 @@ export async function shotContent(file: string, storyboard: Storyboard, timeline
   for (const beat of storyboard.beats) {
     if (beat.flowId === undefined || beat.in === undefined || beat.out === undefined) continue;
     const settled = timeline.events.filter((e) => e.kind === "settled" && e.flowId === beat.flowId && e.t >= beat.in! && e.t <= beat.out!).at(-1);
-    const t = settled?.t ?? (beat.in + beat.out) / 2;
+    // FFmpeg seeks to the next frame at or after -ss. A settle just before a cut can
+    // otherwise sample the following flow; at the end of the file it returns no pixels.
+    const withinBeat = (at: number) => Math.max(beat.in!, Math.min(at, beat.out! - 1 / timeline.fps, timeline.duration - 1 / timeline.fps));
+    const t = withinBeat(settled?.t ?? (beat.in + beat.out) / 2);
     const gray = await frameAt(file, t, signal);
     const { box, fill } = contentBox(gray, W, H);
     const toView = (r: Rect): Rect => [Math.round(r[0] * view.w), Math.round(r[1] * view.h), Math.round(r[2] * view.w), Math.round(r[3] * view.h)];
@@ -195,7 +203,7 @@ export async function shotContent(file: string, storyboard: Storyboard, timeline
     // A page with no structure in its DOM, just before each action: is it a drawn board?
     const moments = timeline.events.filter((e) => e.flowId === beat.flowId && e.t >= beat.in! && e.t <= beat.out! && e.layout && !e.layout.panel && !e.layout.groups.some((g) => g.kind !== "rows"));
     for (const event of moments) {
-      const at = event.layout!.at ?? event.t;
+      const at = withinBeat(event.layout!.at ?? event.t);
       const found = pixelColumns(await frameAt(file, at, signal, [W * 5, H * 5]), W * 5, H * 5);
       if (found) {
         out[beat.id]!.board = { t: at, columns: found.columns.map(toView), cards: found.cards.map(toView) };

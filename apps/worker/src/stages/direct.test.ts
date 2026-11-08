@@ -45,6 +45,7 @@ beforeEach(async () => {
     stage: "direct",
     config: JobConfig.parse({
       url: "https://demoboard.vercel.app/",
+      voiceover: true,
       variants: {
         aspects: ["16x9"],
         langs: ["en", "hi"],
@@ -155,10 +156,10 @@ describe("direct stage", () => {
     expect(await ctx.read(jobPaths.edl, Edl)).toEqual(baseline);
   });
 
-  it("cuts a silent edit when there's no voiceover", async () => {
+  it("cuts a tutorial without voiceover when requested", async () => {
     ctx = {
       ...ctx,
-      config: { ...ctx.config, voiceover: false },
+      config: { ...ctx.config, mode: "tutorial", voiceover: false },
     } as StageContext;
     vi.stubEnv("AGENTCAST_DIRECTOR", "off");
     await makeDirect()(ctx);
@@ -167,5 +168,12 @@ describe("direct stage", () => {
     expect(await readFile(join(dir, "render/DIRECTOR.md"), "utf8")).toContain(
       "There is no voiceover",
     );
+  });
+
+  it("stops a music-led launch when its music file is missing", async () => {
+    ctx = { ...ctx, config: { ...ctx.config, mode: "launch", voiceover: false } } as StageContext;
+    const director = fakeDirector(() => {});
+    await expect(makeDirect({ runDirector: director })(ctx)).rejects.toThrow("needs a local music file");
+    expect(director).not.toHaveBeenCalled();
   });
 });

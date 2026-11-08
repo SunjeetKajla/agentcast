@@ -144,6 +144,19 @@ describe("a music-led edit", () => {
     expect(width).toBeLessThanOrEqual(1080);
   });
 
+  it("stacks a two-document comparison in portrait so each page stays readable", async () => {
+    const made = ledInput();
+    const edl = Edl.parse({ ...made.edl, segments: [{ kind: "primitive", id: "comparison", seconds: 3, transitionIn: "cut", primitive: { type: "build", flowId: "f", at: 1, items: [[0, 0, 330, 350], [400, 0, 330, 350]], reveal: "rise" } }] });
+    const out = join(root, "comparison-tall");
+    await compileComposition({ input: { ...made, edl, aspect: "9x16", height: 1080, footage: { ...made.footage, timeline: { ...made.footage.timeline, viewport: { ...made.footage.timeline.viewport, dpr: 2 } } } }, root, out });
+    const html = await readFile(join(out, "compositions", "comparison.html"), "utf8");
+    const boxes = [...html.matchAll(/id="comparison-i\d"[^>]*style="left: ([\d.]+)px; top: ([\d.]+)px; width: ([\d.]+)px; height: ([\d.]+)px/g)].map((m) => m.slice(1).map(Number));
+    expect(boxes).toHaveLength(2);
+    expect(boxes[0]![2]).toBeGreaterThan(700);
+    expect(boxes[1]![1]).toBeGreaterThan(boxes[0]![1]! + boxes[0]![3]!);
+    expect(boxes[1]![1]! + boxes[1]![3]!).toBeLessThan(1920);
+  });
+
   it("opens a typing close-up closer than the page it pulls back to, in a window that fills the frame", async () => {
     const out = join(root, "led-prompt");
     const made = ledInput();

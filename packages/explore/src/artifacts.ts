@@ -4,4 +4,6 @@ export {
   RehearsalFile,
   AuthState,
   SessionState,
+  CoverageReport,
+  ExplorationBudget,
 } from "@agentcast/shared";

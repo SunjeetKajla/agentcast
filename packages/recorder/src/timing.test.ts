@@ -3,6 +3,7 @@ import {
   alignFrames,
   buildCfrPlan,
   checkStalls,
+  motionFrameGaps,
   watchable,
   type CapturedFrame,
 } from "./timing.ts";
@@ -165,4 +166,13 @@ describe("watchable", () => {
     expect(watchable(report(26, 90, 900))).toBe(false);
     expect(watchable({ ...report(10, 300, 900), status: "passed" })).toBe(true);
   });
+});
+
+
+it("exposes exact merged motion-gap intervals for actionable stall diagnostics", () => {
+  const windows = [{ startMs: 0, endMs: 1000 }, { startMs: 200, endMs: 800 }];
+  const measured = motionFrameGaps([0, 16, 32, 900, 916, 932], windows, 1000);
+  expect(measured.motionDurationMs).toBe(1000);
+  expect(measured.gaps).toContainEqual({ startMs: 32, endMs: 900 });
+  expect(measured.gaps.map((g) => g.endMs - g.startMs)).toEqual(checkStalls([0, 16, 32, 900, 916, 932], windows, 1000).gaps);
 });

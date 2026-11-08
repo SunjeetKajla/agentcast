@@ -7,7 +7,11 @@ import {
   launchRecorderBrowser,
   replayKey,
   serializeLocator,
-  selectMatch,
+  resolveTarget,
+  parseLocator,
+  LocatorResolutionError,
+  waitForSettle,
+  verifyOutcome,
   snapshotOutcome,
   type SemanticLocator,
   type RecorderBrowser,
@@ -85,6 +89,7 @@ async function pageIssue(page: Page) {
     return {
       title: document.title,
       text: parts.join("\n"),
+      usableControls: [...document.querySelectorAll("button,input,canvas")].filter(visible).length,
       password: [...document.querySelectorAll("input[type=password]")].some(
         visible,
       ),
@@ -115,9 +120,7 @@ async function pageIssue(page: Page) {
     );
   if (
     state.text.trim().length < 20 &&
-    !(await page
-      .locator("button:visible, input:visible, canvas:visible")
-      .count())
+    !state.usableControls
   )
     throw new PageAccessError(
       "unavailable",
@@ -250,8 +253,15 @@ export function localBrowserAdapter(
     try {
       return await Promise.race([work, aborted]);
     } catch (error) {
-      if (options.storageState && error instanceof PageAccessError && error.kind === "sign-in-required")
-        throw new PageAccessError("sign-in-required", "The saved session was rejected or has expired at this app entrance. Sign in again before exploring authenticated flows.");
+      if (
+        options.storageState &&
+        error instanceof PageAccessError &&
+        error.kind === "sign-in-required"
+      )
+        throw new PageAccessError(
+          "sign-in-required",
+          "The saved session was rejected or has expired at this app entrance. Sign in again before exploring authenticated flows.",
+        );
       throw error;
     } finally {
       clearTimeout(timer);
@@ -442,7 +452,9 @@ export function localBrowserAdapter(
           }
           logo = await captureLogo(page, options.dir);
           cloud = await captureCloud(page, options.dir).catch(() => []);
-          captures = await capturePages(page, options.dir, { ...(options.signal ? { signal: options.signal } : {}) }).catch(() => []);
+          captures = await capturePages(page, options.dir, {
+            ...(options.signal ? { signal: options.signal } : {}),
+          }).catch(() => []);
         }
         return { ...data, hero, logo, captures, cloud };
       }),
@@ -495,6 +507,7 @@ export function localBrowserAdapter(
             options.signal?.throwIfAborted();
             const before = await page.locator("body").innerText();
             const beforeUrl = page.url();
+            const beforeState = await snapshotOutcome(page);
             const optional = isOptionalDismissal(step);
             let target: Awaited<ReturnType<typeof resolveSemantic>> | undefined;
             // The first step waits for the app to finish building (Linear's demo takes ~25 s);
@@ -583,15 +596,24 @@ export function localBrowserAdapter(
                 break;
               }
               case "wait":
+                const wait = /^(\d+(?:\.\d+)?)(ms|s)?$/.exec(
+                  step.value ?? "300ms",
+                );
                 await delay(
-                  Math.min(2000, Math.max(0, Number(step.value) * 1000 || 0)),
+                  Math.min(
+                    10000,
+                    wait ? Number(wait[1]) * (wait[2] === "s" ? 1000 : 1) : 0,
+                  ),
                   undefined,
                   { signal: options.signal },
                 );
                 break;
             }
             productEntry(page.url(), options.authorizedUrl);
-            await delay(150, undefined, { signal: options.signal });
+            await waitForSettle(page, {
+              signal: options.signal,
+              timeoutMs: 4000,
+            });
             await pageIssue(page);
             // A click that changes nothing (a toast that ignores clicks and closes on its own) adds
             // nothing to a video and would fail every recording take: leave it out of the flow.
@@ -599,44 +621,12 @@ export function localBrowserAdapter(
               dropped.push(step.id);
               continue;
             }
-            for (const check of step.expect ?? []) {
-              if (check.type === "text")
-                await page
-                  .getByText(check.text, { exact: check.match === "exact" })
-                  .filter({ visible: true })
-                  .first()
-                  .waitFor({ state: "visible", timeout: 5000 });
-              if (check.type === "element")
-                await page
-                  .getByRole(check.role as "button", {
-                    name: check.name,
-                    exact: true,
-                  })
-                  .waitFor({ state: "visible", timeout: 5000 });
-              if (check.type === "url" && !page.url().includes(check.pattern))
-                throw new Error(`Step ${step.id}: expected URL did not match.`);
-              if (
-                check.type === "changed" &&
-                beforeUrl === page.url() &&
-                before === (await page.locator("body").innerText())
-              )
-                throw new Error(`Step ${step.id}: the page did not change.`);
-              if (check.type === "value") {
-                const field = await resolveSemantic(
-                  page,
-                  { label: check.target, placeholder: check.target },
-                  options.signal,
-                );
-                if (
-                  !field ||
-                  (await field.locator.inputValue()) !== check.value
-                )
-                  throw new Error(
-                    `Step ${step.id}: expected value did not match.`,
-                  );
-              }
-            }
-            const next = { ...step };
+            const verified = await verifyOutcome(page, step, beforeState, {
+              signal: options.signal,
+              locator: target?.locator,
+              timeoutMs: 5000,
+            });
+            const next = { ...step, expect: verified.learned };
             if (!options.storageState) {
               const frame = `explore/frames/${flow.id}/${step.id}.jpg`;
               await mkdir(join(options.dir, "explore/frames", flow.id), {
@@ -720,51 +710,24 @@ async function resolveSemantic(
   | { locator: Locator; spec: SemanticLocator; strategy: LocatorStrategy }
   | undefined
 > {
-  const specs: SemanticLocator[] = [];
-  const name = target.text || target.label;
-  if (target.role && name)
-    specs.push({ kind: "role", role: target.role as "button", name });
-  if (target.label) specs.push({ kind: "label", name: target.label });
-  if (target.placeholder)
-    specs.push({ kind: "placeholder", name: target.placeholder });
-  if (target.text) specs.push({ kind: "text", name: target.text });
-  // Agents mix up links and buttons (Linear's sidebar "Agent" is a link reported as a button,
-  // beside two real "Agent" buttons): the same name under another clickable role, if unique.
-  if (target.role && name)
-    for (const role of ["link", "button", "tab", "menuitem"] as const)
-      if (role !== target.role) specs.push({ kind: "role", role, name });
-  const candidates = specs.map((spec) => ({
-    spec,
-    strategy: spec.kind as LocatorStrategy,
-    locator:
-      spec.kind === "role"
-        ? page.getByRole(spec.role, { name: spec.name, exact: true })
-        : spec.kind === "label"
-          ? page.getByLabel(spec.name, { exact: true })
-          : spec.kind === "placeholder"
-            ? page.getByPlaceholder(spec.name, { exact: true })
-            : page.getByText(spec.name, { exact: true }),
-  }));
-  const started = Date.now();
-  const until = started + waitMs;
-  for (;;) {
-    let ambiguous=false;
+  try {
+    const resolved = await resolveTarget(
+      page,
+      step ?? { id: "check", action: "click", target },
+      {
+        signal,
+        timeoutMs: waitMs,
+        persist: false,
+      },
+    );
+    const spec = resolved.entry && parseLocator(resolved.entry.locator);
+    return spec
+      ? { locator: resolved.locator, spec, strategy: resolved.strategy }
+      : undefined;
+  } catch (error) {
     signal?.throwIfAborted();
-    for (const candidate of candidates) {
-      // The recorder's own selection: one eligible match, or a tie it can break safely. A flow
-      // that rehearses here then films with the same element (Linear repeats nav labels in the
-      // page body and footer).
-      const selected = await selectMatch(
-        page,
-        candidate.locator,
-        step ?? { id: "check", action: "click", target },
-        100,
-      );
-      if (selected.match) return { ...candidate, locator: selected.match.locator };
-      if (selected.ambiguous) ambiguous = true;
-    }
-    if (Date.now() >= until || ambiguous && Date.now()-started>=2000) return undefined;
-    await delay(250, undefined, { signal });
+    if (error instanceof LocatorResolutionError) return undefined;
+    throw error;
   }
 }
 
