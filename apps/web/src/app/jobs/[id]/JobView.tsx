@@ -1,237 +1,206 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { STAGES, jobPaths, type JobEvent } from "@agentcast/shared";
-import StageRail from "@/components/job/StageRail";
-import NowCard from "@/components/job/NowCard";
-import LiveAgents from "@/components/job/LiveAgents";
-import FlowReview from "@/components/job/FlowReview";
-import StoryboardReview from "@/components/job/StoryboardReview";
-import PreviewReview from "@/components/job/PreviewReview";
-import Outputs from "@/components/job/Outputs";
-import PlanCard from "@/components/job/PlanCard";
+import { FlowsFile, STAGES, jobPaths, variantMatrix, voiced, type JobEvent } from "@agentcast/shared";
+import AppShell, { type Connection } from "@/components/app/AppShell";
+import Field from "@/components/app/Field";
+import RunTimeline from "@/components/app/RunTimeline";
 import ActivityLog from "@/components/job/ActivityLog";
-import { waitingGate } from "@/lib/job-state";
-import { useJob } from "@/lib/useJob";
+import FlowReview from "@/components/job/FlowReview";
+import Multiview from "@/components/job/Multiview";
+import Outputs from "@/components/job/Outputs";
+import PlanBlock from "@/components/job/PlanBlock";
+import PreviewReview from "@/components/job/PreviewReview";
+import StageWork from "@/components/job/StageWork";
+import StoryboardReview from "@/components/job/StoryboardReview";
 import {
-  EASE,
-  MOTION_OK,
-  gsap,
-  useGSAP,
-  useReveal,
-  settle,
-} from "@/lib/motion";
+  STAGE_LEAD, STAGE_TITLE, currentStage, elapsed, facts, fieldState, finding, finished, hostOf, mmss, modeName, took,
+} from "@/lib/job-model";
+import { waitingGate } from "@/lib/job-state";
+import { useArtifact } from "@/lib/useArtifact";
+import { useJob } from "@/lib/useJob";
 
-// /jobs/[id]: one job, live (PRD §5.1 screens 2–7). The rail shows where the pipeline is; the main panel
-// is whatever needs you now: a review, the agents at work, or the finished videos.
+// /jobs/[id]: one job, live from the worker (GET /jobs/:id, then its SSE event stream). The field shows
+// what needs attention now: the agents at work, a review gate, or the finished videos. Below it, the run
+// as an edit timeline, the activity, and what was asked for.
 
-const STATUS_LABEL = {
-  queued: "Starting",
-  running: "Working",
-  waiting: "Needs your review",
-  done: "Done",
-  failed: "Failed",
-  cancelled: "Cancelled",
-} as const;
+function useNow(ms = 1000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), ms);
+    return () => clearInterval(t);
+  }, [ms]);
+  return now;
+}
 
 export default function JobView({ id }: { id: string }) {
   const { view, error, live, decide, cancel } = useJob(id);
+  const now = useNow();
+  const [sure, setSure] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string>();
-  const panel = useRef<HTMLDivElement>(null);
-  const page = useRef<HTMLDivElement>(null);
+  const flowsFile = useArtifact(id, jobPaths.flows, FlowsFile, view?.artifacts[jobPaths.flows]);
+
+  useEffect(() => {
+    if (!sure) return;
+    const t = setTimeout(() => setSure(false), 3000);
+    return () => clearTimeout(t);
+  }, [sure]);
 
   const job = view?.job;
-  const gate = job && waitingGate(job);
-  const panelKey = !job
-    ? "loading"
-    : job.status === "done"
-      ? "outputs"
-      : job.status === "failed" || job.status === "cancelled"
-        ? job.status
-        : (gate ?? "working");
+  useEffect(() => {
+    if (job) document.title = `${hostOf(job.config.url)} · AgentCast`;
+  }, [job]);
 
-  // Each change of panel (a gate opening, the videos arriving) slides the new one in.
-  useGSAP(
-    () => {
-      if (!panel.current) return;
-      const mm = gsap.matchMedia();
-      mm.add(MOTION_OK, () => {
-        gsap.fromTo(
-          panel.current,
-          ...settle({ autoAlpha: 0, y: 28, duration: 0.8, ease: EASE.expo }),
-        );
-      });
-      return () => mm.revert();
-    },
-    { dependencies: [panelKey] },
-  );
-  useReveal(page, [Boolean(job)]);
-
-  if (error) {
+  if (error || !view || !job) {
+    const missing = error?.status === 404;
     return (
-      <div className="flex min-h-[60vh] w-full max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="font-serif text-3xl text-white">
-          {error.status === 404 ? "No such job" : "Can't load this job"}
-        </h1>
-        <p className="text-sm text-white/60">{error.message}</p>
-        <Link
-          href="/"
-          className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black"
+      <AppShell current="job" connection={error ? { tone: "off", text: "Can’t reach the worker" } : { tone: "idle", text: "Connecting…" }}>
+        <div className="ttl"><div className="ttl-l"><p className="crumb"><Link href="/jobs">Videos</Link> / {id}</p><h1 className="jt">{error ? (missing ? "No such job" : "Can’t load this job") : "Loading…"}</h1></div></div>
+        <Field
+          state={error ? "fail" : "run"}
+          title={error ? (missing ? "Not found" : "Offline") : "Loading"}
+          lead={error ? error.message : "Fetching the job and joining its live event stream."}
         >
-          Back home
-        </Link>
-      </div>
-    );
-  }
-  if (!view || !job) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        <p className="text-sm text-white/50">Loading the job…</p>
-      </div>
+          {error && <Link className="ab ab-f" href="/jobs">See all your videos <span className="arr" aria-hidden="true">→</span></Link>}
+        </Field>
+      </AppShell>
     );
   }
 
-  const host = new URL(job.config.url).hostname.replace(/^www\./, "");
-  const finished =
-    job.status === "done" ||
-    job.status === "failed" ||
-    job.status === "cancelled";
-  const exploring = ["discover", "flow-runs"].some(
-    (s) => job.stages[s as "discover"].status === "running",
-  );
-  const failed = STAGES.filter((s) => job.stages[s.name].status === "failed");
+  const gate = waitingGate(job);
+  const stage = currentStage(job);
+  const state = fieldState(job);
+  const over = finished(job);
+  const flows = flowsFile.data
+    ? { total: flowsFile.data.flows.length, selected: flowsFile.data.flows.filter((f) => f.selected).length }
+    : undefined;
+  const n = variantMatrix(job.config.variants).length;
+  const st = stage ? job.stages[stage] : undefined;
+  const inStage = st?.startedAt ? Math.max(0, now / 1000 - Date.parse(st.startedAt) / 1000) : 0;
+  const stageIndex = stage ? STAGES.findIndex((s) => s.name === stage) + 1 : 0;
+  const agents = view.agents.filter((a) => a.stage === "discover" || a.stage === "flow-runs");
+
+  const connection: Connection = over
+    ? { tone: "idle", text: job.status === "done" ? "Finished" : job.status === "failed" ? "Stopped with an error" : "Cancelled" }
+    : live
+      ? { tone: "live", text: "Live from the worker" }
+      : { tone: "wait", text: "Reconnecting to the worker…" };
+
+  // What the field says and holds.
+  let title: string, lead: string, clock: string | undefined, sub: string | undefined, body: React.ReactNode = null;
+  if (job.status === "done") {
+    title = "Ready";
+    lead = "Filmed on the real product and cut from the approved edit. Watch them here or download them.";
+    clock = mmss(elapsed(job, now)); sub = "start to finish";
+    body = <Outputs job={job} versions={view.artifacts} />;
+  } else if (job.status === "failed") {
+    title = "Stopped";
+    lead = finding(job);
+    clock = mmss(elapsed(job, now)); sub = stage ? `in ${STAGE_TITLE[stage].toLowerCase()}` : undefined;
+    body = (
+      <div className="fail-body">
+        {STAGES.filter((s) => job.stages[s.name].status === "failed").map((s) => (
+          <p key={s.name}><b>{s.label}</b>{job.stages[s.name].error?.code ? ` (${job.stages[s.name].error!.code})` : ""}: {job.stages[s.name].error?.message ?? "failed"}</p>
+        ))}
+        <Link className="ab ab-f" href="/#top">Start a new video <span className="arr" aria-hidden="true">→</span></Link>
+      </div>
+    );
+  } else if (job.status === "cancelled") {
+    title = "Cancelled";
+    lead = "Nothing more will be filmed. The stages that finished are kept with the job.";
+    clock = mmss(elapsed(job, now)); sub = "total time";
+    body = <Link className="ab ab-f" href="/#top">Start a new video <span className="arr" aria-hidden="true">→</span></Link>;
+  } else if (gate) {
+    title = STAGE_TITLE[gate];
+    lead = STAGE_LEAD[gate];
+    clock = mmss(inStage); sub = "waiting on you";
+    body =
+      gate === "gate-flows" ? (
+        <FlowReview
+          jobId={job.id}
+          version={view.artifacts[jobPaths.flows]}
+          action={view.events.findLast((e) => e.type === "action" && e.gate === "gate-flows") as Extract<JobEvent, { type: "action" }> | undefined}
+          onApprove={(d) => decide("gate-flows", d)}
+        />
+      ) : gate === "gate-script" ? (
+        <StoryboardReview jobId={job.id} langs={job.config.variants.langs} versions={view.artifacts} onApprove={(d) => decide("gate-script", d)} />
+      ) : (
+        <PreviewReview job={job} version={view.artifacts[jobPaths.preview]} onDecide={(d) => decide("gate-preview", d)} />
+      );
+  } else if (job.status === "queued" || !stage) {
+    title = "Starting";
+    lead = "The worker has the job and is getting the first stages ready.";
+  } else {
+    title = STAGE_TITLE[stage];
+    lead = st?.message ?? STAGE_LEAD[stage];
+    clock = mmss(inStage); sub = `in this stage · stage ${stageIndex} of ${STAGES.length}`;
+    body =
+      (stage === "discover" || stage === "flow-runs") && agents.length > 0 ? (
+        <Multiview jobId={job.id} agents={agents} />
+      ) : (
+        <StageWork job={job} stage={stage} events={view.events} />
+      );
+  }
 
   return (
-    <div ref={page} className="w-full max-w-6xl px-6 py-10 sm:py-14">
-      <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
-        <div className="space-y-2">
-          <p className="flex items-center gap-2 text-xs text-white/50">
-            <span
-              className={`h-2 w-2 rounded-full ${live && !finished ? "animate-pulse bg-accent" : finished ? "bg-white/30" : "bg-amber-400"}`}
-            />
-            {STATUS_LABEL[job.status]}
-            {!finished && !live && " · reconnecting"}
-          </p>
-          <h1 className="font-serif text-4xl font-normal text-white sm:text-5xl">
-            {host}
-          </h1>
-          <a
-            href={job.config.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-white/40 transition-colors hover:text-white/70"
-          >
-            {job.config.url}
-          </a>
+    <AppShell current="job" connection={connection}>
+      <div className="ttl">
+        <div className="ttl-l">
+          <p className="crumb"><Link href="/jobs">Videos</Link> / {modeName(job)}</p>
+          <h1 className="jt">{hostOf(job.config.url)}</h1>
+          <p className="finding">{finding(job, flows)}</p>
         </div>
-        {!finished && (
-          <button
-            type="button"
-            onClick={async () => {
-              setCancelError(undefined);
-              setCancelling(true);
-              try {
-                await cancel();
-              } catch (error) {
-                setCancelError(
-                  error instanceof Error
-                    ? error.message
-                    : "Could not cancel the job. Try again.",
-                );
-              } finally {
-                setCancelling(false);
-              }
-            }}
-            disabled={cancelling}
-            className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
-          >
-            {cancelling ? "Cancelling…" : "Cancel job"}
-          </button>
-        )}
-      </header>
-      {cancelError && (
-        <p role="alert" className="mb-6 text-sm text-red-400">
-          {cancelError}
-        </p>
-      )}
-
-      <div className="grid gap-10 lg:grid-cols-[230px_minmax(0,1fr)]">
-        <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
-          <StageRail job={job} />
-        </aside>
-
-        <div className="min-w-0 space-y-10">
-          <div ref={panel} key={panelKey}>
-            {gate === "gate-flows" ? (
-              <FlowReview
-                jobId={job.id}
-                version={view.artifacts[jobPaths.flows]}
-                action={
-                  view.events.findLast(
-                    (e) => e.type === "action" && e.gate === "gate-flows",
-                  ) as Extract<JobEvent, { type: "action" }> | undefined
-                }
-                onApprove={(d) => decide("gate-flows", d)}
-              />
-            ) : gate === "gate-script" ? (
-              <StoryboardReview
-                jobId={job.id}
-                langs={job.config.variants.langs}
-                versions={view.artifacts}
-                onApprove={(d) => decide("gate-script", d)}
-              />
-            ) : gate === "gate-preview" ? (
-              <PreviewReview
-                job={job}
-                version={view.artifacts[jobPaths.preview]}
-                onDecide={(d) => decide("gate-preview", d)}
-              />
-            ) : job.status === "done" ? (
-              <Outputs job={job} versions={view.artifacts} />
-            ) : job.status === "failed" ? (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.07] p-6 space-y-3">
-                <h2 className="font-serif text-3xl text-white">
-                  Something went wrong
-                </h2>
-                {failed.map((s) => (
-                  <p key={s.name} className="text-sm text-red-300">
-                    <span className="text-white">{s.label}:</span>{" "}
-                    {job.stages[s.name].error?.message ?? "failed"}
-                  </p>
-                ))}
-                <Link
-                  href="/#hero-input"
-                  className="inline-block pt-2 text-sm text-white/70 hover:text-white"
-                >
-                  ← Start a new video
-                </Link>
-              </div>
-            ) : job.status === "cancelled" ? (
-              <div className="rounded-2xl border border-white/10 bg-[#121215]/80 p-6 space-y-2">
-                <h2 className="font-serif text-3xl text-white">Stopped</h2>
-                <p className="text-sm text-white/60">
-                  This job was cancelled. Its finished stages are kept.
-                </p>
-              </div>
-            ) : (
-              <NowCard job={job} events={view.events} />
-            )}
+        {!over && (
+          <div className="ttl-act">
+            <button
+              type="button"
+              className="ab ab-ghost"
+              disabled={cancelling}
+              onClick={async () => {
+                if (!sure) { setSure(true); return; }
+                setCancelError(undefined);
+                setCancelling(true);
+                try { await cancel(); } catch (err) { setCancelError(err instanceof Error ? err.message : "Couldn’t cancel the job. Try again."); }
+                finally { setCancelling(false); setSure(false); }
+              }}
+            >
+              {cancelling ? "Cancelling…" : sure ? "Yes, cancel it" : "Cancel job"}
+            </button>
           </div>
-
-          {(exploring ||
-            (view.agents.length > 0 &&
-              !finished &&
-              job.stages["gate-flows"].status !== "done")) && (
-            <LiveAgents agents={view.agents} jobId={job.id} />
-          )}
-
-          <PlanCard jobId={job.id} versions={view.artifacts} />
-          <ActivityLog events={view.events} />
-        </div>
+        )}
       </div>
-    </div>
+      {cancelError && <p className="app-alert" role="alert">{cancelError}</p>}
+
+      <dl className="meta">
+        <div><dt>Elapsed</dt><dd>{mmss(elapsed(job, now))}</dd></div>
+        <div><dt>Stage</dt><dd>{job.status === "done" ? STAGES.length : stageIndex || "–"} <small>of {STAGES.length}</small></dd></div>
+        <div><dt>Flows</dt><dd>{flows ? <>{flows.selected} <small>of {flows.total} picked</small></> : <small>not found yet</small>}</dd></div>
+        <div><dt>Videos</dt><dd>{n} <small>at 1080p</small></dd></div>
+        <div><dt>Video</dt><dd>{modeName(job).split(" ")[0]} <small>{voiced(job.config) ? "narrated" : "music-led"}</small></dd></div>
+      </dl>
+
+      <Field state={state} title={title} lead={lead} clock={clock} sub={sub}>{body}</Field>
+
+      <PlanBlock jobId={job.id} versions={view.artifacts} />
+
+      <RunTimeline job={job} now={now} />
+
+      <div className="lower">
+        <ActivityLog events={view.events} startedAt={job.createdAt} />
+        <section className="blk" aria-labelledby="facts-h">
+          <div className="blk-h"><h2 id="facts-h">This job</h2><span>{over ? `took ${took(elapsed(job, now))}` : `started ${took(elapsed(job, now))} ago`}</span></div>
+          <dl className="facts">
+            {facts(job).map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{k === "Link" ? <a href={v} target="_blank" rel="noopener noreferrer">{v}</a> : v}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </div>
+    </AppShell>
   );
 }

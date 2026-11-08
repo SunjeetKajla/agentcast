@@ -268,3 +268,53 @@ preview and feed failures back to the director as issues, the same way the motio
 | Arc | peak 2 s window at 50–80% of the film; no swing > 6 dB between neighbouring 2 s windows before the outro | same |
 | Subject size | acted component ≥ 15% of frame width when it acts | same |
 | Ending | logo hold 2–4 s, audio < −35 dB relative in the last second | same |
+
+## 8. Music-led outputs against the references (2026-11-08)
+
+Four of our music-led films measured with the same scripts as §2 (`analyze.py`, `av.py`):
+
+- `led-linear` and `led-shadcn`: the template's edit, 1080p.
+- `sarvam-public` and `sarvam-signedin`: the worker's 540p previews of two sarvam.ai jobs (`job_mw6ms06pa7b1cc`, `job_mw6o12r65ef81c`), both after the director's pass.
+
+| Film | Len s | Scene changes /10 s | Still % | Motion | Luma | LUFS | UI events on audio onset (chance) |
+|---|---|---|---|---|---|---|---|
+| led-linear | 18 | 1.1 | 3.7 | 1.8 | 28 | −14.1 | 0.15 (0.21) |
+| led-shadcn | 18 | 0.0 | 0.0 | 0.9 | 244 | −14.1 | 0.27 (0.21) |
+| sarvam-public | 25 | 0.8 | 8.2 | 1.4 | 233 | −14.2 | 0.31 (0.25) |
+| sarvam-signedin | 30 | 0.7 | 17.4 | 1.1 | 237 | −14.1 | 0.37 (0.21) |
+| *ours before (voice-led)* | 19–30 | 1.4–2.7 | 16–35 | 1.8–2.4 | 61–219 | −15 to −18 | 0.08–0.17 (≈ chance) |
+| *references, rapid* | 22–80 | 4.1–7.7 | 0–8 | 2.6–5.4 | | −11.5 to −21.8 | up to 0.50 (0.26) |
+| *references, one take* | 30–55 | 0–1.0 | 13–53 | 0.4–3.0 | | −12.3 to −28.9 | up to 0.35 (0.11) |
+
+**What improved since the October render:**
+
+- **Stillness:** 0–17% still, down from 16–35%.
+- **Loudness:** every film masters to −14 LUFS.
+- **Brightness:** each film holds its brand's brightness throughout, as the references do. That's near-black for Linear and near-white (233–244) for shadcn and Sarvam, against mid-grey (61) before.
+- **Sync:** UI events now land on sounds above chance (1.2–1.8×, against 0.6–1.0× before). That's still short of the 2–3× in Attio, Notion and the Linear films.
+
+**What the numbers miss:** the scene-change count is a colour-histogram jump. Between two near-white cards it barely moves, so a light film's cuts go uncounted: `led-shadcn` reads 0.0 while it has a cut every 1–4 s. Counted from the edits, the films change scene 2.8–3.3 times per 10 s. That's faster than before, but still below the rapid-fire range (4–8) and far above a one take, so the old dead zone (§3.1) has narrowed but not closed. This lint needs a cut detector that also looks at edges, not only colour.
+
+**Why every film looked the same.** The contact sheets of all four show one shape:
+
+- **Opener:** the opening line arrives a phrase at a time.
+- **Middle:** a 1 s label, then a 3 s tilted window or build, repeated once per shot. The tilt alternates soft and strong, and the frame inverts once at the middle.
+- **Ending:** a ticker of terms, then the logo with a line and a URL pill.
+
+**Causes, in order of weight:**
+
+1. **One template, one structure.** `ledEdl` had a single structure, and only six primitives to fill it. The director's pass on Sarvam added swaps and fixed the length, but it works inside the same structure.
+2. **One usable track.** Only "Enter the Party" (120 BPM) has a dependable grid. Every film cuts on the same 4 s modules over the same music.
+3. **Look constants.** The plain ground, the label entrance, the tilt presets and the end card are fixed. Only the palette, fonts and logo change per brand.
+4. **Placeholder sound.** The same synthesised effects play in every film.
+
+**What changed (PRD §9.7.7):**
+
+- **Structure:** it comes from a skeleton in `assets/references/`, chosen by the product's shape, and the site's seed shifts each look cycle. Results per skeleton are in `spikes/RESULTS.md`, S13.
+- **Not addressed:** the second and fourth causes need licensed music and a sound pack. Those are decisions for the team, not code.
+
+**Still behind the references:**
+
+- **Content:** the footage is mostly marketing pages and settings screens. The references show the product doing its job, and §6.5 still applies.
+- **Subject size:** proofs of text-heavy pages (Sarvam's "Now write your own" panel, shadcn's component list) are too small to read at 540p.
+- **A voice product with no voice:** Sarvam's product is speech, and its film is silent apart from the music. A voice or audio product should play its own output in the film. This is the clearest gap the music-led default creates.

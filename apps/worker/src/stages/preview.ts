@@ -2,6 +2,7 @@ import { access, copyFile, mkdir, rename } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
 import {
   Brand,
+  BrandKit,
   Edl,
   ProductBrief,
   Script,
@@ -64,6 +65,7 @@ export async function videoInput(
         : undefined,
       optional(ctx.read(jobPaths.brand, Brand)),
     ]);
+  const kit = await optional(ctx.read(jobPaths.brandKit, BrandKit));
   // With a voice, its lines set each part's length and captions follow its words; without, the
   // script's lines spread over their parts.
   const narration = voice ? assignNarration(storyboard, voice, edl) : [];
@@ -105,6 +107,13 @@ export async function videoInput(
               width: logo.width,
               height: logo.height,
               plate: logo.plate,
+              // The brand kit's parts, for revealing the logo piece by piece (PRD §9.7.8).
+              ...(kit?.logo
+                ? {
+                    parts: { kind: kit.logo.kind, ...(kit.logo.mark ? { mark: kit.logo.mark } : {}), letters: kit.logo.letters },
+                    ...(kit.logo.svg || kit.logo.cut ? { art: kit.logo.svg ?? kit.logo.cut } : {}),
+                  }
+                : {}),
             },
           }
         : {}),

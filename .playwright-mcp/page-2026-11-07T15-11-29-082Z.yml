@@ -1,0 +1,334 @@
+- generic [active] [ref=f2e1]:
+  - link "Skip to content" [ref=f2e2] [cursor=pointer]:
+    - /url: "#main"
+  - generic [ref=f2e3]:
+    - navigation [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - link "Dynoz home" [ref=f2e6] [cursor=pointer]:
+          - /url: /
+          - img "Dynoz" [ref=f2e7]
+          - generic [ref=f2e8]: DYNOZ
+        - generic [ref=f2e9]:
+          - link "Home" [ref=f2e10] [cursor=pointer]:
+            - /url: /
+          - link "Company" [ref=f2e11] [cursor=pointer]:
+            - /url: /about
+          - link "Hotels" [ref=f2e12] [cursor=pointer]:
+            - /url: /industries/hotels
+          - link "Contact" [ref=f2e13] [cursor=pointer]:
+            - /url: /contact
+        - link "Book a demo" [ref=f2e15] [cursor=pointer]:
+          - /url: /contact
+    - main [ref=f2e16]:
+      - generic [ref=f2e18]:
+        - generic [ref=f2e22]:
+          - generic [ref=f2e23]:
+            - generic [ref=f2e24]: Built for modern hospitality
+            - heading "AI Powered Guest Engagement" [level=1] [ref=f2e27]
+          - generic [ref=f2e28]:
+            - paragraph [ref=f2e29]: Through hospitality-first voice agents and integrations.
+            - generic [ref=f2e30]:
+              - link "Book a demo" [ref=f2e32] [cursor=pointer]:
+                - /url: /contact
+              - link "Talk to us" [ref=f2e34] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=f2e37]:
+          - heading "Industries" [level=2] [ref=f2e38]
+          - generic [ref=f2e42]:
+            - generic [ref=f2e43]:
+              - generic [ref=f2e44]:
+                - paragraph [ref=f2e45]: Guest communication
+                - heading "The Agents Answer" [level=3] [ref=f2e46]
+                - paragraph [ref=f2e47]:
+                  - generic [ref=f2e48]: Calls are answered throughout the guest journey.
+              - link "Calculate ROI" [ref=f2e51] [cursor=pointer]:
+                - /url: /industries/hotels#roi
+            - generic [ref=f2e52]:
+              - generic [ref=f2e53]:
+                - heading "Pre-stay" [level=4] [ref=f2e54]
+                - generic [ref=f2e55]:
+                  - generic [ref=f2e56]: Reservations
+                  - generic [ref=f2e58]: Pre-arrival
+                  - generic [ref=f2e60]: Cancellations
+                  - generic [ref=f2e62]: Inquiries
+              - generic [ref=f2e64]:
+                - heading "In-stay" [level=4] [ref=f2e65]
+                - generic [ref=f2e66]:
+                  - generic [ref=f2e67]: Late checkout
+                  - generic [ref=f2e69]: Early arrival
+                  - generic [ref=f2e71]: Room service
+                  - generic [ref=f2e73]: Housekeeping
+              - generic [ref=f2e75]:
+                - heading "Post-stay" [level=4] [ref=f2e76]
+                - generic [ref=f2e77]:
+                  - generic [ref=f2e78]: Billing
+                  - generic [ref=f2e80]: Invoices
+                  - generic [ref=f2e82]: Feedback
+                  - generic [ref=f2e84]: Lost property
+            - generic [ref=f2e87]:
+              - generic [ref=f2e88]:
+                - heading "Guest Request Management" [level=3] [ref=f2e89]
+                - paragraph [ref=f2e90]: Turns every guest request into an actionable task for your team.
+              - generic [ref=f2e91]:
+                - generic [ref=f2e97]:
+                  - heading "Request Management System" [level=4] [ref=f2e98]
+                  - paragraph [ref=f2e99]: Requests are tracked with escalations and a live floor view.
+                - generic [ref=f2e106]:
+                  - heading "Call Records" [level=4] [ref=f2e107]
+                  - paragraph [ref=f2e108]: Transcript, summary and, where enabled, the recording of each call.
+                - generic [ref=f2e115]:
+                  - heading "Guest Data & PMS" [level=4] [ref=f2e116]
+                  - paragraph [ref=f2e117]: Reservations, availability and guest profiles, live from your PMS.
+                - generic [ref=f2e123]:
+                  - heading "Trends" [level=4] [ref=f2e124]
+                  - paragraph [ref=f2e125]: Understand what guests ask for most, identify recurring issues, and generate customizable reports.
+          - generic [ref=f2e137]:
+            - button "Previous view" [ref=f2e138]
+            - generic [ref=f2e141]:
+              - button "Show view 1 of 4" [ref=f2e142]
+              - button "Show view 2 of 4" [ref=f2e144]
+              - button "Show view 3 of 4" [ref=f2e146]
+              - button "Show view 4 of 4" [ref=f2e148]
+            - button "Next view" [ref=f2e150]
+          - generic [ref=f2e155]:
+            - generic [ref=f2e156]:
+              - generic [ref=f2e222]:
+                - generic [ref=f2e223]: 00:00
+                - generic [ref=f2e224]: 12:00
+                - generic [ref=f2e225]: 23:00
+              - generic [ref=f2e226]:
+                - generic [ref=f2e227]:
+                  - generic [ref=f2e228]: Up to
+                  - term [ref=f2e234]: 50%
+                - definition [ref=f2e236]:
+                  - generic [ref=f2e237]: Saved on call handling
+            - generic [ref=f2e238]:
+              - generic [ref=f2e242]:
+                - generic [ref=f2e243]: EN
+                - generic [ref=f2e244]: ES
+                - generic [ref=f2e245]: FR
+                - generic [ref=f2e246]: DE
+                - generic [ref=f2e247]: HI
+                - generic [ref=f2e248]: PT
+                - generic [ref=f2e249]: IT
+                - generic [ref=f2e250]: NL
+                - generic [ref=f2e251]: AR
+                - generic [ref=f2e252]: JA
+                - generic [ref=f2e253]: ZH
+                - generic [ref=f2e254]: TA
+                - generic [ref=f2e255]: KO
+                - generic [ref=f2e256]: TR
+                - generic [ref=f2e257]: PL
+                - generic [ref=f2e258]: SV
+                - generic [ref=f2e259]: TH
+                - generic [ref=f2e260]: RU
+              - generic [ref=f2e261]:
+                - term [ref=f2e268]: 40+
+                - definition [ref=f2e270]:
+                  - generic [ref=f2e271]: Languages
+            - generic [ref=f2e272]:
+              - generic [ref=f2e275]:
+                - generic [ref=f2e276]:
+                  - generic [ref=f2e277]: Dynoz
+                  - generic [ref=f2e301]: Team
+                - generic [ref=f2e318]: 0h
+                - generic [ref=f2e319]: One week of shifts
+              - generic [ref=f2e320]:
+                - term [ref=f2e327]: 0h
+                - definition [ref=f2e329]:
+                  - generic [ref=f2e330]: Extra staff hours
+      - generic [ref=f2e342]:
+        - paragraph [ref=f2e343]:
+          - generic [ref=f2e344]: Our partners
+        - generic [ref=f2e348]:
+          - img "NVIDIA Inception Program" [ref=f2e349]
+          - img "AWS Startups" [ref=f2e350]
+          - img "Microsoft for Startups" [ref=f2e351]
+          - img "Google for Startups" [ref=f2e352]
+          - img "Claude for Startups" [ref=f2e353]
+          - img "Cartesia Startups Grant" [ref=f2e354]
+          - img "Sarvam Startup Program" [ref=f2e355]
+          - img "DTU IIF" [ref=f2e356]
+          - img "Soniox" [ref=f2e357]
+          - img "Firebase" [ref=f2e358]
+          - img "Vercel" [ref=f2e359]
+          - img "Plivo" [ref=f2e360]
+          - img "Exotel" [ref=f2e361]
+          - img "Worldline Payments" [ref=f2e362]
+          - img "Razorpay" [ref=f2e363]
+          - img "Oracle On-Premise PMS" [ref=f2e364]
+      - generic [ref=f2e387]:
+        - heading "Before and after Dynoz" [level=2] [ref=f2e388]
+        - generic [ref=f2e389]:
+          - generic [ref=f2e390]:
+            - heading "The same hotel, before and after" [level=2] [ref=f2e391]
+            - paragraph [ref=f2e392]: The pain points every property carries. Same property, same guests.
+            - generic [ref=f2e393]:
+              - button "Before" [pressed] [ref=f2e395]
+              - button "After" [ref=f2e396]
+          - generic [ref=f2e397]:
+            - generic [ref=f2e399]:
+              - generic [ref=f2e407]:
+                - paragraph [ref=f2e408]: Cover
+                - generic [ref=f2e409]:
+                  - paragraph [ref=f2e410]: High staff attrition creates service dependency.
+                  - paragraph [ref=f2e411]: Every shift is covered the same way, whoever is on the desk.
+              - paragraph [ref=f2e413]: Shifts covered
+            - generic [ref=f2e424]:
+              - generic [ref=f2e431]:
+                - paragraph [ref=f2e432]: Workload
+                - generic [ref=f2e433]:
+                  - paragraph [ref=f2e434]: Repetitive requests overload the desk at peak.
+                  - paragraph [ref=f2e435]: Routine calls are handled, so the desk stays with the guest.
+              - paragraph [ref=f2e437]: Desk load
+            - generic [ref=f2e444]:
+              - generic [ref=f2e449]:
+                - paragraph [ref=f2e450]: The guest
+                - generic [ref=f2e451]:
+                  - paragraph [ref=f2e452]: Delays and missed requests cost reviews and loyalty.
+                  - paragraph [ref=f2e453]: An answer in seconds, at any hour.
+              - paragraph [ref=f2e455]: Guest wait
+      - generic [ref=f2e465]:
+        - heading "The platform" [level=2] [ref=f2e466]
+        - generic [ref=f2e467]:
+          - generic [ref=f2e471]:
+            - generic [ref=f2e472]:
+              - heading "Fine-Tuned Voice Agent" [level=3] [ref=f2e473]
+              - paragraph [ref=f2e474]: Built specifically for hotels, with deep domain training in hospitality workflows, policies, and guest expectations.
+              - generic [ref=f2e475]:
+                - generic [ref=f2e476]: Workflows
+                - generic [ref=f2e483]: Policies
+                - generic [ref=f2e489]: Expectations
+            - generic [ref=f2e494]:
+              - paragraph [ref=f2e495]: Trained for
+              - list [ref=f2e496]:
+                - listitem [ref=f2e497]:
+                  - generic [ref=f2e501]: Reservations
+                - listitem [ref=f2e502]:
+                  - generic [ref=f2e506]: In-stay requests
+                - listitem [ref=f2e507]:
+                  - generic [ref=f2e512]: Pre-arrival calls
+                - listitem [ref=f2e513]:
+                  - generic [ref=f2e517]: Upgrades & upsells
+          - generic [ref=f2e593]:
+            - generic [ref=f2e594]:
+              - generic [ref=f2e595]:
+                - generic [ref=f2e596]: OPERA Cloud
+                - generic [ref=f2e600]: Connected
+              - generic [ref=f2e605]:
+                - generic [ref=f2e606]: OPERA on-premise V5
+                - generic [ref=f2e610]: Connected
+              - generic [ref=f2e615]:
+                - generic [ref=f2e616]: Your PBX
+                - generic [ref=f2e621]: Connected
+            - link "and 11 more" [ref=f2e626] [cursor=pointer]:
+              - /url: /partners
+            - generic [ref=f2e642]:
+              - heading "20+ Integrations and Partners" [level=3] [ref=f2e643]
+              - paragraph [ref=f2e644]: Into the stack you already run. No rip and replace, no new hardware.
+          - generic [ref=f2e646]:
+            - paragraph [ref=f2e648]:
+              - generic [ref=f2e656]: Wake-up call request
+            - generic [ref=f2e663]:
+              - generic [ref=f2e666]:
+                - generic [ref=f2e667]:
+                  - generic [ref=f2e676]: Wake-up call
+                  - generic [ref=f2e677]: Requested on the call
+                - generic [ref=f2e678]:
+                  - generic [ref=f2e683]: Room & guest
+                  - generic [ref=f2e684]: Recognized
+                - generic [ref=f2e685]:
+                  - generic [ref=f2e691]: PBX & RMS
+                  - generic [ref=f2e692]: Scheduled, staff reminded
+              - generic [ref=f2e693]: No manual entries, on either system
+            - generic [ref=f2e709]:
+              - heading "End-to-end workflows" [level=3] [ref=f2e710]
+              - paragraph [ref=f2e711]: Every request is routed to the right department using the systems your team already has in place.
+          - generic [ref=f2e713]:
+            - paragraph [ref=f2e714]: Coming next
+            - generic [ref=f2e715]:
+              - generic [ref=f2e716]:
+                - generic [ref=f2e731]: Restaurants
+                - generic [ref=f2e732]: Every table call answered, while service keeps moving.
+              - generic [ref=f2e733]:
+                - generic [ref=f2e758]: Hospitals
+                - generic [ref=f2e759]: Appointments answered round the clock.
+              - generic [ref=f2e760]:
+                - generic [aria-hidden] [ref=f2e762]:
+                  - generic [ref=f2e763]: EN
+                  - generic [ref=f2e764]: ES
+                  - generic [ref=f2e765]: PT
+                  - generic [ref=f2e766]: AR
+                  - generic [ref=f2e767]: JA
+                - generic [ref=f2e768]: OTAs
+                - generic [ref=f2e769]: Support in every traveler's language.
+              - generic [ref=f2e770]:
+                - generic [ref=f2e788]: Airports
+                - generic [ref=f2e789]: Passenger inquiries at terminal scale.
+    - contentinfo [ref=f2e794]:
+      - generic [ref=f2e795]:
+        - generic [ref=f2e797]:
+          - generic [ref=f2e798]:
+            - link "Dynoz home" [ref=f2e799] [cursor=pointer]:
+              - /url: /
+              - img "Dynoz" [ref=f2e800]
+              - generic [ref=f2e801]: DYNOZ
+            - paragraph [ref=f2e802]: AI-powered guest engagement system for hospitality
+            - generic [ref=f2e803]:
+              - link "contact@dynoz.ai" [ref=f2e804] [cursor=pointer]:
+                - /url: https://mail.google.com/mail/?view=cm&fs=1&to=contact@dynoz.ai
+              - link "+91 9821505063" [ref=f2e808] [cursor=pointer]:
+                - /url: tel:+919821505063
+            - generic [ref=f2e811]:
+              - link "Dynoz on LinkedIn" [ref=f2e812] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/dynozai
+              - link "Dynoz on X" [ref=f2e815] [cursor=pointer]:
+                - /url: https://x.com/DynozAI
+              - link "Dynoz on Instagram" [ref=f2e818] [cursor=pointer]:
+                - /url: https://www.instagram.com/dynozai/
+          - generic [ref=f2e821]:
+            - generic [ref=f2e822]:
+              - heading "Company" [level=3] [ref=f2e823]
+              - list [ref=f2e824]:
+                - listitem [ref=f2e825]:
+                  - link "About" [ref=f2e826] [cursor=pointer]:
+                    - /url: /about
+                - listitem [ref=f2e827]:
+                  - link "Careers" [ref=f2e828] [cursor=pointer]:
+                    - /url: /careers
+                - listitem [ref=f2e829]:
+                  - link "Partners" [ref=f2e830] [cursor=pointer]:
+                    - /url: /partners
+            - generic [ref=f2e831]:
+              - heading "Platform" [level=3] [ref=f2e832]
+              - list [ref=f2e833]:
+                - listitem [ref=f2e834]:
+                  - link "Hotels" [ref=f2e835] [cursor=pointer]:
+                    - /url: /industries/hotels
+                - listitem [ref=f2e836]:
+                  - link "Contact" [ref=f2e837] [cursor=pointer]:
+                    - /url: /contact
+                - listitem [ref=f2e838]:
+                  - link "Trust Center" [ref=f2e839] [cursor=pointer]:
+                    - /url: /trust-center
+            - generic [ref=f2e840]:
+              - heading "Legal" [level=3] [ref=f2e841]
+              - list [ref=f2e842]:
+                - listitem [ref=f2e843]:
+                  - link "Privacy" [ref=f2e844] [cursor=pointer]:
+                    - /url: /privacy
+                - listitem [ref=f2e845]:
+                  - link "Terms of Use" [ref=f2e846] [cursor=pointer]:
+                    - /url: /terms
+                - listitem [ref=f2e847]:
+                  - link "Disclaimer" [ref=f2e848] [cursor=pointer]:
+                    - /url: /disclaimer
+        - generic [ref=f2e849]:
+          - paragraph [ref=f2e850]: © 2026 Centora Technologies Private Limited. All rights reserved.
+          - paragraph [ref=f2e851]: Where Service Meets Intelligence
+        - generic [aria-hidden]:
+          - paragraph: dynoz
+    - generic [ref=f2e852]:
+      - button "Back to top" [disabled] [ref=f2e853]
+      - button "Jump to bottom" [ref=f2e857]
+  - alert [ref=f2e861]

@@ -1,0 +1,137 @@
+- main "Job view" [ref=f5e2]:
+  - generic [ref=f5e4]:
+    - generic [ref=f5e6]:
+      - link "AgentCast" [ref=f5e7] [cursor=pointer]:
+        - /url: "#top"
+      - navigation "App" [ref=f5e8]:
+        - link "New video" [ref=f5e9] [cursor=pointer]:
+          - /url: "#top"
+        - link "Videos" [ref=f5e10] [cursor=pointer]:
+          - /url: "#job"
+        - link "Help" [ref=f5e11] [cursor=pointer]:
+          - /url: "#faq"
+      - generic "The worker this page talks to" [ref=f5e12]: Worker on 127.0.0.1:4000
+    - generic [ref=f5e15]:
+      - generic [ref=f5e16]:
+        - generic [ref=f5e17]:
+          - paragraph [ref=f5e18]:
+            - link "Videos" [ref=f5e19] [cursor=pointer]:
+              - /url: "#job"
+            - text: / Launch video
+          - heading "todomvc.com" [level=1] [ref=f5e20]
+          - paragraph [ref=f5e21]: Explore found 11 flows. The judge sent the best 3 to be tried, one agent each.
+        - button "Cancel job" [ref=f5e23] [cursor=pointer]
+      - generic [ref=f5e24]:
+        - generic [ref=f5e25]:
+          - term [ref=f5e26]: Elapsed
+          - definition [ref=f5e27]: 2:09
+        - generic [ref=f5e28]:
+          - term [ref=f5e29]: Stage
+          - definition [ref=f5e30]: 4 of 13
+        - generic [ref=f5e31]:
+          - term [ref=f5e32]: Flows
+          - definition [ref=f5e33]: 11 reported
+        - generic [ref=f5e34]:
+          - term [ref=f5e35]: Videos
+          - definition [ref=f5e36]: 2 at 1080p
+        - generic [ref=f5e37]:
+          - term [ref=f5e38]: Recording
+          - definition [ref=f5e39]: Live 60 fps
+      - region [ref=f5e40]:
+        - generic [ref=f5e42]:
+          - generic [ref=f5e43]:
+            - heading [level=2] [ref=f5e44]
+            - paragraph
+          - generic [ref=f5e45]: 0:00
+      - region "The run as a timeline" [ref=f5e47]:
+        - generic [ref=f5e48]:
+          - heading "The run" [level=2] [ref=f5e49]
+          - generic [ref=f5e50]: 2:09 so far · about 6:08 in all
+        - generic [ref=f5e51]:
+          - generic [ref=f5e52]:
+            - generic [ref=f5e53]: 0:00
+            - generic [ref=f5e54]: 0:30
+            - generic [ref=f5e55]: 1:00
+            - generic [ref=f5e56]: 1:30
+            - generic [ref=f5e57]: 2:00
+            - generic [ref=f5e58]: 2:30
+            - generic [ref=f5e59]: 3:00
+            - generic [ref=f5e60]: 3:30
+            - generic [ref=f5e61]: 4:00
+            - generic [ref=f5e62]: 4:30
+            - generic [ref=f5e63]: 5:00
+            - generic [ref=f5e64]: 5:30
+          - generic [ref=f5e65]:
+            - 'generic "Understand: 21s" [ref=f5e66]':
+              - generic [ref=f5e67]: Understand
+              - text: 21s
+            - 'generic "Sign in: skipped"'
+            - 'generic "Explore: 1m 48s" [ref=f5e68]':
+              - generic [ref=f5e69]: Explore
+              - text: 1m 48s
+            - 'generic "Try flows: 0s" [ref=f5e70]'
+            - 'generic "Review flows: about 40s" [ref=f5e71]':
+              - generic [ref=f5e72]: Review flows
+              - text: about 40s
+            - 'generic "Record: about 32s" [ref=f5e73]':
+              - generic [ref=f5e74]: Record
+              - text: about 32s
+            - 'generic "Script: about 22s" [ref=f5e75]':
+              - generic [ref=f5e76]: Script
+              - text: about 22s
+            - 'generic "Review script: about 25s" [ref=f5e77]':
+              - generic [ref=f5e78]: Review script
+              - text: about 25s
+            - 'generic "Voice: about 18s" [ref=f5e79]'
+            - 'generic "Direct: about 26s" [ref=f5e80]':
+              - generic [ref=f5e81]: Direct
+              - text: about 26s
+            - 'generic "Preview: about 16s" [ref=f5e82]'
+            - 'generic "Review preview: about 30s" [ref=f5e83]':
+              - generic [ref=f5e84]: Review preview
+              - text: about 30s
+            - 'generic "Render: about 30s" [ref=f5e85]':
+              - generic [ref=f5e86]: Render
+              - text: about 30s
+        - paragraph [ref=f5e87]:
+          - generic [ref=f5e88]: Done
+          - generic [ref=f5e90]: Working
+          - generic [ref=f5e92]: Review gate
+          - generic [ref=f5e94]: Waiting on you
+          - generic [ref=f5e96]: Still to come, estimated
+          - generic [ref=f5e98]: Now
+      - generic [ref=f5e100]:
+        - generic [ref=f5e101]:
+          - generic [ref=f5e102]:
+            - heading "Activity" [level=2] [ref=f5e103]
+            - generic [ref=f5e104]: 2 events · latest first
+          - list [ref=f5e105]:
+            - listitem [ref=f5e106]:
+              - time [ref=f5e107]: 2:09
+              - generic [ref=f5e108]: The judge picked 3 flows to try
+            - listitem [ref=f5e109]:
+              - time [ref=f5e110]: 2:09
+              - generic [ref=f5e111]: "Explore finished: 11 flows reported"
+        - generic [ref=f5e112]:
+          - generic [ref=f5e113]:
+            - heading "This job" [level=2] [ref=f5e114]
+            - generic [ref=f5e115]: change it at the next gate
+          - generic [ref=f5e116]:
+            - generic [ref=f5e117]:
+              - term [ref=f5e118]: Link
+              - definition [ref=f5e119]: todomvc.com/examples/react
+            - generic [ref=f5e120]:
+              - term [ref=f5e121]: Video
+              - definition [ref=f5e122]: Launch video, narrated
+            - generic [ref=f5e123]:
+              - term [ref=f5e124]: Outputs
+              - definition [ref=f5e125]: "2 videos: 16:9 and 9:16 in English"
+            - generic [ref=f5e126]:
+              - term [ref=f5e127]: Recording
+              - definition [ref=f5e128]: Live, 60 fps
+            - generic [ref=f5e129]:
+              - term [ref=f5e130]: Voice
+              - definition [ref=f5e131]: Brian (premade)
+            - generic [ref=f5e132]:
+              - term [ref=f5e133]: Review gates
+              - definition [ref=f5e134]: Flows, script and preview

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { copyFile, link, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { EndCardProps, OpenerProps, type Edl, type ShotSegment, type TimelineEvent } from "@agentcast/shared";
 import { musicAutomation, sfxCues, type SfxKind, type Sounds } from "../audio.ts";
@@ -12,8 +12,9 @@ import { calloutSeconds, eased } from "../motion.ts";
 import { cursorAt, planParts, type Part, type VideoInput } from "../plan.ts";
 import { clockOf } from "../retime.ts";
 import { soundShape } from "../sound.ts";
+import { assetOf, outputStart } from "../primitives/brand.ts";
 import { endCardScene, openerScene, openerSlot, phrasesOf, primitiveScene, stillFile } from "../primitives/index.ts";
-import { localFonts } from "./fonts.ts";
+import { localFonts, scriptFamilies } from "./fonts.ts";
 import { run } from "./render.ts";
 import {
   SHARED_CSS,
@@ -102,9 +103,16 @@ function themeOf(edl: Edl) {
   const glow1 = colourful ? accent : mixHex(bg, fg, dark ? 0.3 : 0.16);
   const glow2 = colourful ? accent2 : mixHex(bg, fg, dark ? 0.2 : 0.09);
   const glow3 = colourful ? mixHex(accent, bg, 0.5) : mixHex(bg, fg, dark ? 0.12 : 0.06);
+  // The brand's colours from its imagery (v8), or its accents: glows, chips and bars cycle through them.
+  const own = edl.style.palette.colours ?? [];
+  const cs = own.length >= 2 ? own : [colourful ? accent : glow1, field, accent2, colourful ? accent : glow2];
   return {
     colourful,
     vars: {
+      "--ac-c1": cs[0]!,
+      "--ac-c2": cs[1 % cs.length]!,
+      "--ac-c3": cs[2 % cs.length]!,
+      "--ac-c4": cs[3 % cs.length]!,
       "--ac-bg": bg,
       "--ac-fg": fg,
       "--ac-accent": colourful ? readableOn(accent, bg, 1.6) : accent,
@@ -298,6 +306,13 @@ function shotVars(input: VideoInput, shot: ShotSegment, part: Extract<Part, { ki
   return { vars, clips, src };
 }
 
+/** Whether a #rrggbb colour is a colour rather than a grey. */
+function colourful(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const max = Math.max(r!, g!, b!);
+  return max > 0 && (max - Math.min(r!, g!, b!)) / max > 0.3;
+}
+
 /** Compiles one variant; returns the composition's length and its scenes in playing order. */
 export async function compileComposition(o: CompileOptions): Promise<{ duration: number; scenes: CompiledScene[] }> {
   const { input } = o;
@@ -324,14 +339,20 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
   await place(join(o.root, input.footage.src), join(o.out, "assets", "footage.mp4"));
   const logo = input.brand.logo;
   if (logo) await place(join(o.root, logo.src), join(o.out, "assets", "logo.png"));
+  const logoArt = logo?.art ? `assets/logo-art${extname(logo.art)}` : undefined;
+  if (logo?.art && logoArt) await place(join(o.root, logo.art), join(o.out, logoArt));
   const hero = input.brand.hero;
   if (hero) await place(join(o.root, hero), join(o.out, "assets", "hero.jpg"));
 
   // Fonts: the brand's families as local files; Inter always, Devanagari for Hindi.
   const { display, text } = edl.style.fonts;
-  const fonts = await localFonts([display, text, "Inter", ...(lang === "hi" ? ["Noto Sans Devanagari"] : [])], o.out, o.signal);
+  // Every script the film's words are in, whatever the variant's language: the recording's own values (a
+  // Tamil line typed, a chip in its script) stay as recorded.
+  const scripts = scriptFamilies(JSON.stringify({ intro: edl.intro, outro: edl.outro, segments: edl.segments, copy: input.copy }));
+  if (lang === "hi" && !scripts.includes("Noto Sans Devanagari")) scripts.push("Noto Sans Devanagari");
+  const fonts = await localFonts([display, text, "Inter", ...scripts], o.out, o.signal);
   const stack = (family: string) =>
-    [fonts.families.includes(family) ? family : undefined, "Inter", lang === "hi" ? "Noto Sans Devanagari" : undefined, "sans-serif"]
+    [fonts.families.includes(family) ? family : undefined, "Inter", ...scripts, "sans-serif"]
       .filter(Boolean)
       .map((f) => (f === "sans-serif" ? f : `"${f}"`))
       .join(", ");
@@ -348,6 +369,9 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
 
   const scenes: CompiledScene[] = [];
   const hosts: string[] = [];
+  /** The product's own outputs to play, and when (PRD §9.7.8). */
+  const outputs: { src: string; at: number; from: number; seconds: number }[] = [];
+  const clicks = input.footage.timeline.events.flatMap((e) => (e.kind === "click" && e.bbox ? [{ t: e.t, box: e.bbox as [number, number, number, number] }] : []));
   for (const [i, part] of parts.entries()) {
     const id = sceneIdOf(part.id, i);
     const start = r3(part.from / fps);
@@ -366,12 +390,15 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
       kind = "opener";
       const line = textIn((OpenerProps.parse(edl.intro.props)).line, lang);
       const phrases = phrasesOf(line);
-      vars = { ...common, phrases: JSON.stringify(phrases), beat: r3(beat), slot: r3(openerSlot(phrases.length, dur, beat)) };
-      file = openerScene(id, size, vars);
+      // Art direction may open on the logo: it takes the first half (whole beats), the line the rest.
+      const leads = edl.style.brand?.opener === "logo" && logo;
+      const from = leads ? Math.max(beat * 2, Math.floor(dur / 2 / beat) * beat) : 0;
+      vars = { ...common, phrases: JSON.stringify(phrases), beat: r3(beat), from: r3(from), slot: r3(openerSlot(phrases.length, dur - from, beat)), logoWidth: logo?.width ?? 0, logoHeight: logo?.height ?? 0 };
+      file = openerScene(id, size, vars, leads ? { logo: { ...(logo.parts ? { parts: logo.parts } : {}), motion: edl.style.brand?.logo ?? "fade", src: logoArt ?? "assets/logo.png" } } : {});
     } else if (part.kind === "outro" && edl.outro.component === "EndCard") {
       kind = "endcard";
       vars = { ...common, line: textIn(EndCardProps.parse(edl.outro.props).line, lang), site: input.brand.site, name: input.brand.name, logoWidth: logo?.width ?? 0, logoHeight: logo?.height ?? 0, beat: r3(beat) };
-      file = endCardScene(id, size, vars, { logo: Boolean(logo) });
+      file = endCardScene(id, size, vars, { logo: Boolean(logo), ...(logo?.parts ? { parts: logo.parts } : {}), ...(logoArt ? { src: logoArt } : {}), motion: edl.style.brand?.logo ?? "fade" });
     } else if (part.kind === "intro") {
       kind = "title";
       const title = input.copy.title && input.copy.title.trim() !== input.brand.name.trim() ? input.copy.title : "";
@@ -407,10 +434,34 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
       const segment = edl.segments[part.index]!;
       kind = segment.kind;
       if (segment.kind === "primitive") {
-        const made = primitiveScene(segment, { id, size, canvas, common, dur, beat, lang, viewport: input.footage.timeline.viewport, dark: edl.style.look.theme === "dark" });
+        const made = primitiveScene(segment, {
+          id,
+          size,
+          canvas,
+          common,
+          dur,
+          beat,
+          lang,
+          viewport: input.footage.timeline.viewport,
+          dark: edl.style.look.theme === "dark",
+          clicks,
+          cursor: edl.style.brand?.cursor ?? "none",
+          ...(logo ? { logo: { src: logoArt ?? "assets/logo.png", aspect: logo.width / logo.height } } : {}),
+          colourful: colourful(edl.style.palette.accent) || (edl.style.palette.colours?.length ?? 0) >= 2,
+        });
         kind = segment.primitive.type;
         vars = made.vars;
         file = made.file;
+        // The brand moves' own files: the site's pages, other companies' logos, the product's output.
+        const p = segment.primitive;
+        if (p.type === "wall") for (const page of new Set(p.pages)) await place(join(o.root, page), join(o.out, assetOf("pages", page)));
+        if (p.type === "orbit") for (const l of p.logos) await place(join(o.root, l), join(o.out, assetOf("cloud", l)));
+        if (p.type === "output") {
+          await place(join(o.root, p.file), join(o.out, assetOf("output", p.file)));
+          if (p.disc) await place(join(o.root, p.disc), join(o.out, assetOf("imagery", p.disc)));
+          const at = start + outputStart(beat);
+          outputs.push({ src: assetOf("output", p.file), at, from: p.from, seconds: Math.max(0.3, Math.min(p.seconds, dur - outputStart(beat) - 0.15)) });
+        }
         if (segment.primitive.type === "build")
           await run("ffmpeg", ["-v", "error", "-y", "-ss", String(segment.primitive.at), "-i", join(o.root, input.footage.src), "-frames:v", "1", join(o.out, "assets", stillFile(id))], o.signal);
       } else if (segment.kind === "shot") {
@@ -455,7 +506,8 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
         file = kineticScene(id, size, { ...vars, text: line, accent: accentOf(line), kicker: "" });
       }
     }
-    const own = custom.get(id);
+    // A primitive's file has this canvas's pixels in it, so it's always made for the variant. Its settings are in the EDL.
+    const own = part.kind === "segment" && edl.segments[part.index]!.kind === "primitive" ? undefined : custom.get(id);
     await writeFile(join(o.out, "compositions", `${id}.html`), own ?? file);
     if (!own) written[id] = sha(file);
     scenes.push({ id, kind, start, duration: dur, custom: Boolean(own) });
@@ -465,8 +517,27 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
   }
 
   // The ambient ground under everything, for the whole video.
-  const groundVars: Vars = { dur: r3(duration), enter: "cut", enterSecs: 0, exit: "cut", exitSecs: 0 };
-  const groundFile = (edl.style.timing === "music" ? plainGroundScene : groundScene)("ground", size, groundVars);
+  const world = edl.style.brand?.world ?? "plain";
+  // The imagery world: the brand's objects, placed once, moving on every cut (PRD §9.7.8).
+  const imagery = world === "imagery" ? (edl.style.imagery ?? []) : [];
+  for (const i of imagery) await place(join(o.root, i.file), join(o.out, assetOf("imagery", i.file)));
+  const groundVars: Vars = {
+    dur: r3(duration),
+    enter: "cut",
+    enterSecs: 0,
+    exit: "cut",
+    exitSecs: 0,
+    world: imagery.length ? "imagery" : world === "imagery" ? "plain" : world,
+    ...(imagery.length
+      ? {
+          cuts: JSON.stringify(parts.slice(1).map((p) => r3(p.from / fps))),
+          openEnd: r3((parts[0]!.from + parts[0]!.frames) / fps),
+          endAt: r3(parts.at(-1)!.from / fps),
+        }
+      : {}),
+  };
+  const groundFile =
+    edl.style.timing === "music" ? plainGroundScene("ground", size, groundVars, { imagery: imagery.map((i) => ({ src: assetOf("imagery", i.file) })) }) : groundScene("ground", size, groundVars);
   await writeFile(join(o.out, "compositions", "ground.html"), custom.get("ground") ?? groundFile);
   if (!custom.has("ground")) written.ground = sha(groundFile);
   hosts.unshift(
@@ -518,6 +589,12 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
       `<audio id="vo-${i + 1}" src="assets/voice/${name}" data-start="${r3(clip.from / fps)}" data-duration="${r3(lengths.get(clip.src) ?? clip.frames / fps)}" data-volume="1" data-track-index="${lane++}"></audio>`,
     );
   }
+  // The product's own sound, where its move plays it; the music ducks under it as under a voice.
+  for (const [i, out] of outputs.entries())
+    audio.push(
+      `<audio id="out-${i + 1}" src="${out.src}" data-start="${r3(out.at)}" data-duration="${r3(out.seconds)}" data-media-start="${r3(out.from)}" data-volume="1" data-track-index="${lane++}"></audio>`,
+    );
+  const ducked = [...clips, ...outputs.map((out) => ({ from: Math.round(out.at * fps), frames: Math.round(out.seconds * fps) }))].sort((a, b) => a.from - b.from);
   const sfx = input.audio?.sfx ?? {};
   const sounds: Sounds = {};
   const fileSeconds = new Map<string, number>();
@@ -541,7 +618,7 @@ export async function compileComposition(o: CompileOptions): Promise<{ duration:
   if (input.audio?.music) {
     await place(join(o.root, input.audio.music), join(o.out, "assets", "music.mp3"));
     const music = edl.style.music;
-    const points = musicAutomation(music, edl.style.edit, clips, fps, duration);
+    const points = musicAutomation(music, edl.style.edit, ducked, fps, duration);
     const automation = { version: 1, lanes: [{ target: "volume", points }] };
     // The bed falls away under the end card (or as much of it as there is).
     const outro = parts.at(-1)!;

@@ -1,0 +1,275 @@
+- generic [active] [ref=f12e1]:
+  - generic [ref=f12e2]:
+    - region [ref=f12e3]:
+      - generic [ref=f12e4]:
+        - generic [ref=f12e5]:
+          - link "AgentCast" [ref=f12e6] [cursor=pointer]:
+            - /url: "#top"
+          - navigation "Page" [ref=f12e7]:
+            - link "How it works" [ref=f12e8] [cursor=pointer]:
+              - /url: "#how"
+            - link "Try a link" [ref=f12e9] [cursor=pointer]:
+              - /url: "#try"
+            - link "Your videos" [ref=f12e10] [cursor=pointer]:
+              - /url: /jobs
+        - heading "link in. video out." [level=1] [ref=f12e11]:
+          - generic [ref=f12e12]: link in.
+          - generic [ref=f12e14]: video out.
+        - generic [ref=f12e16]:
+          - paragraph [ref=f12e17]: AgentCast turns your product’s link into a demo video. Web agents explore it, film the flows worth showing at 60 fps and cut a narrated edit.
+          - generic [ref=f12e18]:
+            - generic [ref=f12e19]:
+              - generic [ref=f12e20]: Your product’s link
+              - textbox "Your product’s link" [ref=f12e21]:
+                - /placeholder: your-product.com
+              - button "Make the video" [ref=f12e22] [cursor=pointer]:
+                - text: Make the video
+                - generic [aria-hidden] [ref=f12e23]: →
+            - generic [ref=f12e24]:
+              - generic [ref=f12e25]: Describe the video (optional)
+              - textbox "Describe the video (optional)" [ref=f12e26]:
+                - /placeholder: "Describe the video (optional): punchy, 30 s, for developers"
+              - button "Launch video music-led, no voice 16:9 and 9:16 English public site you approve each gate Settings" [ref=f12e27] [cursor=pointer]:
+                - generic [ref=f12e28]:
+                  - generic [ref=f12e29]: Launch video
+                  - generic [ref=f12e30]: music-led, no voice
+                  - generic [ref=f12e31]: 16:9 and 9:16
+                  - generic [ref=f12e32]: English
+                  - generic [ref=f12e33]: public site
+                  - generic [ref=f12e34]: you approve each gate
+                - generic [ref=f12e35]: Settings
+    - region [ref=f12e36]:
+      - generic [ref=f12e37]:
+        - generic [ref=f12e38]:
+          - heading "How a link becomes a video" [level=2] [ref=f12e39]
+          - article [ref=f12e41]:
+            - heading "Understand" [level=3] [ref=f12e42]
+            - paragraph [ref=f12e43]: It reads your site first.
+            - paragraph [ref=f12e44]: "TinyFish Fetch reads the landing page and docs. AgentCast writes a product brief and a creative brief: who the video is for and what it has to prove."
+          - list "Pipeline stages" [ref=f12e45]:
+            - listitem [ref=f12e46]:
+              - button "Understand" [ref=f12e47] [cursor=pointer]
+            - listitem [ref=f12e48]:
+              - button "Explore" [ref=f12e49] [cursor=pointer]
+            - listitem [ref=f12e50]:
+              - button "Record" [ref=f12e51] [cursor=pointer]
+            - listitem [ref=f12e52]:
+              - button "Direct" [ref=f12e53] [cursor=pointer]
+            - listitem [ref=f12e54]:
+              - button "Render" [ref=f12e55] [cursor=pointer]
+        - figure "Landing page and docs read · product and creative brief written" [ref=f12e56]
+    - region [ref=f12e59]:
+      - generic [ref=f12e60]:
+        - generic [ref=f12e61]:
+          - heading "Try a link" [level=2] [ref=f12e62]
+          - paragraph [ref=f12e63]: Type your product’s address. Below is the shape of the plan the agents bring back; the example plans are only examples. Press the button and a real run explores your site.
+        - generic [ref=f12e64]:
+          - generic [ref=f12e65]: Product link
+          - textbox "Product link" [ref=f12e66]: todomvc.com
+        - generic [ref=f12e67]:
+          - generic [ref=f12e68]: Or try
+          - button "todomvc.com" [ref=f12e69] [cursor=pointer]
+          - button "excalidraw.com" [ref=f12e70] [cursor=pointer]
+          - button "localhost:3001" [ref=f12e71] [cursor=pointer]
+        - generic [ref=f12e72]:
+          - generic [ref=f12e73]:
+            - heading "Product brief · todomvc.com" [level=3] [ref=f12e74]
+            - paragraph [ref=f12e75]: A to-do list app, built the same way in many frameworks.
+            - list [ref=f12e76]:
+              - listitem [ref=f12e77]:
+                - generic [ref=f12e80]:
+                  - text: Add three todos and tick one off
+                  - generic [ref=f12e81]: Judge score 92
+                - generic [ref=f12e82]: 0:09
+              - listitem [ref=f12e83]:
+                - generic [ref=f12e86]:
+                  - text: Filter by Active, then Completed
+                  - generic [ref=f12e87]: Judge score 88
+                - generic [ref=f12e88]: 0:08
+              - listitem [ref=f12e89]:
+                - generic [ref=f12e92]:
+                  - text: Rename a todo in place
+                  - generic [ref=f12e93]: Judge score 81
+                - generic [ref=f12e94]: 0:07
+              - listitem [ref=f12e95]:
+                - generic [ref=f12e97]:
+                  - text: Read the framework list on the home page
+                  - generic [ref=f12e98]: Left out · judge score 34
+                - generic [ref=f12e99]: 0:06
+          - generic [ref=f12e100]:
+            - heading "The cut · music-led · 0:23" [level=3] [ref=f12e101]
+            - generic [ref=f12e102]:
+              - generic [ref=f12e103]: Hook
+              - generic [ref=f12e104]: Add three todos and tick one off
+              - generic [ref=f12e105]: Filter by Active, then Completed
+              - generic [ref=f12e106]: Rename a todo in place
+              - generic [ref=f12e107]: Logo
+            - heading "2 videos, recorded in Live" [level=3] [ref=f12e108]
+            - list [ref=f12e109]:
+              - listitem [ref=f12e110]:
+                - generic [ref=f12e111]: todomvc-16x9-en.mp4
+                - generic [ref=f12e112]: 1920 × 1080 · English
+              - listitem [ref=f12e113]:
+                - generic [ref=f12e114]: todomvc-9x16-en.mp4
+                - generic [ref=f12e115]: 1080 × 1920 · English
+            - paragraph [ref=f12e116]: An example plan. Real runs differ by site and by day.
+        - generic [ref=f12e117]:
+          - group "Kind of video" [ref=f12e118]:
+            - button "Launch" [pressed] [ref=f12e120] [cursor=pointer]
+            - button "Tutorial" [ref=f12e121] [cursor=pointer]
+            - button "Sales demo" [ref=f12e122] [cursor=pointer]
+          - generic [ref=f12e123]: Anything about the video
+          - textbox "Anything about the video" [ref=f12e124]:
+            - /placeholder: Anything about the video? Like “punchy, 30 s, for developers”
+          - button "Make this video" [ref=f12e125] [cursor=pointer]:
+            - text: Make this video
+            - generic [aria-hidden] [ref=f12e126]: →
+    - region [ref=f12e127]:
+      - generic [ref=f12e128]:
+        - heading "Choose what comes out" [level=2] [ref=f12e129]
+        - paragraph [ref=f12e130]: Every switch here is a real job setting. The plan above and the video you start follow them.
+      - generic [ref=f12e132]:
+        - generic [ref=f12e133]:
+          - paragraph [ref=f12e134]: Narrate it in Hindi as well.
+          - paragraph: 2 languages. A script, voice and captions for each, timed word by word.
+        - switch "Narrate it in Hindi as well." [ref=f12e135] [cursor=pointer]
+      - generic [ref=f12e138]:
+        - generic [ref=f12e139]:
+          - paragraph [ref=f12e140]: Cut a vertical 9:16 for Reels.
+          - paragraph [ref=f12e141]: Every language also renders at 1080 × 1920, reframed around the action.
+        - switch "Cut a vertical 9:16 for Reels." [checked] [ref=f12e142] [cursor=pointer]
+      - generic [ref=f12e145]:
+        - generic [ref=f12e146]:
+          - paragraph [ref=f12e147]: Let the music set the pace.
+          - paragraph [ref=f12e148]: No voice. The track’s beats set every cut and big type carries the words.
+        - switch "Let the music set the pace." [checked] [ref=f12e149] [cursor=pointer]
+      - generic [ref=f12e152]:
+        - generic [ref=f12e153]:
+          - paragraph [ref=f12e154]: Let me approve each gate.
+          - paragraph [ref=f12e155]: "3 gates: the flows, the script, the preview. Off runs on autopilot."
+        - switch "Let me approve each gate." [checked] [ref=f12e156] [cursor=pointer]
+      - generic [ref=f12e159]:
+        - generic [ref=f12e160]:
+          - paragraph [ref=f12e161]: It needs a login to show.
+          - paragraph: A Chrome window opens on the worker’s machine. Sign in once; your password stays in Chrome.
+        - switch "It needs a login to show." [ref=f12e162] [cursor=pointer]
+      - paragraph [ref=f12e164]:
+        - text: This setup renders
+        - generic [ref=f12e165]: 2 videos
+        - text: ": 16:9 in English and 9:16 in English. You approve the flows, the script and the preview."
+    - region [ref=f12e166]:
+      - generic [ref=f12e167]:
+        - heading "Watch the agents work" [level=2] [ref=f12e168]
+        - generic [ref=f12e169]:
+          - paragraph [ref=f12e170]: Every job gets a live page. The stages fill in, three agents try flows side by side, and nothing is filmed until you approve it. This is a sample run on autopilot; yours runs on your product.
+          - link "See your videos" [ref=f12e171] [cursor=pointer]:
+            - /url: /jobs
+            - text: See your videos
+            - generic [aria-hidden] [ref=f12e172]: →
+    - region [ref=f12e175]:
+      - table [ref=f12e177]:
+        - rowgroup [ref=f12e178]:
+          - row [ref=f12e179]:
+            - columnheader [ref=f12e180]:
+              - heading "How it films" [level=2] [ref=f12e181]
+            - columnheader "Full sharpness 2× local Chrome · default" [ref=f12e182]:
+              - generic [ref=f12e183]: Full sharpness
+              - generic [ref=f12e184]: 2×
+              - generic [ref=f12e185]: local Chrome · default
+            - columnheader "Lighter capture 4/3 local Chrome · automatic" [ref=f12e186]:
+              - generic [ref=f12e187]: Lighter capture
+              - generic [ref=f12e188]: 4/3
+              - generic [ref=f12e189]: local Chrome · automatic
+        - rowgroup [ref=f12e190]:
+          - row [ref=f12e191]:
+            - rowheader "Frames" [ref=f12e192]
+            - cell "2880 × 1800 (2× pixels)" [ref=f12e193]
+            - cell "1920 × 1200 (4/3 pixels)" [ref=f12e194]
+          - row [ref=f12e195]:
+            - rowheader "When" [ref=f12e196]
+            - cell "Every job starts here" [ref=f12e197]
+            - cell "When a site can’t be screencast smoothly at 2× on your machine" [ref=f12e198]
+          - row [ref=f12e199]:
+            - rowheader "Close-ups" [ref=f12e200]
+            - cell "Crisp up to 2.5× zoom" [ref=f12e201]
+            - cell "Crisp up to about 1.7× zoom" [ref=f12e202]
+          - row [ref=f12e203]:
+            - rowheader "Smoothness check" [ref=f12e204]
+            - 'cell "Every take must hold 30 fps: 95% of frame gaps under 73 ms, none over 400 ms" [ref=f12e205]'
+            - cell "The same check" [ref=f12e206]
+          - row [ref=f12e207]:
+            - rowheader "Retakes" [ref=f12e208]
+            - cell "Up to 3 per flow" [ref=f12e209]
+            - cell "Every flow is filmed again at this size, so the takes join cleanly" [ref=f12e210]
+    - region [ref=f12e211]:
+      - generic [ref=f12e212]:
+        - heading "Before you paste a link" [level=2] [ref=f12e213]
+        - generic [ref=f12e214]:
+          - group [ref=f12e215]:
+            - generic "Do I need an API key for the AI?" [ref=f12e216] [cursor=pointer]
+            - paragraph [ref=f12e218]: No. The writing and directing run through the Claude Code or Codex CLI you’re already logged into. The only keys are for TinyFish, which explores, and ElevenLabs, which speaks.
+          - group [ref=f12e219]:
+            - generic "Which sites can it record?" [ref=f12e220] [cursor=pointer]
+          - group [ref=f12e222]:
+            - generic "What about pages behind a login?" [ref=f12e223] [cursor=pointer]
+          - group [ref=f12e225]:
+            - generic "Will passwords end up in the video?" [ref=f12e226] [cursor=pointer]
+          - group [ref=f12e228]:
+            - generic "What happens when our UI changes?" [ref=f12e229] [cursor=pointer]
+          - group [ref=f12e231]:
+            - generic "Can I change the edit myself?" [ref=f12e232] [cursor=pointer]
+    - region [ref=f12e234]:
+      - heading "Your link, or ours?" [level=2] [ref=f12e235]:
+        - generic [ref=f12e236]: Your link
+      - generic [ref=f12e237]:
+        - generic [ref=f12e238]:
+          - button "Make a video" [ref=f12e239] [cursor=pointer]
+          - generic [ref=f12e240]: or
+          - link "Watch a sample run" [ref=f12e241] [cursor=pointer]:
+            - /url: "#watch"
+        - paragraph [ref=f12e242]: Making one opens its live job page. The sample plays a whole run in about a minute.
+      - paragraph [aria-hidden] [ref=f12e243]:
+        - generic [ref=f12e244]: or ours?
+  - contentinfo [ref=f12e245]:
+    - generic [ref=f12e246]:
+      - generic [ref=f12e247]:
+        - heading "The page" [level=2] [ref=f12e248]
+        - list [ref=f12e249]:
+          - listitem [ref=f12e250]:
+            - link "How it works" [ref=f12e251] [cursor=pointer]:
+              - /url: "#how"
+          - listitem [ref=f12e252]:
+            - link "Try a link" [ref=f12e253] [cursor=pointer]:
+              - /url: "#try"
+          - listitem [ref=f12e254]:
+            - link "How it films" [ref=f12e255] [cursor=pointer]:
+              - /url: "#modes"
+          - listitem [ref=f12e256]:
+            - link "Questions" [ref=f12e257] [cursor=pointer]:
+              - /url: "#faq"
+      - generic [ref=f12e258]:
+        - heading "Made with" [level=2] [ref=f12e259]
+        - list [ref=f12e260]:
+          - listitem [ref=f12e261]: TinyFish agents
+          - listitem [ref=f12e262]: Playwright and Chromium
+          - listitem [ref=f12e263]: Claude Code or Codex
+          - listitem [ref=f12e264]: ElevenLabs and HyperFrames
+      - generic [ref=f12e265]:
+        - heading "Runs on" [level=2] [ref=f12e266]
+        - list [ref=f12e267]:
+          - listitem [ref=f12e268]: Your machine
+          - listitem [ref=f12e269]: Your logged-in coding agent
+          - listitem [ref=f12e270]: Node 22, Chrome and ffmpeg
+      - generic [ref=f12e271]:
+        - heading "Your work" [level=2] [ref=f12e272]
+        - list [ref=f12e273]:
+          - listitem [ref=f12e274]:
+            - link "Your videos" [ref=f12e275] [cursor=pointer]:
+              - /url: /jobs
+          - listitem [ref=f12e276]:
+            - link "Make a video" [ref=f12e277] [cursor=pointer]:
+              - /url: "#top"
+    - img "AgentCast" [ref=f12e279]
+    - paragraph [ref=f12e281]:
+      - generic [ref=f12e282]: Only record sites you own or are allowed to demo.
+      - generic [ref=f12e283]: AgentCast runs on your machine.

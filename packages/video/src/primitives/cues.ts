@@ -1,5 +1,6 @@
 import { EndCardProps, OpenerProps, type Edl, type Primitive, type Timeline } from "@agentcast/shared";
 import type { MoveCue } from "../audio.ts";
+import { MOCKUP, WALL, outputStart, pillTimes } from "./brand.ts";
 
 // When a designed move's parts happen, pure and shared by its scene, its sounds and its stills, so the
 // sound lands exactly where the picture does.
@@ -28,15 +29,25 @@ const textIn = (text: Record<string, string>, lang: string) => text[lang] ?? tex
 export const openerSlot = (phrases: number, seconds: number, beat: number) =>
   Math.max(beat, Math.floor((seconds - beat) / Math.max(1, phrases) / beat) * beat);
 
-/** When a build's items land: eighth notes, closing up if there are many. */
-export const buildStep = (items: number, beat: number) => Math.min(beat / 2, (beat * 2) / items);
+/**
+ * When a build's items land: spread over the first part of the move, on eighth or quarter notes, so a
+ * few items don't land at once and then hold; eighths closing up if there are many.
+ */
+export function buildStep(items: number, beat: number, seconds: number) {
+  const spread = (seconds * 0.45) / items;
+  if (spread <= beat / 2) return Math.min(beat / 2, (beat * 2) / items);
+  return Math.min(beat, Math.round(spread / (beat / 2)) * (beat / 2));
+}
 
 /** When a build's lifted piece comes forward, on a beat: after the pieces land, with time left to read it. */
 export function liftAt(items: number, seconds: number, beat: number) {
-  const built = items * buildStep(items, beat) + beat / 2;
+  const built = items * buildStep(items, beat, seconds) + beat / 2;
   const at = Math.ceil(built / beat) * beat;
   return seconds - at >= beat * 2 ? at : undefined;
 }
+
+/** Seconds a proof's camera takes from one region to the next, starting on its beat. */
+export const PATH_MOVE = 0.6;
 
 /** When a proof's highlight hops: the last beats, by which time the page has settled. */
 export const hopTimes = (hops: number, seconds: number, beat: number) =>
@@ -62,14 +73,44 @@ export function primitiveCues(p: Primitive, seconds: number, beat: number, timel
       return [{ kind: "whoosh", at: 0.05, priority: PRIORITY.transition, factor: 0.6 }];
     case "proof": {
       const hops = hopTimes(p.hops?.length ?? 0, seconds, beat);
-      return [{ kind: "whoosh", at: 0.05, priority: PRIORITY.transition }, ...hops.map((at) => ({ kind: "click" as const, at, priority: PRIORITY.click, factor: 0.8 }))];
+      // A camera move along the path: a soft whoosh through it.
+      const moves = (p.path ?? []).map((stop) => ({ kind: "whoosh" as const, at: stop.at + PATH_MOVE * 0.35, priority: PRIORITY.transition, factor: 0.5 }));
+      return [{ kind: "whoosh", at: 0.05, priority: PRIORITY.transition }, ...moves, ...hops.map((at) => ({ kind: "click" as const, at, priority: PRIORITY.click, factor: 0.8 }))];
     }
     case "build": {
-      const step = buildStep(p.items.length, beat);
+      const step = buildStep(p.items.length, beat, seconds);
       const lands: MoveCue[] = p.items.slice(0, 6).map((_, i) => ({ kind: "pop", at: i * step, priority: PRIORITY.landing, factor: 0.8 }));
       const lift = p.lift ? liftAt(p.items.length, seconds, beat) : undefined;
       return [...lands, ...(lift === undefined ? [] : [{ kind: "pop" as const, at: lift + 0.05, priority: PRIORITY.landing }])];
     }
+    case "wall":
+      return [
+        { kind: "whoosh", at: 0.05, priority: PRIORITY.transition },
+        { kind: "whoosh", at: seconds - WALL.dive + 0.4, priority: PRIORITY.transition },
+      ];
+    case "mockup":
+      return [
+        { kind: "whoosh", at: 0.05, priority: PRIORITY.transition },
+        { kind: "whoosh", at: seconds - MOCKUP.through + 0.4, priority: PRIORITY.transition },
+      ];
+    case "pill": {
+      const t = pillTimes(p, seconds, beat);
+      const ticks: MoveCue[] = [];
+      let chars = 0;
+      for (const word of p.text.split(/(?<=\s)/)) {
+        chars += [...word].length;
+        const at = t.start + chars / t.rate;
+        if (word.trim() && at < (t.press ?? t.fold)) ticks.push({ kind: "tick", at, priority: PRIORITY.tick });
+      }
+      return [{ kind: "whoosh", at: 0.05, priority: PRIORITY.transition, factor: 0.6 }, ...ticks, ...(t.press === undefined ? [] : [{ kind: "click" as const, at: t.press, priority: PRIORITY.click }])];
+    }
+    case "output":
+      return [
+        { kind: "pop", at: 0.1, priority: PRIORITY.landing },
+        { kind: "click", at: outputStart(beat), priority: PRIORITY.click },
+      ];
+    case "orbit":
+      return p.logos.slice(0, 6).map((_, i) => ({ kind: "pop" as const, at: 0.2 + i * 0.07, priority: PRIORITY.landing, factor: 0.6 }));
     case "prompt": {
       const typed = timeline.events.find((e) => e.kind === "type" && e.flowId === p.flowId && e.t >= p.in && e.t <= p.out);
       const value = typeof typed?.value === "string" ? typed.value : "";
@@ -88,12 +129,15 @@ export function primitiveCues(p: Primitive, seconds: number, beat: number, timel
 }
 
 /** A title or end card's sounds, or undefined for the voice-led cards. */
-export function cardCues(card: Edl["intro"], seconds: number, beat: number, lang: string): MoveCue[] | undefined {
+export function cardCues(card: Edl["intro"], seconds: number, beat: number, lang: string, logoFirst = false): MoveCue[] | undefined {
   if (card.component === "Opener") {
     const phrases = phrasesOf(textIn(OpenerProps.parse(card.props).line, lang));
-    const slot = openerSlot(phrases.length, seconds, beat);
+    // Opening on the logo: a pop as it lands, a whoosh as it lifts away, then the line in the time left.
+    const from = logoFirst ? Math.max(beat * 2, Math.floor(seconds / 2 / beat) * beat) : 0;
+    const slot = openerSlot(phrases.length, seconds - from, beat);
     return [
-      ...phrases.map((_, i) => ({ kind: "pop" as const, at: i * slot, priority: PRIORITY.landing, factor: 0.8 })),
+      ...(logoFirst ? [{ kind: "pop" as const, at: 0.1, priority: PRIORITY.landing }, { kind: "whoosh" as const, at: from - 0.15, priority: PRIORITY.transition, factor: 0.6 }] : []),
+      ...phrases.map((_, i) => ({ kind: "pop" as const, at: from + i * slot, priority: PRIORITY.landing, factor: 0.8 })),
       { kind: "whoosh", at: seconds - beat + 0.05, priority: PRIORITY.transition },
     ];
   }
@@ -116,10 +160,19 @@ export function primitiveMoments(p: Primitive): number[] {
     case "swap":
       return [0.4, 0.85];
     case "proof":
-      return [0.3, 0.92];
+      return p.path?.length ? [0.25, 0.6, 0.92] : [0.3, 0.92];
     case "build":
       return [0.45, 0.9];
     case "prompt":
+      return [0.4, 0.92];
+    case "wall":
+    case "mockup":
+      return [0.4, 0.8];
+    case "pill":
+      return [0.5, 0.85];
+    case "output":
+      return [0.6];
+    case "orbit":
       return [0.4, 0.92];
   }
 }

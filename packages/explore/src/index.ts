@@ -84,3 +84,8 @@ export {
 } from "./pipeline";
 export { localBrowserAdapter, openProduct, PageAccessError } from "./local";
 export { signInLocally, type SignInOptions } from "./sign-in";
+export { borderColour, cutOut, inkSpans, logoParts, splitLogo, svgProblems } from "./logokit";
+export { brandKitOf, withRecordingImagery } from "./kit";
+export { capturePages, pagesToCapture } from "./captures";
+export { captureCloud } from "./cloud";
+export { brandColours, collectImagery, imageryOf, mergeColours, objectsIn, sameObject, type ImageryObject } from "./imagery";

@@ -1,0 +1,1830 @@
+<meta charset="utf-8">
+<title>AgentCast Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: a type-only first screen on blue-screen ultramarine, then flat fields in sequence
+   (black film, yellow try-a-link, black switches, blue job view, black table, blue FAQ, black CTA),
+   ending on a white curtain footer. One face, five steps, square corners, one green action. */
+:root {
+  color-scheme: dark;
+  --blue: #1423b8;
+  --blue-2: #1220a6;
+  --blue-3: #0d198c;
+  --blue-soft: #c3c9f4;
+  --black: #05060f;
+  --black-2: #0d0f1f;
+  --black-3: #171a33;
+  --black-soft: #a3a9cc;
+  --white: #ffffff;
+  --yellow: #f7dd47;
+  --yellow-2: #ead03a;
+  --pink: #e9479f;
+  --green: #1fc27a;
+  --green-ink: #03140b;
+  --font: "Schibsted Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+  --gutter: clamp(16px, 2.2vw, 32px);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: var(--step-body);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+h1, h2, h3, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; }
+button, input { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+::selection { background: var(--yellow); color: var(--black); }
+h1, h2, h3 { text-wrap: balance; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.wrap {
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+.head { font-size: var(--step-head); font-weight: 800; letter-spacing: -0.045em; line-height: 0.95; }
+.lead { font-size: var(--step-lead); line-height: 1.3; letter-spacing: -0.02em; }
+.page { position: relative; z-index: 1; }
+.page > section { position: relative; }
+
+/* Buttons: one shape, square corners. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5em;
+  min-height: 52px; padding: 0 22px; border: 0; border-radius: 0;
+  font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: transform .25s var(--ease-out), background-color .2s, color .2s;
+}
+.btn:active { transform: scale(.97); }
+.btn-ink { background: var(--white); color: var(--blue); }
+.btn-ink:hover { background: var(--yellow); color: var(--black); }
+.btn-go { background: var(--green); color: var(--green-ink); }
+.btn-go:hover { background: var(--white); color: var(--black); }
+.btn-dark { background: var(--black); color: var(--white); }
+.btn-dark:hover { background: var(--blue); }
+.btn .arr { transition: transform .3s var(--ease-out); }
+.btn:hover .arr { transform: translateX(4px); }
+
+/* ───────── Hero ───────── */
+.hero { background: var(--blue); color: var(--white); overflow: hidden; }
+.hero-canvas, .swish { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.hero-canvas { z-index: 0; }
+.swish { z-index: 1; overflow: visible; }
+.swish path { fill: none; stroke: var(--yellow); stroke-linecap: round; stroke-linejoin: round; }
+.hero-in { position: relative; z-index: 2; min-height: min(100svh, 980px); display: flex; flex-direction: column; padding-block: 22px 28px; }
+.hero-top { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; font-size: 15px; font-weight: 600; }
+.wordmark { text-decoration: none; font-weight: 800; letter-spacing: -0.03em; font-size: 18px; }
+.hero-top nav { display: flex; gap: 22px; }
+.hero-top nav a { text-decoration: none; position: relative; }
+.hero-top nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .35s var(--ease-out); }
+.hero-top nav a:hover::after { transform: scaleX(1); transform-origin: left; }
+.statement {
+  margin-top: clamp(40px, 9vh, 120px);
+  font-size: clamp(76px, 15.4vw, 268px);
+  font-weight: 800; letter-spacing: -0.055em; line-height: .86;
+}
+.lines .line { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.lines [data-line] { display: inline-block; }
+.statement .l2 { text-align: right; }
+@media (prefers-reduced-motion: no-preference) {
+  .js .lines [data-line] { transform: translateY(105%); animation: line-up 1000ms var(--ease-out) forwards; animation-delay: calc(var(--i) * 110ms + 150ms); }
+  .js .hero-foot > * { opacity: 0; animation: fade-up 800ms var(--ease-out) 650ms forwards; }
+}
+@keyframes line-up { to { transform: none; } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.hero-foot { margin-top: auto; padding-top: clamp(48px, 12vh, 160px); display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; flex-wrap: wrap; }
+.hero-sub { max-width: 40ch; font-size: var(--step-lead); line-height: 1.3; letter-spacing: -0.02em; }
+.hero-form { display: flex; width: min(600px, 100%); }
+.hero-form input {
+  flex: 1; min-width: 0; min-height: 56px; padding: 0 18px; border: 0; border-radius: 0;
+  background: var(--blue-3); color: var(--white); font-size: 18px;
+}
+.hero-form input::placeholder { color: var(--blue-soft); }
+.hero-form .btn { min-height: 56px; }
+
+/* ───────── Film (pinned particles) ───────── */
+.film { background: var(--black); height: 560vh; }
+.film-stage { position: sticky; top: 0; height: 100svh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; padding-block: 40px; }
+.film-copy { display: flex; flex-direction: column; min-width: 0; padding-top: 6vh; }
+.film-copy h2 { font-size: var(--step-lead); font-weight: 600; letter-spacing: -0.02em; color: var(--black-soft); }
+.chapters { display: grid; margin-top: 4vh; }
+.chapter { grid-area: 1 / 1; }
+.chapter h3 { font-size: clamp(52px, 7.4vw, 128px); font-weight: 800; letter-spacing: -0.055em; line-height: .9; }
+.chapter .lead { margin-top: 20px; color: var(--yellow); font-weight: 500; }
+.chapter p + p { margin-top: 16px; max-width: 44ch; }
+.js .chapter:not(.is-on) { visibility: hidden; }
+.ch-nav { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.ch-nav button { background: none; border: 0; padding: 8px 0; font-size: 15px; font-weight: 600; color: var(--black-soft); position: relative; }
+.ch-nav button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--yellow); transform: scaleX(0); transform-origin: left; transition: transform .5s var(--ease-out); }
+.ch-nav button[aria-current="step"] { color: var(--white); }
+.ch-nav button[aria-current="step"]::after { transform: scaleX(1); }
+.ch-nav button:hover { color: var(--white); }
+.film-art { position: relative; min-width: 0; min-height: 0; }
+.film-art canvas { position: absolute; inset: 0 0 32px; width: 100%; height: calc(100% - 32px); display: block; }
+.film-cap { position: absolute; right: 0; bottom: 0; font-size: 15px; color: var(--black-soft); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ───────── Try a link ───────── */
+.try { background: var(--yellow); color: var(--black); padding-block: clamp(96px, 14vw, 200px); }
+.try-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px 48px; flex-wrap: wrap; }
+.try-head p { max-width: 46ch; }
+.try-line { position: relative; margin-top: clamp(40px, 6vw, 88px); display: flex; align-items: center; }
+.try-line input {
+  width: 100%; border: 0; background: transparent; padding: 0; border-radius: 0;
+  font-size: clamp(48px, 9vw, 150px); font-weight: 800; letter-spacing: -0.05em; line-height: 1.05;
+  color: var(--black); caret-color: transparent; outline: none;
+}
+.try-line:focus-within { outline: 3px solid var(--black); outline-offset: 8px; }
+.caret { position: absolute; top: 12%; height: 76%; width: .08em; background: var(--blue); font-size: clamp(48px, 9vw, 150px); pointer-events: none; animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.mirror { position: absolute; visibility: hidden; white-space: pre; font-size: clamp(48px, 9vw, 150px); font-weight: 800; letter-spacing: -0.05em; }
+.try-ex { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 17px; }
+.try-ex span { margin-right: 6px; }
+.try-ex button { border: 0; background: var(--yellow-2); padding: 10px 14px; min-height: 44px; font-weight: 600; border-radius: 0; transition: background-color .2s, transform .2s var(--ease-out); }
+.try-ex button:hover { background: var(--black); color: var(--yellow); }
+.try-ex button:active { transform: scale(.96); }
+
+/* The plan: a real fragment of the product. */
+.plan { margin-top: 48px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px; background: var(--black); color: var(--white); font-size: 16px; }
+.plan > div { background: var(--black-2); padding: 24px; min-width: 0; }
+.plan h3 { font-size: 15px; font-weight: 600; color: var(--black-soft); letter-spacing: 0; }
+.plan .brief { font-size: 20px; line-height: 1.3; margin-top: 10px; letter-spacing: -0.02em; }
+.flows { margin-top: 20px; display: grid; gap: 2px; }
+.flow { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--black-3); padding: 12px 14px; }
+.flow .tick { width: 20px; height: 20px; background: var(--green); display: grid; place-items: center; color: var(--green-ink); font-size: 13px; font-weight: 800; }
+.flow.is-out { opacity: .55; }
+.flow.is-out .tick { background: transparent; box-shadow: inset 0 0 0 2px var(--black-soft); }
+.flow.is-out .ck { display: none; }
+.ck { display: block; width: .32em; height: .6em; border-right: .14em solid currentColor; border-bottom: .14em solid currentColor; transform: translateY(-.08em) rotate(45deg); }
+.flow .ck { font-size: 20px; }
+.flow small { display: block; color: var(--black-soft); font-size: 13px; }
+.flow .t { font-variant-numeric: tabular-nums; color: var(--black-soft); font-size: 14px; }
+.cut { margin-top: 20px; display: flex; height: 54px; gap: 2px; }
+.cut > div { background: var(--blue); padding: 8px; font-size: 13px; line-height: 1.2; overflow: hidden; min-width: 0; transform-origin: left; }
+.cut > div:nth-child(even) { background: var(--blue-2); }
+.cut > .c-card { background: var(--yellow); color: var(--black); }
+.outs { margin-top: 18px; display: grid; gap: 6px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.outs li { display: flex; justify-content: space-between; gap: 12px; }
+.outs li span:last-child { color: var(--black-soft); }
+.plan-note { margin-top: 16px; font-size: 14px; color: var(--black-soft); }
+
+/* ───────── Switches ───────── */
+.switches { background: var(--black); padding-top: clamp(96px, 12vw, 180px); }
+.switches > .wrap:first-child { padding-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.switches > .wrap:first-child p { max-width: 40ch; color: var(--black-soft); }
+.band { position: relative; min-height: max(132px, 19vh); display: flex; align-items: center; overflow: hidden; color: var(--black-soft); transition: color .45s; }
+.band::before { content: ""; position: absolute; inset: 0; background: var(--band); transform: scaleX(0); transform-origin: right; transition: transform .7s var(--ease-out); }
+.band.is-on { color: var(--band-ink); }
+.band.is-on::before { transform: scaleX(1); transform-origin: left; }
+.band-in { position: relative; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 24px; }
+.band-s { font-size: clamp(28px, 3.6vw, 60px); font-weight: 800; letter-spacing: -0.045em; line-height: 1; }
+.band-c { max-height: 0; overflow: hidden; opacity: 0; font-size: 17px; font-weight: 500; transition: max-height .5s var(--ease-out), opacity .4s, margin .4s; }
+.band.is-on .band-c { max-height: 3em; opacity: 1; margin-top: 10px; }
+.sw { flex: none; position: relative; width: 2.1em; height: 1.1em; border: 0; border-radius: 99px; padding: 0; background: var(--black-3); font-size: clamp(30px, 3.6vw, 60px); transition: background-color .3s; }
+.sw::before { content: ""; position: absolute; inset: -8px; }
+.sw .knob { position: absolute; top: .12em; left: .12em; width: .86em; height: .86em; border-radius: 50%; background: var(--black-soft); transition: transform .45s var(--ease-out), background-color .3s; }
+.band.is-on .sw { background: var(--band-ink); }
+.band.is-on .sw .knob { transform: translateX(1em); background: var(--band); }
+.sw-sum { padding-block: 40px clamp(96px, 12vw, 180px); font-size: var(--step-lead); letter-spacing: -0.02em; max-width: none; }
+.sw-sum b { color: var(--yellow); font-weight: 600; }
+
+/* ───────── Watch the agents ───────── */
+.watch { background: var(--blue); padding-block: clamp(96px, 12vw, 180px); }
+.watch-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; align-items: end; }
+.watch-head .side { display: grid; gap: 24px; justify-items: start; }
+.job-frame { margin-top: 56px; height: min(960px, 96svh); overflow: hidden; }
+
+/* ───────── Recording modes table ───────── */
+.modes { background: var(--black); padding-block: clamp(96px, 12vw, 180px); }
+.table-scroll { overflow-x: auto; }
+.modes-t { width: 100%; min-width: 680px; border-collapse: collapse; table-layout: fixed; font-size: 20px; }
+.modes-t th, .modes-t td { text-align: left; vertical-align: top; padding: 20px; }
+.modes-t thead th { padding-top: 0; }
+.modes-t thead th:first-child { padding-left: 0; }
+.modes-t thead h2 { font-size: clamp(30px, 3vw, 46px); font-weight: 800; letter-spacing: -0.045em; line-height: .95; }
+.modes-t .pn { display: block; font-size: clamp(30px, 3vw, 46px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+.modes-t .pp { display: block; font-size: clamp(30px, 3vw, 46px); font-weight: 400; letter-spacing: -0.04em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.modes-t .pq { display: block; font-size: 16px; font-weight: 500; margin-top: 6px; color: var(--black-soft); }
+.modes-t tbody th { font-weight: 500; color: var(--black-soft); padding-left: 0; }
+.modes-t tbody tr:nth-child(odd) > * { background: var(--black-2); }
+.modes-t .is-pick { background: var(--yellow) !important; color: var(--black); }
+.modes-t .is-pick .pq { color: var(--black); }
+.modes-t td, .modes-t thead th { transition: background-color .4s, color .4s; width: 25%; }
+.fps { position: relative; display: flex; gap: 2px; height: 40px; margin-top: 16px; padding: 6px; background: var(--black-3); }
+.fps i { flex: 1; background: var(--black-soft); opacity: .35; }
+.fps i.on { opacity: 1; background: var(--white); }
+.is-pick .fps { background: var(--black); }
+.is-pick .fps i.on { background: var(--yellow); }
+.modes-t tfoot td { padding-top: 24px; padding-bottom: 24px; }
+.modes-t tfoot .btn { width: 100%; white-space: normal; padding: 8px 12px; text-align: center; }
+.modes-t .is-pick .btn { background: var(--black); color: var(--yellow); }
+
+/* ───────── FAQ ───────── */
+.faq { background: var(--blue); padding-block: clamp(96px, 12vw, 180px); }
+.faq h2 { font-size: clamp(44px, 5.6vw, 96px); font-weight: 800; letter-spacing: -0.05em; line-height: .92; max-width: 12ch; }
+.faq-list { margin-top: 80px; margin-left: 33.333%; display: grid; gap: 12px; }
+.faq details { position: relative; }
+.faq details::before { content: ""; position: absolute; inset: -4px calc(-1 * min(24px, var(--gutter))); background: var(--blue-2); transform: scaleY(.6); opacity: 0; transition: transform .45s var(--ease-out), opacity .3s; z-index: 0; }
+.faq details[open]::before { transform: none; opacity: 1; }
+.faq summary { position: relative; z-index: 1; list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; align-items: center; padding-block: 16px; font-size: clamp(20px, 1.7vw, 24px); letter-spacing: -0.02em; }
+.faq summary::-webkit-details-marker { display: none; }
+.chev { flex: none; width: 14px; height: 14px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translate(-3px, -3px); transition: transform .4s var(--ease-out); }
+.faq details[open] .chev { transform: rotate(225deg) translate(-3px, -3px); }
+.faq summary:hover { color: var(--yellow); }
+.faq .ans { position: relative; z-index: 1; padding-bottom: 24px; max-width: 52ch; font-size: 17px; color: var(--blue-soft); }
+.faq details[open] .ans { animation: fade-up .5s var(--ease-out); }
+
+/* ───────── CTA ───────── */
+.cta { background: var(--black); min-height: 100svh; display: grid; grid-template-rows: auto 1fr auto; text-align: center; overflow: hidden; padding-block: 32px 24px; }
+.cta .cl { display: block; font-size: clamp(84px, 11vw, 176px); font-weight: 800; letter-spacing: -0.055em; line-height: 1; }
+.cta-mid { position: relative; display: grid; place-content: center; gap: 16px; padding-block: 48px; }
+.cta-row { display: flex; align-items: center; justify-content: center; gap: 28px; position: relative; z-index: 1; }
+.cta-row .or { color: var(--black-soft); font-size: 18px; }
+.cta-row .btn { min-width: 220px; min-height: 60px; font-size: 18px; }
+.cta-mid p { color: var(--black-soft); font-size: 16px; position: relative; z-index: 1; }
+.cta-swish { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.cta-swish path { fill: none; stroke: var(--yellow); stroke-width: 10; stroke-linecap: round; }
+
+/* ───────── Footer curtain ───────── */
+.foot { position: sticky; bottom: 0; z-index: 0; min-height: 100svh; display: grid; grid-template-rows: auto 1fr auto auto; background: var(--white); color: var(--blue); padding-block: 40px 20px; }
+.foot-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; font-size: 16px; }
+.foot-cols h2 { font-size: 16px; font-weight: 600; }
+.foot-cols li { color: #4b56c9; margin-top: 6px; }
+.foot-cols a { text-decoration: none; }
+.foot-cols a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.foot-mark { display: block; width: 100%; height: auto; margin-bottom: 20px; }
+.foot-mark text { fill: var(--blue); font-family: var(--font); font-weight: 800; letter-spacing: -0.055em; }
+.foot-legal { font-size: 13px; color: #4b56c9; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* ───────── The app (job view) ─────────
+   Style: true-black flat (dealt, seed 479947018), with the landing's palette and type kept.
+   Layout: no-sidebar shell. A 48px bar on the ground over one centred column, max 1208px + 2 × 24px gutters.
+   Arithmetic: meta strip 5 × 240 + 4 × 2 = 1208; lower row 2 × 592 + 24 = 1208; multiview 3 × 381 + 2 × 16 + 2 × 32 = 1208.
+   Elevation by lightness alone: ground --black → surface --black-2 → raised --black-3. No borders on cards.
+   The status is the field: blue while AgentCast works, yellow when it needs you, white when the videos are ready. */
+.app { container: app / inline-size; background: var(--black); color: var(--white); font-size: 15px; line-height: 1.4; letter-spacing: -0.005em; text-align: left; min-height: 100%; }
+.job-frame .app { height: 100%; overflow: hidden; }
+.app-bar { position: sticky; top: 0; z-index: 5; background: var(--black); }
+.app-bar-in { max-width: 1256px; margin: 0 auto; padding: 0 24px; height: 48px; display: flex; align-items: center; gap: 28px; }
+.app-bar .wm { font-weight: 800; font-size: 18px; letter-spacing: -0.03em; text-decoration: none; }
+.app-bar nav { display: flex; gap: 20px; font-size: 14px; font-weight: 600; }
+.app-bar nav a { color: var(--black-soft); text-decoration: none; transition: color .2s; }
+.app-bar nav a:hover, .app-bar nav a[aria-current] { color: var(--white); }
+.app-bar .grow { flex: 1; }
+.worker { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--black-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.worker i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.app-col { max-width: 1256px; margin: 0 auto; padding: 20px 24px 56px; display: grid; gap: 24px; }
+
+/* Title row */
+.ttl { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; }
+.ttl-l { min-width: 0; }
+.crumb { font-size: 14px; color: var(--black-soft); }
+.crumb a { color: inherit; text-decoration: none; }
+.crumb a:hover { color: var(--white); }
+.ttl .jt { margin-top: 6px; font-size: clamp(40px, 5.4cqw, 72px); font-weight: 800; letter-spacing: -0.05em; line-height: .92; overflow-wrap: anywhere; }
+.finding { margin-top: 12px; font-size: 18px; max-width: 64ch; }
+.ttl-act { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Buttons: square, 44px. Primary by inversion. */
+.ab { display: inline-flex; align-items: center; justify-content: center; gap: .5em; min-height: 44px; padding: 0 18px; border: 0; border-radius: 0; font-weight: 600; font-size: 15px; text-decoration: none; white-space: nowrap; transition: transform .2s var(--ease-out), background-color .2s, color .2s; }
+.ab:active { transform: scale(.97); }
+.ab:disabled { opacity: .45; cursor: not-allowed; }
+.ab-ghost { background: var(--black-3); color: var(--white); }
+.ab-ghost:hover { background: #22264a; }
+.ab-inv { background: var(--white); color: var(--black); }
+.ab-inv:hover { background: var(--yellow); }
+.ab .arr { transition: transform .3s var(--ease-out); }
+.ab:hover .arr { transform: translateX(3px); }
+
+/* Meta strip: one container, split by a tone step */
+.meta { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; margin: 0; }
+.meta > div { background: var(--black-2); padding: 14px 20px 16px; min-width: 0; }
+.meta dt { font-size: 13px; color: var(--black-soft); }
+.meta dd { margin: 4px 0 0; font-size: 24px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: proportional-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta dd small { font-size: 15px; font-weight: 500; color: var(--black-soft); letter-spacing: 0; }
+
+/* The field */
+.air { --f: var(--blue); --f-2: var(--blue-2); --f-3: var(--blue-3); --f-ink: var(--white); --f-soft: var(--blue-soft); --f-lead: var(--yellow);
+  position: relative; overflow: hidden; color: var(--f-ink); background: var(--f); transition: color .3s; }
+.air[data-state="wait"] { --f: var(--yellow); --f-2: var(--yellow-2); --f-3: #dfc52f; --f-ink: var(--black); --f-soft: #4d4515; --f-lead: var(--black); }
+.air[data-state="done"] { --f: var(--white); --f-2: #eef0fb; --f-3: #e2e5f8; --f-ink: var(--blue); --f-soft: #4b56c9; --f-lead: var(--blue); }
+.air-sweep { position: absolute; inset: 0; z-index: 0; transform-origin: left; background: var(--blue); }
+.air-sweep[data-state="wait"] { background: var(--yellow); }
+.air-sweep[data-state="done"] { background: var(--white); }
+.air-dust { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.air-in { position: relative; z-index: 1; padding: 28px 32px 32px; display: grid; gap: 28px; }
+.air-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 32px; align-items: end; }
+.air-h { font-size: clamp(48px, 8.4cqw, 116px); font-weight: 800; letter-spacing: -0.055em; line-height: .9; overflow: hidden; padding-bottom: .06em; margin-bottom: -.06em; }
+.air-h span { display: inline-block; }
+.air-lead { margin-top: 14px; font-size: 20px; line-height: 1.3; letter-spacing: -0.02em; color: var(--f-lead); max-width: 48ch; font-weight: 500; }
+.air-clock { text-align: right; font-variant-numeric: tabular-nums; }
+.air-clock b { display: block; font-size: clamp(36px, 5cqw, 68px); font-weight: 400; letter-spacing: -0.045em; line-height: 1; font-variant-numeric: proportional-nums; }
+.air-clock span { display: block; margin-top: 6px; font-size: 14px; color: var(--f-soft); }
+.air-body { min-width: 0; }
+
+/* Multiview: one monitor per agent, with a tally light */
+.mv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.mon { background: var(--f-3); min-width: 0; display: flex; flex-direction: column; transition: background-color .3s; }
+.mon-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; font-size: 14px; }
+.mon-h b { font-weight: 600; }
+.tally { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--f-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tally i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.tally.live { color: var(--white); }
+.tally.live i { background: var(--pink); animation: pulse 1s infinite; }
+.tally.ok { color: var(--white); }
+.tally.ok i { background: var(--green); }
+.mon .goal { padding: 0 12px 10px; font-size: 15px; font-weight: 500; min-height: 2.9em; }
+.mon .alog { padding: 10px 12px 12px; display: grid; gap: 3px; font-size: 13px; min-height: 8.6em; align-content: start; }
+.mon .alog li { color: var(--f-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: fade-up .35s var(--ease-out); }
+.mon .alog li:last-child { color: var(--white); }
+.mon .alog li.warn { color: #ff9ccc; }
+.mon .alog li.fix { color: var(--yellow); }
+@keyframes pulse { 50% { opacity: .3; } }
+
+/* The product, as the agents see it (todomvc's own look) */
+.browser { margin: 0 12px; background: #f5f5f5; color: #4d4d4d; position: relative; overflow: hidden; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.browser .bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #e4e4e8; font-size: 11px; color: #555; }
+.browser .bar i { width: 7px; height: 7px; border-radius: 50%; background: #c4c4cc; }
+.browser .bar span { margin-left: 6px; background: #fff; padding: 2px 8px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.tm { font-size: 11px; padding: .6em 1.2em 1.2em; position: relative; }
+.tm-h { text-align: center; font-size: 3.4em; font-weight: 200; color: #b83f45; line-height: 1.1; letter-spacing: -0.02em; }
+.tm-card { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2), 0 12px 24px -8px rgba(0,0,0,.15); margin-top: .5em; }
+.tm-in { height: 2.6em; display: flex; align-items: center; padding-left: 3.2em; font-style: italic; color: #b3b3b3; border-bottom: 1px solid #ededed; position: relative; }
+.tm-in.typed { font-style: normal; color: #4d4d4d; }
+.tm-in.typed::after { content: ""; width: 1px; height: 1.2em; background: #4d4d4d; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+.tm-row { height: 2.3em; display: flex; align-items: center; gap: .9em; padding-left: 1em; border-bottom: 1px solid #ededed; animation: fade-up .35s var(--ease-out); }
+.tm-row .c { width: 1.4em; height: 1.4em; border-radius: 50%; border: 1px solid #ccc; flex: none; display: grid; place-items: center; color: #3ea390; font-size: .9em; }
+.tm-row.done .c { border-color: #59a193; }
+.tm-row.done .l { text-decoration: line-through; color: #949494; }
+.tm-row.edit { box-shadow: inset 0 0 0 1px #b83f45; }
+.tm-foot { display: flex; justify-content: space-between; padding: .6em 1em; color: #777; font-size: .92em; }
+.tm-foot .f { display: flex; gap: .5em; }
+.tm-foot .f span { padding: 0 .35em; border: 1px solid transparent; border-radius: 3px; }
+.tm-foot .f span.on { border-color: #ce4646; }
+.cursor { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(31, 194, 122, .3); transition: top .55s var(--ease-out), left .55s var(--ease-out); z-index: 3; pointer-events: none; }
+.cursor.click { animation: click .4s; }
+@keyframes click { 50% { box-shadow: 0 0 0 10px rgba(31, 194, 122, .15); } }
+
+/* Review: flows, script, preview */
+.rv { display: grid; gap: 2px; }
+.rv-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1.35fr); gap: 20px; align-items: center; padding: 14px 16px; background: var(--f-2); cursor: pointer; transition: opacity .25s, background-color .2s; }
+.rv-row:hover { background: var(--f-3); }
+.rv-row.off { opacity: .5; }
+.rv-row b { display: block; font-size: 21px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+.rv-row small { display: block; margin-top: 4px; font-size: 14px; color: var(--f-soft); font-variant-numeric: tabular-nums; }
+.chk { appearance: none; -webkit-appearance: none; width: 24px; height: 24px; margin: 0; border-radius: 0; background: transparent; box-shadow: inset 0 0 0 2px var(--f-ink); display: grid; place-items: center; cursor: pointer; }
+.chk:checked { background: var(--f-ink); }
+.chk:checked::after { content: ""; width: 6px; height: 12px; border-right: 3px solid var(--f); border-bottom: 3px solid var(--f); transform: translateY(-2px) rotate(45deg); }
+.frames { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.frames .fr { background: #f5f5f5; overflow: hidden; aspect-ratio: 16 / 10; position: relative; max-width: 100%; }
+.frames .fr .tm { font-size: 4.2px; padding: .4em 1.4em; }
+.rv-foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.rv-foot input { flex: 1; min-width: 200px; height: 48px; padding: 0 14px; border: 0; border-radius: 0; background: var(--f-2); color: var(--f-ink); font-size: 16px; }
+.rv-foot input::placeholder { color: var(--f-soft); }
+.rv-foot .spacer { flex: 1; }
+.ab-f { background: var(--f-ink); color: var(--f); min-height: 48px; padding: 0 22px; font-size: 16px; }
+.ab-f:hover { background: var(--black); color: var(--white); }
+.air[data-state="wait"] .ab-f:hover { background: var(--white); color: var(--black); }
+.ab-f2 { background: var(--f-2); color: var(--f-ink); min-height: 48px; }
+.ab-f2:hover { background: var(--f-3); }
+.cd { font-size: 15px; font-variant-numeric: tabular-nums; color: var(--f-soft); }
+
+/* Takes, beats, preview, renders */
+.takes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.take { background: var(--f-3); min-width: 0; padding-bottom: 12px; }
+.take .bar2 { margin: 12px 12px 0; height: 6px; background: var(--f-2); }
+.take .bar2 i, .vr .bar2 i { display: block; height: 100%; background: var(--white); transform: scaleX(0); transform-origin: left; }
+.take .fc { display: flex; justify-content: space-between; padding: 8px 12px 0; font-size: 13px; color: var(--f-soft); font-variant-numeric: tabular-nums; }
+.beats { display: flex; gap: 2px; }
+.beat { background: var(--f-2); padding: 14px; min-width: 0; display: flex; flex-direction: column; gap: 8px; transition: background-color .3s; }
+.beat.card { background: var(--yellow); color: var(--black); }
+.air[data-state="wait"] .beat.card { background: var(--black); color: var(--yellow); }
+.beat h3 { font-size: 13px; font-weight: 600; color: var(--f-soft); display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
+.beat.card h3 { color: inherit; opacity: .7; }
+.beat p { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.beat .wave { display: flex; align-items: center; gap: 2px; height: 28px; margin-top: auto; }
+.beat .wave i { flex: 1; background: currentColor; opacity: .55; transform-origin: center; }
+.beat.on { background: var(--f-3); }
+.notes { margin-top: 16px; display: grid; gap: 2px; }
+.notes li { background: var(--f-2); padding: 12px 14px; display: flex; justify-content: space-between; gap: 16px; font-size: 15px; animation: fade-up .4s var(--ease-out); }
+.notes li span:last-child { color: var(--f-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pv { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.screen { position: relative; aspect-ratio: 16 / 9; background: var(--black); overflow: hidden; max-width: 100%; }
+.screen .tm { position: absolute; inset: 6% 18% auto; font-size: clamp(6px, 1.05cqw, 13px); background: #f5f5f5; }
+.screen .cap { position: absolute; left: 0; right: 0; bottom: 7%; text-align: center; padding: 0 8%; font-size: clamp(14px, 2.2cqw, 28px); font-weight: 800; letter-spacing: -0.03em; color: var(--white); }
+.screen .cap span { transition: color .15s; }
+.screen .cap span.on { color: var(--yellow); }
+.screen .tc { position: absolute; left: 12px; top: 10px; font-size: 13px; color: var(--white); font-variant-numeric: tabular-nums; }
+.screen .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255, 255, 255, .2); }
+.screen .prog i { display: block; height: 100%; background: var(--yellow); transform-origin: left; }
+.blist { display: grid; gap: 2px; }
+.blist li { background: var(--f-2); padding: 10px 12px; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; font-size: 14px; transition: background-color .2s; }
+.blist li.on { background: var(--f-3); }
+.blist time { color: var(--f-soft); font-variant-numeric: tabular-nums; }
+.vr { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) 56px; gap: 16px; align-items: center; background: var(--f-2); padding: 14px 16px; }
+.vr + .vr { margin-top: 2px; }
+.vr b { font-weight: 600; }
+.vr small { display: block; color: var(--f-soft); font-size: 13px; font-variant-numeric: tabular-nums; }
+.vr .bar2 { height: 6px; background: var(--f-3); }
+.vr .pct { text-align: right; font-variant-numeric: tabular-nums; }
+.outs2 { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.outv { display: grid; gap: 10px; min-width: 0; }
+.done-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px 48px; align-items: start; }
+.done-h { font-size: 15px; font-weight: 600; color: var(--f-soft); margin-bottom: 10px; }
+.outv .th { position: relative; display: block; padding: 0; border: 0; border-radius: 0; background: var(--black); overflow: hidden; cursor: pointer; transition: transform .3s var(--ease-out); }
+.outv .th:hover { transform: scale(1.02); }
+.outv .th::before { content: ""; position: absolute; left: 50%; top: 42%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: var(--blue); z-index: 2; }
+.outv .th::after { content: ""; position: absolute; left: 50%; top: 42%; margin: -11px 0 0 -6px; border-left: 20px solid var(--white); border-top: 11px solid transparent; border-bottom: 11px solid transparent; z-index: 3; }
+.thf .tm { position: absolute; inset: 7% 16% auto; font-size: 7px; background: #f5f5f5; }
+.th.v .thf .tm { inset: 18% 6% auto; font-size: 4px; }
+.thc { position: absolute; left: 6%; right: 6%; bottom: 7%; text-align: center; color: var(--white); font-weight: 800; letter-spacing: -0.03em; font-size: 15px; line-height: 1.1; }
+.th.v .thc { font-size: 11px; bottom: 9%; }
+.outv .th.w { width: clamp(220px, 34cqw, 400px); aspect-ratio: 16 / 9; }
+.outv .th.v { width: clamp(90px, 10.5cqw, 126px); aspect-ratio: 9 / 16; }
+.outv b { display: block; font-weight: 600; font-size: 15px; }
+.outv small { color: var(--f-soft); font-size: 13px; font-variant-numeric: tabular-nums; }
+.done-act { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+
+/* The run, as an edit timeline */
+.blk { background: var(--black-2); padding: 18px 24px 22px; min-width: 0; }
+.blk-h { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.blk-h h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.025em; }
+.blk-h span { font-size: 14px; color: var(--black-soft); font-variant-numeric: tabular-nums; }
+.tl { position: relative; margin-top: 16px; }
+.tl-ruler { position: relative; height: 20px; font-size: 12px; color: var(--black-soft); font-variant-numeric: tabular-nums; }
+.tl-ruler span { position: absolute; top: 0; transform: translateX(-1px); padding-left: 5px; white-space: nowrap; }
+.tl-ruler span::before { content: ""; position: absolute; left: 0; top: 2px; width: 1px; height: 12px; background: #2c3050; }
+.tl-track { position: relative; height: 58px; }
+.clip { position: absolute; top: 0; bottom: 0; padding: 9px 10px; overflow: hidden; white-space: nowrap; font-size: 13px; background: var(--black-3); color: var(--white); }
+.clip b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.clip span { color: var(--black-soft); font-variant-numeric: tabular-nums; }
+.clip.gate { box-shadow: inset 3px 0 0 var(--yellow); }
+.clip.running { background: var(--blue); }
+.clip.running span { color: var(--blue-soft); }
+.clip.waiting { background: var(--yellow); color: var(--black); box-shadow: none; }
+.clip.waiting span { color: #4d4515; }
+.clip.pending { background: transparent; outline: 1px dashed #343a63; outline-offset: -1px; color: var(--black-soft); }
+.clip.skipped { padding: 0; background: #343a63; }
+.clip.narrow b, .clip.narrow span { visibility: hidden; }
+.clip b + span { display: block; overflow: hidden; text-overflow: ellipsis; }
+.playhead { position: absolute; top: -26px; bottom: -6px; width: 2px; margin-left: -1px; background: var(--green); z-index: 2; pointer-events: none; }
+.playhead::before { content: ""; position: absolute; top: 0; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid var(--green); }
+.tl-key { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--black-soft); }
+.tl-key span { display: inline-flex; align-items: center; gap: 7px; }
+.tl-key i { width: 18px; height: 10px; display: inline-block; }
+.tl-key .k-done { background: var(--black-3); }
+.tl-key .k-run { background: var(--blue); }
+.tl-key .k-gate { background: var(--black-3); box-shadow: inset 3px 0 0 var(--yellow); }
+.tl-key .k-wait { background: var(--yellow); }
+.tl-key .k-next { outline: 1px dashed #343a63; outline-offset: -1px; }
+.tl-key .k-now { width: 2px; background: var(--green); }
+
+/* Activity and settings */
+.lower { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.feed2 { margin-top: 10px; }
+.feed2 li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 9px 0; font-size: 14px; border-top: 1px solid var(--black-3); animation: fade-up .35s var(--ease-out); }
+.feed2 li:first-child { border-top: 0; }
+.feed2 time { color: var(--black-soft); font-variant-numeric: tabular-nums; }
+.facts { margin: 10px 0 0; }
+.facts > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 9px 0; font-size: 14px; border-top: 1px solid var(--black-3); }
+.facts > div:first-child { border-top: 0; }
+.facts dt { color: var(--black-soft); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+
+/* The full job view route */
+.app-view { min-height: 100svh; position: relative; z-index: 1; background: var(--black); }
+
+@container app (max-width: 1000px) {
+  .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .meta > div:nth-child(n+4) { grid-column: span 1; }
+  .meta > div:nth-child(4) { grid-column: 1 / 3; }
+  .pv { grid-template-columns: minmax(0, 1fr); }
+  .takes .take:nth-child(n+3), .mv .mon:nth-child(3) { display: none; }
+  .takes, .mv { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container app (max-width: 700px) {
+  .app-bar nav, .worker span { display: none; }
+  .app-bar-in { gap: 14px; padding: 0 16px; }
+  .app-col { padding: 16px 16px 40px; gap: 16px; }
+  .ttl .jt { font-size: 40px; }
+  .finding { font-size: 16px; }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta > div:nth-child(4) { grid-column: auto; }
+  .meta > div:nth-child(5) { grid-column: 1 / -1; }
+  .meta dd { font-size: 20px; }
+  .air-in { padding: 20px 18px 22px; gap: 20px; }
+  .air-head { grid-template-columns: minmax(0, 1fr); }
+  .air-clock { text-align: left; }
+  .air-lead { font-size: 17px; }
+  .mv, .takes { grid-template-columns: minmax(0, 1fr); }
+  .mv .mon:nth-child(3) { display: flex; }
+  .mv .mon:nth-child(n+2) .browser, .mv .mon:nth-child(n+2) .alog { display: none; }
+  .mv .mon:nth-child(n+2) .goal { min-height: 0; }
+  .rv-row { grid-template-columns: 26px minmax(0, 1fr); }
+  .rv-row .frames { grid-column: 1 / -1; }
+  .rv-row b { font-size: 18px; }
+  .rv-foot .spacer { display: none; }
+  .rv-foot .ab-f { width: 100%; }
+  .beats { flex-direction: column; }
+  .beat { flex: none !important; }
+  .vr { grid-template-columns: minmax(0, 1fr) 48px; }
+  .vr .bar2 { grid-column: 1 / -1; grid-row: 2; }
+  .blk { padding: 16px; }
+  .clip b, .clip span { visibility: hidden; }
+  .clip.running b, .clip.waiting b { visibility: visible; }
+  .clip.running span, .clip.waiting span { display: none; }
+  .lower { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .done-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+
+/* ───────── Phone ───────── */
+@media (max-width: 760px) {
+  .hero-top nav a:not(:last-child) { display: none; }
+  .statement { font-size: 17.2vw; line-height: .9; margin-top: 12vh; }
+  .statement .l2 { text-align: left; }
+  .hero-foot { gap: 20px; }
+  .hero-sub { font-size: 17px; }
+  .hero-form { flex-direction: column; }
+  .hero-form .btn { width: 100%; }
+  .film { height: 600vh; }
+  .film-stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px; padding-block: 20px; }
+  .film-copy { display: contents; }
+  .film-copy h2 { order: 0; }
+  .film-art { order: 1; min-height: 0; }
+  .chapters { order: 2; margin-top: 0; }
+  .chapter h3 { font-size: 14vw; }
+  .chapter .lead { margin-top: 10px; font-size: 19px; }
+  .chapter p + p { font-size: 16px; margin-top: 8px; }
+  .ch-nav { order: 3; gap: 4px 14px; }
+  .ch-nav button { font-size: 13px; }
+  .film-cap { display: none; }
+  .plan { grid-template-columns: minmax(0, 1fr); }
+  .outs li { flex-direction: column; gap: 0; }
+  .try-line input, .caret, .mirror { font-size: 12vw; }
+  .band-s { font-size: 6.4vw; max-width: 76%; }
+  .band-c { font-size: 15px; }
+  .sw { font-size: 30px; }
+  .watch-head { grid-template-columns: minmax(0, 1fr); }
+  .job-frame { height: 900px; }
+  .faq h2 { font-size: 10vw; }
+  .faq-list { margin-left: 0; margin-top: 48px; }
+  .faq summary { font-size: 19px; }
+  .faq .ans { font-size: 16px; }
+  .cta .cl { font-size: 16vw; }
+  .cta-row { flex-direction: column; gap: 12px; }
+  .cta-row .btn { width: 72vw; min-width: 0; }
+  .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 20px; font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+  .caret { animation: none; }
+}
+</style>
+
+<div class="page" id="landing">
+  <!-- Hero: the statement -->
+  <section class="hero" id="top" aria-labelledby="hero-h">
+    <canvas class="hero-canvas" id="hero-canvas" aria-hidden="true"></canvas>
+    <svg class="swish" id="hero-swish" aria-hidden="true"><path id="swish-path" d=""/></svg>
+    <div class="hero-in wrap">
+      <header class="hero-top">
+        <a class="wordmark" href="#top">AgentCast</a>
+        <nav aria-label="Page">
+          <a href="#how">How it works</a>
+          <a href="#try">Try a link</a>
+          <a href="#job">Job view</a>
+        </nav>
+      </header>
+      <h1 class="statement lines" id="hero-h">
+        <span class="line l1"><span data-line style="--i:0">link in.</span></span>
+        <span class="line l2"><span data-line style="--i:1">video out.</span></span>
+      </h1>
+      <div class="hero-foot">
+        <p class="hero-sub">AgentCast turns your product’s link into a demo video. Web agents explore it, film the flows worth showing at 60 fps and cut a narrated edit.</p>
+        <form class="hero-form" id="hero-form" novalidate>
+          <label for="hero-url" class="sr">Your product’s link</label>
+          <input id="hero-url" name="url" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="your-product.com">
+          <button class="btn btn-ink magnet" type="submit">Make the video <span class="arr" aria-hidden="true">→</span></button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Film: the particles act out the pipeline -->
+  <section class="film" id="how" aria-labelledby="film-h">
+    <div class="film-stage wrap">
+      <div class="film-copy">
+        <h2 id="film-h">How a link becomes a video</h2>
+        <div class="chapters" id="chapters">
+          <article class="chapter is-on">
+            <h3>Understand</h3>
+            <p class="lead">It reads your site first.</p>
+            <p>TinyFish Fetch reads the landing page and docs. AgentCast writes a product brief and a creative brief: who the video is for and what it has to prove.</p>
+          </article>
+          <article class="chapter">
+            <h3>Explore</h3>
+            <p class="lead">Agents walk the product.</p>
+            <p>Up to three TinyFish agents try flows side by side. Every flow they report is rehearsed in a local Chrome before you see it, and a judge picks the ones worth showing.</p>
+          </article>
+          <article class="chapter">
+            <h3>Record</h3>
+            <p class="lead">Filmed at 60 fps, for real.</p>
+            <p>A Playwright recorder replays each approved flow in a local Chromium. When a button moves, its locator heals; when a page stalls, the take is shot again.</p>
+          </article>
+          <article class="chapter">
+            <h3>Direct</h3>
+            <p class="lead">A coding agent cuts it.</p>
+            <p>Claude Code writes the script, times every cut to the voice and checks the edit with a motion lint. Ask for a change in plain words and it revises.</p>
+          </article>
+          <article class="chapter">
+            <h3>Render</h3>
+            <p class="lead">Every size, every language.</p>
+            <p>HyperFrames renders 16:9 and 9:16 in English and Hindi, with captions that light up word by word as the voice speaks them.</p>
+          </article>
+        </div>
+        <ol class="ch-nav" id="ch-nav" aria-label="Pipeline stages">
+          <li><button type="button" data-go="0" aria-current="step">Understand</button></li>
+          <li><button type="button" data-go="1">Explore</button></li>
+          <li><button type="button" data-go="2">Record</button></li>
+          <li><button type="button" data-go="3">Direct</button></li>
+          <li><button type="button" data-go="4">Render</button></li>
+        </ol>
+      </div>
+      <figure class="film-art">
+        <canvas id="film-canvas" aria-hidden="true"></canvas>
+        <figcaption class="film-cap" id="film-cap">1 landing page read · 5 claims found · brief written in 21 s</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Try a link: the live thing -->
+  <section class="try" id="try" aria-labelledby="try-h">
+    <div class="wrap">
+      <div class="try-head">
+        <h2 class="head" id="try-h" data-rise>Try a link</h2>
+        <p data-rise>Type any address to see the shape of the plan the agents bring back. These plans are examples; a real run explores the site itself.</p>
+      </div>
+      <div class="try-line" data-ui data-rise>
+        <label for="try-url" class="sr">Product link</label>
+        <input id="try-url" type="text" value="todomvc.com" autocomplete="off" spellcheck="false" inputmode="url">
+        <span class="caret" id="caret" aria-hidden="true"></span>
+        <span class="mirror" id="mirror" aria-hidden="true"></span>
+      </div>
+      <div class="try-ex" data-rise>
+        <span>Or try</span>
+        <button type="button" data-ex="todomvc.com">todomvc.com</button>
+        <button type="button" data-ex="excalidraw.com">excalidraw.com</button>
+        <button type="button" data-ex="localhost:3001">localhost:3001</button>
+      </div>
+      <div class="plan" id="plan" data-ui data-rise aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- Switches: what comes out -->
+  <section class="switches" id="outputs" aria-labelledby="sw-h">
+    <div class="wrap">
+      <h2 class="head" id="sw-h" data-rise>Choose what comes out</h2>
+      <p data-rise>Every switch here is a real job setting. The plan above and the count below follow them.</p>
+    </div>
+    <div class="band" style="--band: var(--pink); --band-ink: var(--black)">
+      <div class="wrap band-in">
+        <div><p class="band-s" id="sw1">Narrate it in Hindi as well.</p><p class="band-c">2 languages. A script, voice and captions for each, timed word by word.</p></div>
+        <button type="button" class="sw" role="switch" aria-checked="false" aria-labelledby="sw1" data-opt="hindi"><span class="knob"></span></button>
+      </div>
+    </div>
+    <div class="band is-on" style="--band: var(--yellow); --band-ink: var(--black)">
+      <div class="wrap band-in">
+        <div><p class="band-s" id="sw2">Cut a vertical 9:16 for Reels.</p><p class="band-c">Every language also renders at 1080 × 1920, reframed around the action.</p></div>
+        <button type="button" class="sw" role="switch" aria-checked="true" aria-labelledby="sw2" data-opt="vertical"><span class="knob"></span></button>
+      </div>
+    </div>
+    <div class="band" style="--band: var(--blue); --band-ink: var(--white)">
+      <div class="wrap band-in">
+        <div><p class="band-s" id="sw3">Let the music set the pace.</p><p class="band-c">No voice. The track’s beats set every cut and big type carries the words.</p></div>
+        <button type="button" class="sw" role="switch" aria-checked="false" aria-labelledby="sw3" data-opt="music"><span class="knob"></span></button>
+      </div>
+    </div>
+    <div class="band is-on" style="--band: var(--white); --band-ink: var(--black)">
+      <div class="wrap band-in">
+        <div><p class="band-s" id="sw4">Let me approve each gate.</p><p class="band-c">3 gates: the flows, the script, the preview. Off runs on autopilot.</p></div>
+        <button type="button" class="sw" role="switch" aria-checked="true" aria-labelledby="sw4" data-opt="gates"><span class="knob"></span></button>
+      </div>
+    </div>
+    <p class="wrap sw-sum" id="sw-sum" aria-live="polite"></p>
+  </section>
+
+  <!-- Watch: the job page, live -->
+  <section class="watch" id="watch" aria-labelledby="watch-h">
+    <div class="wrap watch-head">
+      <h2 class="head" id="watch-h" data-rise>Watch the agents work</h2>
+      <div class="side">
+        <p data-rise>Every job gets a live page. The stages fill in, three agents try flows side by side, and nothing is filmed until you approve it. This one runs on autopilot.</p>
+        <a href="#job" class="btn btn-ink magnet" data-rise>Open the job view <span class="arr" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <div class="wrap"><div class="job-frame" id="job-landing" data-rise></div></div>
+  </section>
+
+  <!-- Modes: recording, as a large table -->
+  <section class="modes" id="modes" aria-labelledby="modes-h">
+    <div class="wrap table-scroll">
+      <table class="modes-t" id="modes-t">
+        <thead>
+          <tr>
+            <th scope="col"><h2 id="modes-h">Ways to film</h2></th>
+            <th scope="col" data-col="0"><span class="pn">Live</span><span class="pp">60 fps</span><span class="pq">local Chromium · default</span><span class="fps" data-ui data-fps="60" aria-label="60 frames in one second"></span></th>
+            <th scope="col" data-col="1"><span class="pn">Studio</span><span class="pp">60 fps</span><span class="pq">on our virtual clock · opt-in</span><span class="fps" data-ui data-fps="60" aria-label="60 frames in one second"></span></th>
+            <th scope="col" data-col="2"><span class="pn">Fallback</span><span class="pp">4–6 fps</span><span class="pq">TinyFish remote browser</span><span class="fps" data-ui data-fps="5" aria-label="5 frames in one second"></span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">How it films</th><td data-col="0">A screencast of a real browser on your machine</td><td data-col="1">Frame by frame, with time paused between frames</td><td data-col="2">State by state in a hosted browser</td></tr>
+          <tr><th scope="row">Speed</th><td data-col="0">Real time</td><td data-col="1">Parallel chunks across workers</td><td data-col="2">About 300 ms per round trip</td></tr>
+          <tr><th scope="row">When a page stalls</th><td data-col="0">Caught, then shot again automatically</td><td data-col="1">Can’t happen: the clock waits</td><td data-col="2">Each state is captured once settled</td></tr>
+          <tr><th scope="row">Best for</th><td data-col="0">Every job, unless something below applies</td><td data-col="1">Heavy animation or a slow machine</td><td data-col="2">Sites a local browser can’t reach</td></tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td data-col="0"><button type="button" class="btn btn-ink" data-mode="0">Record in Live</button></td>
+            <td data-col="1"><button type="button" class="btn btn-ink" data-mode="1">Switch to Studio</button></td>
+            <td data-col="2"><button type="button" class="btn btn-ink" data-mode="2">Use the fallback</button></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq" id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+      <h2 id="faq-h" data-rise>Before you paste a link</h2>
+      <div class="faq-list">
+        <details data-rise open><summary>Do I need an API key for the AI?<span class="chev" aria-hidden="true"></span></summary><p class="ans">No. The writing and directing run through the Claude Code or Codex CLI you’re already logged into. The only keys are for TinyFish, which explores, and ElevenLabs, which speaks.</p></details>
+        <details data-rise><summary>Which sites can it record?<span class="chev" aria-hidden="true"></span></summary><p class="ans">Sites you own or are allowed to demo. AgentCast doesn’t solve CAPTCHAs and won’t try to get past one.</p></details>
+        <details data-rise><summary>What about pages behind a login?<span class="chev" aria-hidden="true"></span></summary><p class="ans">Sign in once. A normal Chrome window opens on the worker’s machine, you log in, then press “I’m signed in”. The recorder keeps a sealed session and the agents get their own profile.</p></details>
+        <details data-rise><summary>Will passwords end up in the video?<span class="chev" aria-hidden="true"></span></summary><p class="ans">No. Anything typed into a secret field is stored as redacted and never reaches a prompt, a log, a caption or a frame of footage.</p></details>
+        <details data-rise><summary>What happens when our UI changes?<span class="chev" aria-hidden="true"></span></summary><p class="ans">Press “Re-run on latest UI”. It films the approved flows again, heals any locators that moved, reports what changed and carries the script, voice and edit over to the new footage.</p></details>
+        <details data-rise><summary>Can I change the edit myself?<span class="chev" aria-hidden="true"></span></summary><p class="ans">At the preview gate, describe the change in plain words, like “hold longer on the dashboard”. The director revises the edit and checks it again before it renders.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta wrap" id="start" aria-labelledby="cta-h">
+    <h2 id="cta-h" class="cl" aria-label="Your link, or ours?"><span id="cl1" style="display:inline-block">Your link</span></h2>
+    <div class="cta-mid">
+      <svg class="cta-swish" aria-hidden="true" viewBox="0 0 1000 400" preserveAspectRatio="none"><path id="cta-path" d="M -40 110 C 120 50, 250 370, 500 345 S 870 60, 1040 130" vector-effect="non-scaling-stroke"/></svg>
+      <div class="cta-row">
+        <a href="#top" class="btn btn-go magnet" data-to="hero">Make a video</a>
+        <span class="or">or</span>
+        <a href="#job" class="btn btn-ink magnet">Watch a run</a>
+      </div>
+      <p>Making one opens a live job page. Watching opens one already in progress.</p>
+    </div>
+    <p class="cl" aria-hidden="true"><span id="cl2" style="display:inline-block">or ours?</span></p>
+  </section>
+</div>
+
+<!-- The job view route (#job) -->
+<main class="app-view" id="app-view" hidden aria-label="Job view">
+  <div id="job-full" style="flex:1; display:flex; flex-direction:column; min-height:0"></div>
+</main>
+
+<footer class="foot wrap" id="foot">
+  <div class="foot-cols">
+    <div><h2>The page</h2><ul><li><a href="#how">How it works</a></li><li><a href="#try">Try a link</a></li><li><a href="#modes">Three ways to film</a></li><li><a href="#faq">Questions</a></li></ul></div>
+    <div><h2>Made with</h2><ul><li>TinyFish agents</li><li>Playwright and Chromium</li><li>Claude Code or Codex</li><li>ElevenLabs and HyperFrames</li></ul></div>
+    <div><h2>Runs on</h2><ul><li>Your machine</li><li>Your logged-in coding agent</li><li>Node 22, Chrome and ffmpeg</li></ul></div>
+    <div><h2>Made by</h2><ul><li>Four people</li><li>in 24 hours</li><li>at a hackathon</li></ul></div>
+  </div>
+  <div></div>
+  <svg class="foot-mark" viewBox="0 0 1000 205" aria-label="AgentCast" role="img"><text x="-6" y="180" font-size="262" textLength="1006" lengthAdjust="spacingAndGlyphs">AgentCast</text></svg>
+  <p class="foot-legal"><span>Only record sites you own or are allowed to demo.</span><span>A redesign proposal for AgentCast, November 2026.</span></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+(() => {
+"use strict";
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const PHONE = () => innerWidth <= 760;
+document.documentElement.classList.add("js");
+const G = typeof gsap !== "undefined" ? gsap : null;
+const ST = typeof ScrollTrigger !== "undefined" ? ScrollTrigger : null;
+if (G && ST) G.registerPlugin(ST);
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/* ── Smooth scroll ── */
+let lenis = null;
+if (!RM && typeof Lenis !== "undefined") {
+  try {
+    lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+    if (G && ST) { lenis.on("scroll", ST.update); G.ticker.add((t) => lenis.raf(t * 1000)); G.ticker.lagSmoothing(0); }
+    else { const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); }; requestAnimationFrame(raf); }
+  } catch (e) { lenis = null; }
+}
+const scrollToEl = (el, opts = {}) => {
+  if (!el) return;
+  if (lenis) lenis.scrollTo(el, { offset: 0, duration: 1.4, ...opts });
+  else el.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
+};
+
+/* ── Shared job settings ── */
+const opts = { hindi: false, vertical: true, music: false, gates: true, mode: 0 };
+const subs = [];
+const onOpts = (fn) => { subs.push(fn); fn(); };
+const setOpt = (k, v) => { opts[k] = v; subs.forEach((f) => f()); };
+const variants = () => {
+  const langs = opts.hindi ? ["English", "Hindi"] : ["English"];
+  const sizes = opts.vertical ? ["16:9", "9:16"] : ["16:9"];
+  const out = [];
+  for (const s of sizes) for (const l of langs) out.push({ size: s, lang: l });
+  return out;
+};
+const MODES = ["Live", "Studio", "the TinyFish fallback"];
+
+/* ══════════ HERO: particles + swish + comet ══════════ */
+const hero = $("#top"), hc = $("#hero-canvas"), hctx = hc.getContext("2d");
+let HW = 0, HH = 0, dpr = Math.min(devicePixelRatio || 1, 2);
+const dots = [], sparks = [];
+let mouse = { x: 0.5, y: 0.5, px: -999, py: -999 };
+function heroSize() {
+  const r = hero.getBoundingClientRect();
+  HW = r.width; HH = r.height;
+  hc.width = HW * dpr; hc.height = HH * dpr;
+  hctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const n = PHONE() ? 220 : 520;
+  dots.length = 0;
+  for (let i = 0; i < n; i++) dots.push({ x: Math.random() * HW, y: Math.random() * HH, z: rand(0.25, 1), y2: Math.random() < 0.07 });
+}
+hero.addEventListener("pointermove", (e) => {
+  const r = hero.getBoundingClientRect();
+  mouse.x = (e.clientX - r.left) / r.width; mouse.y = (e.clientY - r.top) / r.height;
+  mouse.px = e.clientX - r.left; mouse.py = e.clientY - r.top;
+});
+hero.addEventListener("pointerleave", () => { mouse.px = mouse.py = -999; });
+
+const swish = $("#swish-path");
+let swishLen = 0, comet = { p: -1, t0: 0, dur: 1600 };
+function buildSwish() {
+  const hr = hero.getBoundingClientRect();
+  const a = $(".l1 [data-line]").getBoundingClientRect();
+  const b = $(".l2 [data-line]").getBoundingClientRect();
+  const fs = parseFloat(getComputedStyle($(".statement")).fontSize);
+  const r1 = { l: a.left - hr.left, r: a.right - hr.left, b: a.bottom - hr.top };
+  const r2 = { l: b.left - hr.left, r: b.right - hr.left, t: b.top - hr.top, b: b.bottom - hr.top };
+  // the transforms of the line reveal shift rects; correct with the line wrapper instead
+  const w2 = $(".l2").getBoundingClientRect(), w1 = $(".l1").getBoundingClientRect();
+  r1.b = w1.bottom - hr.top - fs * 0.08; r2.t = w2.top - hr.top; r2.b = w2.bottom - hr.top - fs * 0.08;
+  const base = r2.b - fs * 0.06;
+  let d;
+  if (PHONE() || r2.l - r1.l < fs * 0.5) {
+    d = `M ${r2.l} ${base + fs * 0.06} C ${r2.l + (r2.r - r2.l) * 0.3} ${base + fs * 0.16}, ${r2.l + (r2.r - r2.l) * 0.65} ${base - fs * 0.02}, ${r2.r + fs * 0.05} ${base - fs * 0.18}`;
+  } else {
+    const px = Math.max(r1.l + fs * 0.1, r2.l - fs * 0.32);
+    d = `M ${r1.l + fs * 0.04} ${r1.b + fs * 0.02}`
+      + ` C ${r1.l + fs * 0.5} ${r1.b + fs * 0.06}, ${px + fs * 0.12} ${r1.b + fs * 0.1}, ${px} ${(r1.b + base) / 2 + fs * 0.08}`
+      + ` S ${r2.l - fs * 0.05} ${base + fs * 0.2}, ${r2.l + fs * 0.4} ${base + fs * 0.12}`
+      + ` C ${r2.l + (r2.r - r2.l) * 0.45} ${base + fs * 0.06}, ${r2.r - fs * 0.7} ${base + fs * 0.16}, ${r2.r - fs * 0.25} ${base + fs * 0.12}`
+      + ` S ${r2.r + fs * 0.12} ${base + fs * 0.02}, ${r2.r + fs * 0.1} ${base - fs * 0.45}`;
+  }
+  swish.setAttribute("d", d);
+  swish.style.strokeWidth = Math.max(6, fs * 0.045) + "px";
+  swishLen = swish.getTotalLength();
+  swish.style.strokeDasharray = swishLen;
+}
+function drawSwish(first) {
+  if (RM) { swish.style.strokeDashoffset = 0; return; }
+  swish.style.transition = "none";
+  swish.style.strokeDashoffset = swishLen;
+  swish.getBoundingClientRect();
+  swish.style.transition = `stroke-dashoffset ${comet.dur}ms cubic-bezier(.65,0,.35,1)`;
+  swish.style.strokeDashoffset = 0;
+  comet.p = 0; comet.t0 = performance.now(); comet.first = first;
+}
+const easeIO = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+let heroVisible = true, lastComet = 0;
+function heroFrame(now) {
+  if (heroVisible) {
+    hctx.clearRect(0, 0, HW, HH);
+    const t = now * 0.00025;
+    const ox = (mouse.x - 0.5) * 30, oy = (mouse.y - 0.5) * 20;
+    for (const p of dots) {
+      if (!RM) {
+        const ang = Math.sin(p.x * 0.0021 + t) * Math.cos(p.y * 0.0027 - t * 0.8) * Math.PI * 2;
+        p.x += Math.cos(ang) * 0.35 * p.z; p.y += Math.sin(ang) * 0.35 * p.z - 0.05 * p.z;
+        if (p.x < -10) p.x = HW + 10; if (p.x > HW + 10) p.x = -10; if (p.y < -10) p.y = HH + 10; if (p.y > HH + 10) p.y = -10;
+      }
+      let x = p.x + ox * p.z, y = p.y + oy * p.z;
+      const dx = x - mouse.px, dy = y - mouse.py, dd = dx * dx + dy * dy;
+      if (dd < 12000) { const f = (1 - dd / 12000) * 26; const m = Math.sqrt(dd) || 1; x += (dx / m) * f; y += (dy / m) * f; }
+      hctx.globalAlpha = 0.18 + 0.55 * p.z;
+      hctx.fillStyle = p.y2 ? "#f7dd47" : "#ffffff";
+      const s = 0.8 + p.z * 1.6;
+      hctx.fillRect(x, y, s, s);
+    }
+    // comet along the swish
+    if (comet.p >= 0 && swishLen) {
+      const k = Math.min(1, (now - comet.t0) / comet.dur);
+      const pt = swish.getPointAtLength(easeIO(k) * swishLen);
+      for (let i = 0; i < 3; i++) sparks.push({ x: pt.x, y: pt.y, vx: rand(-1.2, 1.2), vy: rand(-1.6, 0.6), life: 1, s: rand(1, 3) });
+      hctx.globalAlpha = 1; hctx.fillStyle = "#ffffff";
+      hctx.beginPath(); hctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2); hctx.fill();
+      if (k >= 1) { comet.p = -1; lastComet = now; }
+    } else if (!RM && swishLen && now - lastComet > 7000 && lastComet) {
+      comet.p = 0; comet.t0 = now; comet.first = false;
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i]; s.x += s.vx; s.y += s.vy; s.vy += 0.03; s.life -= 0.018;
+      if (s.life <= 0) { sparks.splice(i, 1); continue; }
+      hctx.globalAlpha = s.life; hctx.fillStyle = "#f7dd47"; hctx.fillRect(s.x, s.y, s.s, s.s);
+    }
+    hctx.globalAlpha = 1;
+  }
+  if (!RM) requestAnimationFrame(heroFrame);
+}
+new IntersectionObserver((e) => { heroVisible = e[0].isIntersecting; }).observe(hero);
+
+/* ══════════ FILM: particles that take the pipeline's shapes ══════════ */
+const fc = $("#film-canvas"), fctx = fc.getContext("2d");
+let FW = 0, FH = 0, P = [], TARGETS = [], chapter = 0, filmVisible = false;
+const COLORS = { w: "#ffffff", y: "#f7dd47", g: "#1fc27a" };
+const CAPS = [
+  "1 landing page read · 5 claims found · brief written in 21 s",
+  "3 agents · 11 flows reported · 3 picked by the judge",
+  "60 fps · 1920 × 1080 · locators healed: 2",
+  "4 beats · cuts timed to the voice · motion lint passed",
+  "16:9 and 9:16 · English and Hindi · captions word by word",
+];
+function shapeUnderstand(c, w, h) {
+  const bw = Math.min(w * 0.82, h * 1.25), bh = bw * 0.66, x = (w - bw) / 2, y = (h - bh) / 2;
+  c.strokeStyle = "#fff"; c.lineWidth = 5; c.strokeRect(x, y, bw, bh);
+  c.fillStyle = "#fff"; c.fillRect(x, y + bh * 0.1, bw, 4);
+  c.fillStyle = "#ff0"; [0, 1, 2].forEach((i) => { c.beginPath(); c.arc(x + 18 + i * 18, y + bh * 0.05, 5, 0, 7); c.fill(); });
+  c.fillStyle = "#fff"; c.fillRect(x + bw * 0.08, y + bh * 0.24, bw * 0.5, bh * 0.09); c.fillRect(x + bw * 0.08, y + bh * 0.37, bw * 0.36, bh * 0.09);
+  for (let i = 0; i < 3; i++) c.fillRect(x + bw * 0.08, y + bh * (0.54 + i * 0.07), bw * (0.42 - i * 0.06), 4);
+  c.fillStyle = "#0f0"; c.fillRect(x + bw * 0.08, y + bh * 0.78, bw * 0.18, bh * 0.08);
+  c.strokeStyle = "#fff"; c.lineWidth = 3; c.strokeRect(x + bw * 0.62, y + bh * 0.24, bw * 0.3, bh * 0.62);
+  c.beginPath(); c.moveTo(x + bw * 0.62, y + bh * 0.86); c.lineTo(x + bw * 0.74, y + bh * 0.6); c.lineTo(x + bw * 0.82, y + bh * 0.72); c.lineTo(x + bw * 0.92, y + bh * 0.5); c.stroke();
+}
+function shapeExplore(c, w, h) {
+  const ox = w * 0.1, oy = h * 0.5;
+  const ends = [[w * 0.88, h * 0.18], [w * 0.9, h * 0.5], [w * 0.86, h * 0.82]];
+  c.lineWidth = 4; c.strokeStyle = "#fff";
+  ends.forEach(([ex, ey], i) => {
+    c.beginPath(); c.moveTo(ox, oy);
+    c.bezierCurveTo(w * 0.38, oy + (i - 1) * h * 0.05, w * 0.5, ey, ex, ey); c.stroke();
+    for (let k = 1; k < 4; k++) {
+      const t = k / 4, mt = 1 - t;
+      const bx = mt ** 3 * ox + 3 * mt * mt * t * w * 0.38 + 3 * mt * t * t * w * 0.5 + t ** 3 * ex;
+      const by = mt ** 3 * oy + 3 * mt * mt * t * (oy + (i - 1) * h * 0.05) + 3 * mt * t * t * ey + t ** 3 * ey;
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(bx, by, 9, 0, 7); c.fill();
+    }
+    c.fillStyle = "#ff0"; c.beginPath(); c.arc(ex, ey, 22, 0, 7); c.fill();
+  });
+  c.fillStyle = "#0f0"; c.beginPath(); c.arc(ox, oy, 26, 0, 7); c.fill();
+}
+function shapeRecord(c, w, h) {
+  c.save(); c.translate(w / 2, h / 2); c.rotate(-0.08);
+  const sw = w * 0.95, sh = Math.min(h * 0.46, sw * 0.3);
+  c.fillStyle = "#fff"; c.fillRect(-sw / 2, -sh / 2, sw, sh);
+  c.globalCompositeOperation = "destination-out";
+  const n = 14, hs = sh * 0.09;
+  for (let i = 0; i < n; i++) { const x = -sw / 2 + (i + 0.5) * (sw / n) - hs / 2; c.fillRect(x, -sh / 2 + hs * 0.6, hs, hs); c.fillRect(x, sh / 2 - hs * 1.6, hs, hs); }
+  const fw = sw / 4;
+  for (let i = 0; i < 4; i++) c.fillRect(-sw / 2 + i * fw + 8, -sh / 2 + hs * 2.4, fw - 16, sh - hs * 4.8);
+  c.globalCompositeOperation = "source-over";
+  c.fillStyle = "#ff0";
+  for (let i = 0; i < 4; i++) {
+    const cx = -sw / 2 + i * fw + fw / 2, s = sh * 0.14;
+    c.beginPath(); c.moveTo(cx - s * 0.6, -s); c.lineTo(cx + s, 0); c.lineTo(cx - s * 0.6, s); c.fill();
+  }
+  c.restore();
+}
+function shapeDirect(c, w, h) {
+  const x0 = w * 0.06, x1 = w * 0.94, tw = x1 - x0;
+  const tracks = [[[0, .14, "y"], [.16, .38, "w"], [.4, .7, "w"], [.72, .9, "w"], [.92, 1, "y"]], [[.1, .3, "w"], [.45, .62, "w"], [.75, .86, "w"]]];
+  tracks.forEach((tr, ti) => tr.forEach(([a, b, col]) => { c.fillStyle = col === "y" ? "#ff0" : "#fff"; c.fillRect(x0 + a * tw, h * (0.22 + ti * 0.17), (b - a) * tw - 6, h * 0.11); }));
+  c.fillStyle = "#fff";
+  for (let i = 0; i < 90; i++) { const v = Math.abs(Math.sin(i * 0.37) * Math.cos(i * 0.11)) * 0.12 + 0.015; c.fillRect(x0 + (i / 90) * tw, h * 0.7 - v * h / 2, tw / 90 - 3, v * h); }
+  c.fillStyle = "#0f0"; c.fillRect(x0 + tw * 0.57, h * 0.12, 6, h * 0.76);
+  c.beginPath(); c.moveTo(x0 + tw * 0.57 - 14, h * 0.1); c.lineTo(x0 + tw * 0.57 + 20, h * 0.1); c.lineTo(x0 + tw * 0.57 + 3, h * 0.15); c.fill();
+}
+function shapeRender(c, w, h) {
+  const H = Math.min(h * 0.7, w * 0.42), wide = H * 16 / 9 * 0.82, tall = H * 9 / 16 * 1.25;
+  const gap = w * 0.06, total = wide + tall + gap, x = (w - total) / 2, y = (h - H) / 2;
+  const tri = (cx, cy, s) => { c.beginPath(); c.moveTo(cx - s * 0.6, cy - s); c.lineTo(cx + s, cy); c.lineTo(cx - s * 0.6, cy + s); c.fill(); };
+  c.strokeStyle = "#fff"; c.lineWidth = 5;
+  const wh = wide * 9 / 16; c.strokeRect(x, y + (H - wh) / 2, wide, wh);
+  const th = Math.min(H * 1.0, tall * 16 / 9); c.strokeRect(x + wide + gap, y + (H - th) / 2, tall, th);
+  c.fillStyle = "#ff0"; tri(x + wide / 2, y + H / 2, wh * 0.16); tri(x + wide + gap + tall / 2, y + H / 2, tall * 0.2);
+  c.fillStyle = "#fff";
+  for (let i = 0; i < 3; i++) c.fillRect(x + wide * (0.2 + i * 0.2), y + (H + wh) / 2 - wh * 0.14, wide * 0.15, 5);
+  c.fillStyle = "#0f0"; c.fillRect(x + wide * 0.4, y + (H + wh) / 2 - wh * 0.14, wide * 0.15, 5);
+}
+const SHAPES = [shapeUnderstand, shapeExplore, shapeRecord, shapeDirect, shapeRender];
+function sample(fn, n) {
+  const oc = document.createElement("canvas"); oc.width = FW; oc.height = FH;
+  const c = oc.getContext("2d"); fn(c, FW, FH);
+  const data = c.getImageData(0, 0, FW, FH).data, pts = [];
+  const step = Math.max(2, Math.round(Math.sqrt((FW * FH) / (n * 9))));
+  for (let y = 0; y < FH; y += step) for (let x = 0; x < FW; x += step) {
+    const i = (y * FW + x) * 4;
+    if (data[i + 3] > 128) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      const col = r > 200 && g > 200 && b > 200 ? "w" : r > 200 && g > 200 ? "y" : "g";
+      pts.push({ x: x + rand(-1, 1), y: y + rand(-1, 1), c: col });
+    }
+  }
+  for (let i = pts.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [pts[i], pts[j]] = [pts[j], pts[i]]; }
+  const out = [];
+  for (let i = 0; i < n; i++) { const p = pts[i % Math.max(1, pts.length)] || { x: FW / 2, y: FH / 2, c: "w" }; out.push(i < pts.length ? p : { x: p.x + rand(-2, 2), y: p.y + rand(-2, 2), c: p.c }); }
+  return out;
+}
+function filmSize() {
+  const r = fc.getBoundingClientRect();
+  FW = Math.max(10, Math.round(r.width)); FH = Math.max(10, Math.round(r.height));
+  fc.width = FW * dpr; fc.height = FH * dpr; fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const n = PHONE() ? 1100 : 2400;
+  TARGETS = SHAPES.map((s) => sample(s, n));
+  if (P.length !== n) P = TARGETS[chapter].map((t) => ({ x: rand(0, FW), y: rand(0, FH), fx: 0, fy: 0, cx: 0, cy: 0, tx: t.x, ty: t.y, c: t.c, t0: 0, dl: 0, ph: rand(0, 6.28), ox: 0, oy: 0 }));
+  retarget(chapter, true);
+  if (RM) requestAnimationFrame(filmFrame);
+}
+let morphStart = 0;
+function retarget(i, instant) {
+  const tg = TARGETS[i], now = performance.now();
+  morphStart = now;
+  P.forEach((p, k) => {
+    const t = tg[k];
+    p.fx = p.x; p.fy = p.y; p.tx = t.x; p.ty = t.y; p.c = t.c;
+    const mx = (p.fx + p.tx) / 2, my = (p.fy + p.ty) / 2, dx = p.tx - p.fx, dy = p.ty - p.fy;
+    const bend = rand(-0.9, 0.9);
+    p.cx = mx - dy * bend + rand(-30, 30); p.cy = my + dx * bend + rand(-30, 30);
+    p.dl = (t.x / FW) * 380 + rand(0, 260);
+    if (instant || RM) { p.x = p.tx; p.y = p.ty; p.dl = -1; }
+  });
+}
+const film = $("#how"), filmPointer = { x: -999, y: -999 };
+fc.addEventListener("pointermove", (e) => { const r = fc.getBoundingClientRect(); filmPointer.x = e.clientX - r.left; filmPointer.y = e.clientY - r.top; });
+fc.addEventListener("pointerleave", () => { filmPointer.x = filmPointer.y = -999; });
+const MORPH = 1300;
+function filmFrame(now) {
+  if (filmVisible || RM) {
+    fctx.globalAlpha = 1;
+    fctx.fillStyle = RM ? "#05060f" : "rgba(5,6,15,0.3)";
+    fctx.fillRect(0, 0, FW, FH);
+    const groups = { w: [], y: [], g: [] };
+    for (const p of P) {
+      if (p.dl >= 0) {
+        const k = Math.min(1, Math.max(0, (now - morphStart - p.dl) / MORPH));
+        const e = easeIO(k), m = 1 - e;
+        p.x = m * m * p.fx + 2 * m * e * p.cx + e * e * p.tx;
+        p.y = m * m * p.fy + 2 * m * e * p.cy + e * e * p.ty;
+        if (k >= 1) p.dl = -1;
+      } else if (!RM) {
+        p.x = p.tx + Math.sin(now * 0.0013 + p.ph) * 0.9; p.y = p.ty + Math.cos(now * 0.0011 + p.ph) * 0.9;
+      }
+      const dx = p.x - filmPointer.x, dy = p.y - filmPointer.y, dd = dx * dx + dy * dy;
+      let tx = 0, ty = 0;
+      if (dd < 6400) { const f = (1 - dd / 6400) * 34, m = Math.sqrt(dd) || 1; tx = (dx / m) * f; ty = (dy / m) * f; }
+      p.ox += (tx - p.ox) * 0.15; p.oy += (ty - p.oy) * 0.15;
+      groups[p.c].push(p);
+    }
+    for (const c of ["w", "y", "g"]) {
+      fctx.fillStyle = COLORS[c]; const s = c === "w" ? 1.7 : 2.3;
+      fctx.globalAlpha = c === "w" ? 0.85 : 1;
+      for (const p of groups[c]) fctx.fillRect(p.x + p.ox, p.y + p.oy, s, s);
+    }
+  }
+  if (!RM) requestAnimationFrame(filmFrame);
+}
+new IntersectionObserver((e) => { filmVisible = e[0].isIntersecting; }).observe(film);
+
+const chapters = $$(".chapter"), chBtns = $$("#ch-nav button");
+function setChapter(i) {
+  if (i === chapter) return;
+  chapter = i;
+  retarget(i);
+  if (RM) requestAnimationFrame(filmFrame);
+  chBtns.forEach((b, k) => b.toggleAttribute("aria-current", k === i) || (k === i && b.setAttribute("aria-current", "step")));
+  chBtns[i].setAttribute("aria-current", "step");
+  $("#film-cap").textContent = CAPS[i];
+  chapters.forEach((c) => c.classList.toggle("is-on", c === chapters[i]));
+  if (G && !RM) {
+    G.fromTo(chapters[i].children, { y: 36, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8, ease: "expo.out", stagger: 0.07, overwrite: true });
+  }
+}
+let filmST = null;
+if (ST) {
+  filmST = ST.create({ trigger: film, start: "top top", end: "bottom bottom", onUpdate: (s) => setChapter(Math.min(4, Math.floor(s.progress * 5 * 0.999))) });
+}
+chBtns.forEach((b) => b.addEventListener("click", () => {
+  const i = +b.dataset.go;
+  if (filmST) {
+    const y = filmST.start + (filmST.end - filmST.start) * ((i + 0.5) / 5);
+    lenis ? lenis.scrollTo(y, { duration: 1.2 }) : scrollTo({ top: y, behavior: RM ? "auto" : "smooth" });
+  } else setChapter(i);
+}));
+
+/* ══════════ TRY A LINK ══════════ */
+const PLANS = {
+  "todomvc.com": {
+    brief: "A to-do list app, built the same way in many frameworks.",
+    flows: [["Add three todos and tick one off", 9, 92, 1], ["Filter by Active, then Completed", 8, 88, 1], ["Rename a todo in place", 7, 81, 1], ["Read the framework list on the home page", 6, 34, 0]],
+  },
+  "excalidraw.com": {
+    brief: "A virtual whiteboard for sketching hand-drawn diagrams.",
+    flows: [["Draw a box and an arrow", 12, 94, 1], ["Label it in the hand-drawn font", 10, 86, 1], ["Export the drawing as a PNG", 8, 79, 1], ["Open the keyboard shortcuts", 5, 41, 0]],
+  },
+  "localhost:3001": {
+    brief: "Demoboard: a content workspace with templates, drafts and analytics.",
+    flows: [["Sign in with the demo login", 7, 90, 1], ["Start a project from a template", 12, 93, 1], ["Generate a draft and edit it", 15, 89, 1], ["Reset the workspace", 6, 22, 0]],
+  },
+};
+const tryUrl = $("#try-url"), caret = $("#caret"), mirror = $("#mirror"), plan = $("#plan");
+const clean = (v) => v.trim().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
+const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+function planFor(v) {
+  const host = clean(v) || "your-product.com";
+  const known = PLANS[host.toLowerCase()];
+  if (known) return { host, ...known };
+  return {
+    host, generic: true,
+    brief: `What ${host} does, in one line, read from its landing page.`,
+    flows: [["Sign up and reach the first screen", 11, 0, 1], ["Make the first thing the product is for", 14, 0, 1], ["Share or export the result", 9, 0, 1], ["Change account settings", 6, 0, 0]],
+  };
+}
+function renderPlan() {
+  const p = planFor(tryUrl.value);
+  const picked = p.flows.filter((f) => f[3]);
+  const beats = opts.music
+    ? [["Hook", 3, 1], ...picked.map((f) => [f[0], Math.round(f[1] * 0.7), 0]), ["Logo", 3, 1]]
+    : [["Title", 4, 1], ...picked.map((f) => [f[0], f[1] + 3, 0]), ["End card", 4, 1]];
+  const total = beats.reduce((a, b) => a + b[1], 0);
+  const v = variants();
+  plan.innerHTML = `
+    <div>
+      <h3>Product brief · ${esc(p.host)}</h3>
+      <p class="brief">${esc(p.brief)}</p>
+      <ol class="flows">${p.flows.map((f) => `
+        <li class="flow ${f[3] ? "" : "is-out"}"><span class="tick" aria-hidden="true"><i class="ck"></i></span>
+          <span>${esc(f[0])}<small>${f[3] ? (p.generic ? "Would be tried by an agent" : `Judge score ${f[2]}`) : (p.generic ? "Usually left out" : `Left out · judge score ${f[2]}`)}</small></span>
+          <span class="t">${fmt(f[1])}</span></li>`).join("")}
+      </ol>
+    </div>
+    <div>
+      <h3>The cut · ${opts.music ? "music-led" : "narrated"} · ${fmt(total)}</h3>
+      <div class="cut" id="cut">${beats.map((b) => `<div class="${b[2] ? "c-card" : ""}" style="flex:${b[1]}">${esc(b[0])}</div>`).join("")}</div>
+      <h3 style="margin-top:24px">${v.length} ${v.length === 1 ? "video" : "videos"}, recorded in ${MODES[opts.mode]}</h3>
+      <ul class="outs">${v.map((x) => `<li><span>${esc(p.host.split(/[.:]/)[0])}-${x.size.replace(":", "x")}-${x.lang.slice(0, 2).toLowerCase()}.mp4</span><span>${x.size === "16:9" ? "1920 × 1080" : "1080 × 1920"} · ${x.lang}</span></li>`).join("")}</ul>
+      <p class="plan-note">${p.generic ? "A typical plan. The agents find the real flows on your site." : "An example plan. Real runs differ by site and by day."}</p>
+    </div>`;
+  if (G && !RM) G.from("#cut > div", { scaleX: 0, duration: 0.7, ease: "expo.out", stagger: 0.05 });
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function moveCaret() {
+  mirror.textContent = tryUrl.value || " ";
+  const w = Math.min(mirror.getBoundingClientRect().width, tryUrl.clientWidth - 4);
+  caret.style.left = w + 6 + "px";
+}
+let planT;
+tryUrl.addEventListener("input", () => { moveCaret(); clearTimeout(planT); planT = setTimeout(renderPlan, 220); });
+$$(".try-ex button").forEach((b) => b.addEventListener("click", () => typeInto(b.dataset.ex)));
+async function typeInto(text) {
+  if (RM) { tryUrl.value = text; moveCaret(); renderPlan(); return; }
+  while (tryUrl.value.length) { tryUrl.value = tryUrl.value.slice(0, -1); moveCaret(); await sleep(22); }
+  for (const ch of text) { tryUrl.value += ch; moveCaret(); await sleep(48); }
+  renderPlan();
+}
+$("#hero-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = clean($("#hero-url").value);
+  scrollToEl($("#try"));
+  if (v) setTimeout(() => typeInto(v), RM ? 0 : 900);
+});
+
+/* ══════════ SWITCHES + MODES ══════════ */
+$$(".sw").forEach((sw) => {
+  const band = sw.closest(".band");
+  sw.addEventListener("click", () => {
+    const on = sw.getAttribute("aria-checked") !== "true";
+    sw.setAttribute("aria-checked", on); band.classList.toggle("is-on", on);
+    setOpt(sw.dataset.opt, on);
+  });
+});
+onOpts(() => {
+  const v = variants();
+  const list = v.map((x) => `${x.size} in ${x.lang}`);
+  const said = list.length > 1 ? list.slice(0, -1).join(", ") + " and " + list.at(-1) : list[0];
+  $("#sw-sum").innerHTML = `This setup renders <b>${v.length} ${v.length === 1 ? "video" : "videos"}</b>: ${said}. ${opts.gates ? "You approve the flows, the script and the preview." : "It runs start to finish on autopilot."}`;
+  renderPlan();
+});
+const modeCells = $$("#modes-t [data-col]");
+function pickMode(i) {
+  modeCells.forEach((c) => c.classList.toggle("is-pick", +c.dataset.col === i));
+  $$("#modes-t [data-mode]").forEach((b) => { const me = +b.dataset.mode === i; b.textContent = me ? "Selected" : ["Record in Live", "Switch to Studio", "Use the fallback"][+b.dataset.mode]; b.setAttribute("aria-pressed", me); });
+}
+$$("#modes-t [data-mode]").forEach((b) => b.addEventListener("click", () => { pickMode(+b.dataset.mode); setOpt("mode", +b.dataset.mode); }));
+pickMode(0);
+// One second of footage per mode: each tick is a frame, lit as the playhead passes it.
+const fpsStrips = $$(".fps").map((el) => { const n = +el.dataset.fps; el.innerHTML = "<i></i>".repeat(n); return { el, n, ticks: Array.from(el.children) }; });
+let fpsVisible = false;
+new IntersectionObserver((e) => { fpsVisible = e[0].isIntersecting; }).observe($("#modes"));
+function fpsFrame(now) {
+  if (fpsVisible || RM) {
+    const t = RM ? 0.999 : (now % 2000) / 2000;
+    for (const s of fpsStrips) { const k = Math.floor(t * s.n); s.ticks.forEach((tk, i) => tk.classList.toggle("on", i <= k)); }
+  }
+  if (!RM) requestAnimationFrame(fpsFrame);
+}
+requestAnimationFrame(fpsFrame);
+
+/* ══════════ THE JOB VIEW (simulated run) ══════════ */
+const STAGES = [["understand", "Understand"], ["auth", "Sign in"], ["discover", "Explore"], ["flow-runs", "Try flows"], ["gate-flows", "Review flows", 1], ["record", "Record"], ["script", "Script"], ["gate-script", "Review script", 1], ["voice", "Voice"], ["direct", "Direct"], ["preview", "Preview"], ["gate-preview", "Review preview", 1], ["render", "Render"]];
+const AGENTS = [
+  { goal: "Add three todos and tick one off", start: [], steps: [
+    ["open", "Opened todomvc.com/examples/react"], ["focus", "Clicked “What needs to be done?”"],
+    ["add", "Typed “Book the venue”, pressed Enter", "Book the venue"], ["add", "Typed “Send the invites”, pressed Enter", "Send the invites"],
+    ["add", "Typed “Order the cake”, pressed Enter", "Order the cake"], ["toggle", "Ticked “Book the venue”", 0], ["check", "Checked the outcome: “2 items left”"]] },
+  { goal: "Filter by Active, then Completed", start: [["Book the venue", 1], ["Send the invites", 0], ["Order the cake", 0]], steps: [
+    ["open", "Opened the list with three todos"], ["filter", "Clicked “Active”: 2 shown", 1], ["filter", "Clicked “Completed”: 1 shown", 2],
+    ["filter", "Clicked “All”: 3 shown", 0], ["check", "Checked the address: #/completed, then #/"]] },
+  { goal: "Rename a todo in place", start: [["Book the venue", 0], ["Send the invites", 0]], steps: [
+    ["open", "Opened the list with two todos"], ["warn", "Double-clicked the row; no editor opened"], ["fix", "Repair: double-clicked the label instead", 1],
+    ["rename", "Typed “Send the invites by Friday”", 1, "Send the invites by Friday"], ["commit", "Pressed Enter: the label changed"], ["check", "Checked the outcome: 2 todos, one renamed"]] },
+];
+function tmHTML(s, opt = {}) {
+  const items = s.items.filter((it) => s.filter === 0 || (s.filter === 1 ? !it[1] : it[1]));
+  const left = s.items.filter((it) => !it[1]).length;
+  return `<div class="tm">${opt.cursor ? `<span class="cursor" style="top:${s.cy}em;left:${s.cx}em"></span>` : ""}
+    <div class="tm-h">todos</div>
+    <div class="tm-card">
+      <div class="tm-in ${s.typing ? "typed" : ""}">${s.typing ? esc(s.typing) : "What needs to be done?"}</div>
+      ${items.map((it, i) => `<div class="tm-row ${it[1] ? "done" : ""} ${s.editing === i ? "edit" : ""}"><span class="c">${it[1] ? '<i class="ck"></i>' : ""}</span><span class="l">${esc(it[0])}</span></div>`).join("")}
+      ${s.items.length ? `<div class="tm-foot"><span>${left} item${left === 1 ? "" : "s"} left</span><span class="f"><span class="${s.filter === 0 ? "on" : ""}">All</span><span class="${s.filter === 1 ? "on" : ""}">Active</span><span class="${s.filter === 2 ? "on" : ""}">Completed</span></span></div>` : ""}
+    </div></div>`;
+}
+
+// The job's data. Every figure on the job view is computed from these.
+const JOB = { host: "todomvc.com", url: "todomvc.com/examples/react", kind: "Launch video", reported: 11, voice: "Brian (premade)" };
+const BEATS = [
+  { name: "Title", line: "Your list, kept simple.", s: 4, card: 1 },
+  { name: "Add and tick off", line: "Add what’s on your mind, and tick it off when it’s done.", s: 12 },
+  { name: "Filter", line: "See only what’s left.", s: 9 },
+  { name: "Rename", line: "Changed your mind? Rename it in place.", s: 10 },
+  { name: "End card", line: "TodoMVC. One app, every framework.", s: 4, card: 1 },
+];
+const CUT_S = BEATS.reduce((a, b) => a + b.s, 0);
+// Seconds each stage takes (gates: the usual wait, used only as an estimate until they happen).
+const DUR = { understand: 21, auth: 0, discover: 108, "flow-runs": 72, "gate-flows": 40, record: 32, script: 22, "gate-script": 25, voice: 18, direct: 26, preview: 16, "gate-preview": 30, render: 30 };
+const FLOW_S = [9, 8, 7], JUDGE = [92, 88, 81];
+const NOTES = [["Held the add-todo shot 0.4 s longer so the voice lands", "0:06"], ["Moved the cut on “tick it off” to the click frame", "0:13"], ["Spotlight on the Active and Completed filters", "0:19"], ["Motion lint: 0 issues", "all"]];
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+const took = (s) => (s >= 60 ? `${Math.floor(s / 60)}m ${Math.floor(s % 60)}s` : `${Math.floor(s)}s`);
+console.assert(CUT_S === 39, "beats should add up to the 0:39 cut");
+
+class JobSim {
+  constructor(root, { autopilot }) {
+    this.root = root; this.autopilot = autopilot; this.gen = 0; this.visible = false;
+    new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; }, { threshold: 0.02 }).observe(root);
+    setInterval(() => this.tick(), 100);
+    onOpts(() => { if (this.root.querySelector("[data-facts]")) { this.facts(); this.metaUpd(); this.tl(); } });
+    SIMS.push(this);
+    this.start();
+  }
+  async wait(ms, gen) {
+    let left = RM ? Math.min(ms, 300) : ms;
+    while (left > 0) { await sleep(100); if (gen !== this.gen) throw 0; if (this.visible) left -= 100; }
+  }
+  q(s) { return this.root.querySelector(s); }
+  start() {
+    this.gen++;
+    const gen = this.gen;
+    this.st = {}; let t = 0;
+    for (const [k] of STAGES) this.st[k] = { s: "pending" };
+    for (const k of ["understand", "auth", "discover"]) { this.st[k] = { s: k === "auth" ? "skipped" : "done", a: t, b: t + DUR[k] }; t += DUR[k]; }
+    this.clock = t; this.rate = 0; this.cur = null; this.picked = 0; this.feedItems = []; this.finished = false;
+    this.root.innerHTML = `<div class="app" ${this.autopilot ? "data-ui" : ""}>
+      <header class="app-bar"><div class="app-bar-in">
+        <a class="wm" href="#top">AgentCast</a>
+        <nav aria-label="App"><a href="#top">New video</a><a href="#job" aria-current="page">Videos</a><a href="#faq">Help</a></nav>
+        <span class="grow"></span>
+        <span class="worker" title="The worker this page talks to"><i></i><span>Worker on 127.0.0.1:4000</span></span>
+      </div></header>
+      <div class="app-col">
+        <div class="ttl">
+          <div class="ttl-l"><p class="crumb"><a href="#job">Videos</a> / ${JOB.kind}</p><${this.autopilot ? "h3" : "h1"} class="jt">${JOB.host}</${this.autopilot ? "h3" : "h1"}><p class="finding" data-finding></p></div>
+          <div class="ttl-act" data-ttl-act></div>
+        </div>
+        <dl class="meta">
+          <div><dt>Elapsed</dt><dd data-m="elapsed"></dd></div>
+          <div><dt>Stage</dt><dd data-m="stage"></dd></div>
+          <div><dt>Flows</dt><dd data-m="flows"></dd></div>
+          <div><dt>Videos</dt><dd data-m="videos"></dd></div>
+          <div><dt>Recording</dt><dd data-m="rec"></dd></div>
+        </dl>
+        <section class="air" data-state="run" aria-labelledby="air-h-${this.autopilot ? "a" : "b"}">
+          <canvas class="air-dust" aria-hidden="true"></canvas>
+          <div class="air-in">
+            <div class="air-head">
+              <div><h2 class="air-h" id="air-h-${this.autopilot ? "a" : "b"}"><span data-air-h></span></h2><p class="air-lead" data-air-lead></p></div>
+              <div class="air-clock"><b data-air-clock>0:00</b><span data-air-sub></span></div>
+            </div>
+            <div class="air-body" data-air-body></div>
+          </div>
+        </section>
+        <section class="blk" aria-label="The run as a timeline">
+          <div class="blk-h"><h2>The run</h2><span data-tl-sum></span></div>
+          <div class="tl"><div class="tl-ruler" data-ruler></div><div class="tl-track" data-track></div></div>
+          <p class="tl-key"><span><i class="k-done"></i>Done</span><span><i class="k-run"></i>Working</span><span><i class="k-gate"></i>Review gate</span><span><i class="k-wait"></i>Waiting on you</span><span><i class="k-next"></i>Still to come, estimated</span><span><i class="k-now"></i>Now</span></p>
+        </section>
+        <div class="lower">
+          <section class="blk"><div class="blk-h"><h2>Activity</h2><span data-feed-n></span></div><ol class="feed2" data-feed></ol></section>
+          <section class="blk"><div class="blk-h"><h2>This job</h2><span>change it at the next gate</span></div><dl class="facts" data-facts></dl></section>
+        </div>
+      </div></div>`;
+    this.dust = { c: this.q(".air-dust"), dots: [] };
+    this.cancelBtn();
+    this.facts();
+    const at = (k) => this.st[k].b;
+    [[0, "Job started for todomvc.com"], [at("understand"), "Brief written: 1 page read, 5 claims found"], [at("auth"), "Sign in skipped: the site is public"],
+     [at("understand"), "Explore started: a scout is mapping the site"], [at("discover"), "Explore finished: 11 flows reported"], [at("discover"), "The judge picked 3 flows to try"]]
+      .forEach(([t, m]) => this.log(m, t));
+    this.run(gen).catch(() => {});
+  }
+  cancelBtn() {
+    const box = this.q("[data-ttl-act]");
+    box.innerHTML = `<button type="button" class="ab ab-ghost" data-cancel>Cancel job</button>`;
+    const b = box.firstChild;
+    b.addEventListener("click", () => {
+      if (b.dataset.sure) return this.cancel();
+      b.dataset.sure = 1; b.textContent = "Yes, cancel it";
+      setTimeout(() => { if (b.isConnected) { delete b.dataset.sure; b.textContent = "Cancel job"; } }, 3000);
+    });
+  }
+  async cancel() {
+    this.gen++; this.rate = 0;
+    const k = this.cur; if (k) Object.assign(this.st[k], { s: "cancelled", b: this.clock });
+    this.log("Job cancelled");
+    this.q("[data-ttl-act]").innerHTML = "";
+    await this.show({ state: "run", title: "Cancelled", lead: "Nothing more will be filmed. Takes already recorded are kept with the job.", clock: mmss(this.clock), sub: "total time", body: `<button type="button" class="ab ab-f" data-again>Start it again <span class="arr" aria-hidden="true">→</span></button>` });
+    this.q("[data-finding]").textContent = `Cancelled during ${STAGES.find(([x]) => x === k)?.[1] ?? "the run"}.`;
+    this.q("[data-again]").addEventListener("click", () => this.start());
+    this.tl();
+  }
+
+  /* ── ticking state ── */
+  tick() {
+    if (!this.q || !this.cur || !this.rate || !this.visible || this.finished) return;
+    this.clock += this.rate * 0.1;
+    this.clockUpd();
+  }
+  clockUpd() {
+    const s = this.st[this.cur];
+    const c = this.q("[data-air-clock]"); if (c && s && s.a != null && this.cur) c.textContent = mmss(this.clock - s.a);
+    this.metaUpd(); this.tl();
+  }
+  metaUpd() {
+    const set = (k, h) => { const el = this.q(`[data-m="${k}"]`); if (el) el.innerHTML = h; };
+    const idx = STAGES.findIndex(([k]) => k === this.cur);
+    const v = variants();
+    set("elapsed", mmss(this.clock));
+    set("stage", this.finished ? `13 <small>of 13</small>` : `${idx + 1} <small>of ${STAGES.length}</small>`);
+    set("flows", this.picked ? `${this.picked} <small>of ${JOB.reported} approved</small>` : `${JOB.reported} <small>reported</small>`);
+    set("videos", `${v.length} <small>at 1080p</small>`);
+    set("rec", opts.mode === 2 ? `Fallback <small>4–6 fps</small>` : `${["Live", "Studio"][opts.mode]} <small>60 fps</small>`);
+  }
+  facts() {
+    const v = variants();
+    const sizes = [...new Set(v.map((x) => x.size))].join(" and "), langs = [...new Set(v.map((x) => x.lang))].join(" and ");
+    const rows = [
+      ["Link", JOB.url],
+      ["Video", `${JOB.kind}, ${opts.music ? "music-led" : "narrated"}`],
+      ["Outputs", `${v.length} ${v.length === 1 ? "video" : "videos"}: ${sizes} in ${langs}`],
+      ["Recording", `${MODES[opts.mode][0].toUpperCase() + MODES[opts.mode].slice(1)}, ${opts.mode === 2 ? "4–6" : "60"} fps`],
+      ["Voice", opts.music ? "None, the music leads" : JOB.voice],
+      ["Review gates", opts.gates ? (this.autopilot ? "On, approved on autopilot here" : "Flows, script and preview") : "Off: runs on autopilot"],
+    ];
+    this.q("[data-facts]").innerHTML = rows.map(([a, b]) => `<div><dt>${a}</dt><dd>${esc(b)}</dd></div>`).join("");
+  }
+  log(msg, t = this.clock) {
+    this.feedItems.unshift([mmss(t), msg]);
+    const ol = this.q("[data-feed]"); if (!ol) return;
+    ol.innerHTML = this.feedItems.slice(0, 6).map(([t, m]) => `<li><time>${t}</time><span>${esc(m)}</span></li>`).join("");
+    this.q("[data-feed-n]").textContent = `${this.feedItems.length} events · latest first`;
+  }
+  tl() {
+    const track = this.q("[data-track]"); if (!track) return;
+    let x = 0; const parts = [];
+    for (const [k, label, gate] of STAGES) {
+      const s = this.st[k];
+      let a, b, cls = s.s;
+      if (s.s === "pending") { a = x; b = x + DUR[k]; }
+      else { a = s.a; b = s.b ?? this.clock; }
+      if (k === "voice" && s.s === "pending" && opts.music) b = a;
+      x = b;
+      parts.push({ k, label, gate, a, b, cls });
+    }
+    const T = Math.max(60, x), W = track.clientWidth || 1;
+    const step = [30, 60, 120, 180, 300, 600].find((st) => (st / T) * W >= 56) ?? 600;
+    let ticks = "";
+    for (let t = 0; t <= T - step * 0.4; t += step) ticks += `<span style="left:${(t / T) * 100}%">${mmss(t)}</span>`;
+    this.q("[data-ruler]").innerHTML = ticks;
+    track.innerHTML = parts.map((p) => {
+      const w = ((p.b - p.a) / T) * 100, px = (w / 100) * W;
+      const state = p.cls === "skipped" || (p.cls === "pending" && p.b === p.a) ? "skipped" : p.cls === "cancelled" ? "done" : p.cls;
+      const lab = p.cls === "pending" ? `about ${took(p.b - p.a)}` : p.cls === "skipped" ? "skipped" : took(p.b - p.a);
+      return `<div class="clip ${state} ${p.gate ? "gate" : ""} ${px < 44 ? "narrow" : ""}" style="left:${(p.a / T) * 100}%;width:calc(${w}% - 2px)" title="${p.label}: ${lab}"><b>${p.label}</b><span>${lab}</span></div>`;
+    }).join("") + (this.finished ? "" : `<div class="playhead" style="left:${(this.clock / T) * 100}%"></div>`);
+    this.q("[data-tl-sum]").textContent = this.finished ? `${mmss(this.clock)} start to finish` : `${mmss(this.clock)} so far · about ${mmss(T)} in all`;
+  }
+
+  /* ── the field ── */
+  async show(o) {
+    const gen = this.gen, air = this.q(".air"), inner = this.q(".air-in");
+    const animate = G && !RM;
+    if (animate) {
+      await G.to(inner, { autoAlpha: 0, y: -10, duration: 0.22, ease: "power2.in" });
+      if (air.dataset.state !== o.state) {
+        const sw = document.createElement("div"); sw.className = "air-sweep"; sw.dataset.state = o.state; air.prepend(sw);
+        await G.fromTo(sw, { scaleX: 0 }, { scaleX: 1, duration: 0.75, ease: "expo.inOut" });
+        air.dataset.state = o.state; sw.remove();
+      }
+    } else air.dataset.state = o.state;
+    if (gen !== this.gen) return;
+    this.q("[data-air-h]").textContent = o.title;
+    this.q("[data-air-lead]").textContent = o.lead;
+    this.q("[data-air-clock]").textContent = o.clock ?? "0:00";
+    this.q("[data-air-sub]").textContent = o.sub ?? "";
+    this.q("[data-air-body]").innerHTML = o.body ?? "";
+    if (animate) {
+      G.fromTo(inner, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: "expo.out" });
+      G.fromTo(this.q("[data-air-h]"), { yPercent: 105 }, { yPercent: 0, duration: 0.9, ease: "expo.out" });
+    }
+  }
+  begin(k, realMs) {
+    this.cur = k; this.st[k] = { s: "running", a: this.clock };
+    this.rate = realMs ? DUR[k] / (realMs / 1000) : 1;
+    this.metaUpd(); this.tl();
+  }
+  end(k, msg) {
+    const s = this.st[k];
+    if (s.s === "running" && DUR[k] && this.rate !== 1) this.clock = s.a + DUR[k];
+    Object.assign(s, { s: "done", b: this.clock });
+    this.rate = 0;
+    if (msg) this.log(msg);
+    this.metaUpd(); this.tl();
+  }
+  finding(t) { this.q("[data-finding]").textContent = t; }
+  sub(k, extra) { return `in this stage · ${extra ?? `usually ${took(DUR[k])}`}`; }
+
+  async gate(k, title, lead, body, approveLabel, gen, wire) {
+    if (!opts.gates) {
+      this.cur = k; this.st[k] = { s: "done", a: this.clock, b: this.clock };
+      this.log(`${title}: approved on autopilot`); this.tl();
+      return;
+    }
+    this.cur = k; this.st[k] = { s: "waiting", a: this.clock }; this.rate = 1;
+    await this.show({ state: "wait", title, lead, sub: "waiting on you", body: body + `<div class="rv-foot">${wire.extra ?? ""}<span class="spacer"></span><span class="cd" data-cd></span><button type="button" class="ab ab-f" data-approve>${approveLabel} <span class="arr" aria-hidden="true">→</span></button></div>` });
+    if (gen !== this.gen) throw 0;
+    this.metaUpd(); this.tl();
+    const btn = this.q("[data-approve]");
+    wire.after?.(btn);
+    await new Promise((resolve, reject) => {
+      btn.addEventListener("click", resolve, { once: true });
+      if (this.autopilot) {
+        const cd = this.q("[data-cd]");
+        (async () => { for (let n = 4; n > 0; n--) { if (cd) cd.textContent = `Approving on autopilot in ${n} s`; await this.wait(1000, gen); } resolve(); })().catch(reject);
+      }
+      const chk = setInterval(() => { if (gen !== this.gen) { clearInterval(chk); reject(0); } }, 300);
+    });
+    if (gen !== this.gen) throw 0;
+    Object.assign(this.st[k], { s: "done", b: this.clock }); this.rate = 0;
+  }
+
+  async run(gen) {
+    const v = () => variants();
+    /* Try flows: the multiview */
+    const states = AGENTS.map((a) => ({ items: a.start.map((x) => [...x]), filter: 0, typing: "", editing: -1, cx: 18, cy: 2, frames: [] }));
+    const realFlows = 11000;
+    this.begin("flow-runs", realFlows);
+    this.finding("Explore found 11 flows. The judge sent the best 3 to be tried, one agent each.");
+    await this.show({
+      state: "run", title: "Trying flows", sub: this.sub("flow-runs"),
+      lead: "Three agents work through the flows side by side. Each one is replayed in local Chrome before you see it.",
+      body: `<div class="mv">${AGENTS.map((a, i) => `<article class="mon" data-agent="${i}">
+        <div class="mon-h"><b>Agent ${i + 1}</b><span class="tally" data-tally><i></i><span>waiting</span></span></div>
+        <p class="goal">${esc(a.goal)}</p>
+        <div class="browser" data-ui><div class="bar"><i></i><i></i><i></i><span>${JOB.url}${i === 1 ? "/#/" : ""}</span></div><div data-view>${tmHTML(states[i], { cursor: true })}</div></div>
+        <ol class="alog" data-alog></ol></article>`).join("")}</div>`,
+    });
+    if (gen !== this.gen) return;
+    const pos = (s, kind, arg) => {
+      const rowsTop = 6.2, row = 2.3;
+      if (kind === "focus" || kind === "add") return [8, 4.9];
+      if (kind === "toggle") return [2.1, rowsTop + arg * row];
+      if (["fix", "warn", "rename", "commit"].includes(kind)) return [8, rowsTop + (arg ?? 1) * row];
+      if (kind === "filter") { const n = s.items.filter((it) => arg === 0 || (arg === 1 ? !it[1] : it[1])).length; return [[17, 21, 26][arg], rowsTop + n * row + 0.6]; }
+      return [18, 2];
+    };
+    const agentRun = async (i) => {
+      const a = AGENTS[i], s = states[i], el = this.q(`[data-agent="${i}"]`);
+      const view = el.querySelector("[data-view]"), alog = el.querySelector("[data-alog]"), tally = el.querySelector("[data-tally]");
+      await this.wait(300 + i * 600, gen);
+      for (let k = 0; k < a.steps.length; k++) {
+        const [kind, msg, arg, arg2] = a.steps[k];
+        tally.className = "tally live"; tally.lastChild.textContent = `live · step ${k + 1} of ${a.steps.length}`;
+        [s.cx, s.cy] = pos(s, kind, kind === "warn" ? 1 : arg);
+        if (kind === "add") { for (let c = 1; c <= arg.length; c += 3) { s.typing = arg.slice(0, c); view.innerHTML = tmHTML(s, { cursor: true }); await this.wait(70, gen); } s.typing = ""; s.items.push([arg, 0]); }
+        if (kind === "toggle") s.items[arg][1] = 1;
+        if (kind === "filter") s.filter = arg;
+        if (kind === "fix") s.editing = arg;
+        if (kind === "rename") s.items[arg][0] = arg2;
+        if (kind === "commit") s.editing = -1;
+        view.innerHTML = tmHTML(s, { cursor: true });
+        view.querySelector(".cursor")?.classList.add("click");
+        const li = document.createElement("li"); li.textContent = msg; if (kind === "warn") li.className = "warn"; if (kind === "fix") li.className = "fix";
+        alog.append(li); while (alog.children.length > 5) alog.firstChild.remove();
+        if (kind === "warn") { this.log(`Agent ${i + 1}: ${msg}`); this.finding("Agent 3 needed one repair: the double-click missed, so it tried the label. The other two ran clean."); }
+        if ([0, Math.floor(a.steps.length / 3) + 1, Math.floor(a.steps.length / 2) + 1, a.steps.length - 1].includes(k)) s.frames.push(tmHTML(s));
+        await this.wait(1150 + Math.random() * 300, gen);
+      }
+      tally.className = "tally ok"; tally.lastChild.textContent = "replays locally";
+      this.log(`Agent ${i + 1} finished: “${a.goal}”`);
+    };
+    await Promise.all(AGENTS.map((_, i) => agentRun(i)));
+    this.end("flow-runs", "3 flows ready for review");
+
+    /* Gate 1: flows */
+    const frames = (i) => states[i].frames.slice(0, 4).map((f) => `<span class="fr" data-ui>${f}</span>`).join("");
+    this.finding("3 flows replayed in local Chrome. Nothing is filmed until you approve them.");
+    await this.gate("gate-flows", "Review flows", "Pick what gets filmed. These are the frames each flow reached when it replayed.",
+      `<div class="rv">${AGENTS.map((a, i) => `<label class="rv-row"><input class="chk" type="checkbox" checked data-pick><span><b>${esc(a.goal)}</b><small>${fmt(FLOW_S[i])} · ${a.steps.length} steps · judge score ${JUDGE[i]}</small></span><span class="frames">${frames(i)}</span></label>`).join("")}</div>`,
+      "Approve 3 flows", gen, {
+        extra: `<label class="sr" for="another-${this.autopilot ? "a" : "b"}">Describe another flow</label><input id="another-${this.autopilot ? "a" : "b"}" placeholder="Describe another flow, like “clear the completed todos”"><button type="button" class="ab ab-f2" data-add>Send to an agent</button>`,
+        after: (btn) => {
+          const picks = $$("[data-pick]", this.root);
+          picks.forEach((p) => p.addEventListener("change", () => { p.closest(".rv-row").classList.toggle("off", !p.checked); const n = picks.filter((x) => x.checked).length; btn.firstChild.textContent = `Approve ${n} flow${n === 1 ? "" : "s"} `; btn.disabled = n === 0; }));
+          this.q("[data-add]").addEventListener("click", () => { const inp = this.q(".rv-foot input"); const t = inp.value.trim(); if (!t) { inp.focus(); return; } this.log(`Sent to a fourth agent: “${t}”`); inp.value = ""; inp.placeholder = "Sent. A fourth agent is trying it now."; });
+        },
+      });
+    const picked = $$("[data-pick]", this.root).map((p, i) => (p.checked ? i : -1)).filter((i) => i >= 0);
+    this.picked = picked.length || 3; const use = picked.length ? picked : [0, 1, 2];
+    this.log(`Approved ${this.picked} flows`); this.metaUpd();
+
+    /* Record */
+    this.begin("record", 3400);
+    this.finding(`Filming the ${this.picked} flows you approved${opts.gates ? ". You’ll see the script before any voice is recorded." : "."}`);
+    await this.show({
+      state: "run", title: "Recording", sub: this.sub("record"),
+      lead: `Each approved flow replays in a local Chromium and is filmed in ${MODES[opts.mode]}, at 1920 × 1080.`,
+      body: `<div class="takes">${use.map((i) => `<div class="take"><div class="mon-h"><b>Take ${i + 1}</b><span class="tally live" data-rec><i></i><span>rec</span></span></div><p class="goal">${esc(AGENTS[i].goal)}</p><div class="browser" data-ui><div class="bar"><i></i><i></i><i></i><span>${JOB.url}</span></div>${states[i].frames.at(-1)}</div><div class="bar2"><i data-tb></i></div><p class="fc"><span data-fc>frame 0 of ${FLOW_S[i] * 60}</span><span>${fmt(FLOW_S[i])}</span></p></div>`).join("")}</div>`,
+    });
+    if (gen !== this.gen) return;
+    const tbs = $$("[data-tb]", this.root), fcs = $$("[data-fc]", this.root);
+    if (G && !RM) tbs.forEach((b, j) => G.to(b, { scaleX: 1, duration: 3.2 * (FLOW_S[use[j]] / 9), ease: "none", onUpdate() { fcs[j].textContent = `frame ${Math.round(this.progress() * FLOW_S[use[j]] * 60)} of ${FLOW_S[use[j]] * 60}`; }, onComplete() { const r = fcs[j].closest(".take").querySelector("[data-rec]"); r.className = "tally ok"; r.lastChild.textContent = "kept"; } }));
+    await this.wait(3400, gen);
+    this.end("record", `Recorded ${this.picked} takes at 60 fps`);
+
+    /* Script */
+    const beatsHTML = (extra = "") => `<div class="beats">${BEATS.map((b, i) => `<div class="beat ${b.card ? "card" : ""}" style="flex:${b.s}" data-beat="${i}"><h3><span>${b.name}</span><span>${fmt(b.s)}</span></h3><p data-line>${extra === "type" ? "" : esc(b.line)}</p>${extra === "wave" ? `<div class="wave">${Array.from({ length: 18 }, (_, k) => `<i style="height:${20 + Math.abs(Math.sin(i * 3 + k * 0.9)) * 80}%"></i>`).join("")}</div>` : ""}</div>`).join("")}</div>`;
+    this.begin("script", 2600);
+    this.finding(`Writing a ${fmt(CUT_S)} cut: ${BEATS.length} beats, one per approved flow plus a title and an end card.`);
+    await this.show({ state: "run", title: "Writing", sub: this.sub("script"), lead: "The storyboard first, then the lines, sized to what each shot can carry.", body: beatsHTML("type") });
+    if (gen !== this.gen) return;
+    const lines = $$("[data-line]", this.root);
+    for (let i = 0; i < BEATS.length; i++) {
+      const words = BEATS[i].line.split(" ");
+      for (let w = 1; w <= words.length; w++) { lines[i].textContent = words.slice(0, w).join(" "); await this.wait(45, gen); }
+      await this.wait(120, gen);
+    }
+    await this.wait(400, gen);
+    this.end("script", `Script written: ${BEATS.length} beats, ${fmt(CUT_S)}`);
+
+    /* Gate 2: script */
+    this.finding("The script is ready. Approve it and the voice is recorded next.");
+    await this.gate("gate-script", "Review the script", "Read it as it will be heard. Ask for a change in plain words, or approve it.", beatsHTML(), "Approve the script", gen, {
+      extra: `<label class="sr" for="sc-${this.autopilot ? "a" : "b"}">Ask for a change to the script</label><input id="sc-${this.autopilot ? "a" : "b"}" placeholder="Ask for a change, like “make the title shorter”">`,
+    });
+    this.log("Script approved");
+
+    /* Voice */
+    if (opts.music) {
+      this.cur = "voice"; this.st.voice = { s: "skipped", a: this.clock, b: this.clock }; this.log("Voice skipped: the music leads"); this.tl();
+    } else {
+      this.begin("voice", 2200);
+      this.finding(`Recording ${BEATS.length * (opts.hindi ? 2 : 1)} clips with word timings, so every caption lights up on its word.`);
+      await this.show({ state: "run", title: "Voicing", sub: this.sub("voice"), lead: `${JOB.voice.split(" ")[0]} reads each beat${opts.hindi ? " in English and Hindi" : ""}. Every word gets a timestamp.`, body: beatsHTML("wave") });
+      if (gen !== this.gen) return;
+      if (G && !RM) G.from($$(".wave i", this.root), { scaleY: 0.1, duration: 0.5, ease: "expo.out", stagger: { each: 0.012 } });
+      await this.wait(2200, gen);
+      this.end("voice", `Voice: ${BEATS.length * (opts.hindi ? 2 : 1)} clips, timings checked`);
+    }
+
+    /* Direct */
+    this.begin("direct", 3000);
+    this.finding("Claude Code is improving the baseline edit, then checking it with the motion lint.");
+    await this.show({ state: "run", title: "Directing", sub: this.sub("direct"), lead: "Cuts follow the voice. Shots hold, cards stretch and the spotlight goes where the action is.", body: beatsHTML() + `<ol class="notes" data-notes></ol>` });
+    if (gen !== this.gen) return;
+    const notes = this.q("[data-notes]");
+    for (const [n, t] of NOTES) { notes.insertAdjacentHTML("beforeend", `<li><span>${esc(n)}</span><span>${t}</span></li>`); await this.wait(650, gen); }
+    this.end("direct", "Director: 2 repair rounds, motion lint passed");
+
+    /* Preview */
+    const screenHTML = `<div class="pv"><div class="screen" data-screen data-ui><span class="tc" data-tc>0:00 / ${fmt(CUT_S)}</span>${states[0].frames.at(-1)}<p class="cap" data-cap></p><span class="prog"><i data-prog style="transform:scaleX(0)"></i></span></div>
+      <ol class="blist">${BEATS.map((b, i) => `<li data-bl="${i}"><time>${fmt(BEATS.slice(0, i).reduce((a, x) => a + x.s, 0))}</time><span>${esc(b.line)}</span></li>`).join("")}</ol></div>`;
+    this.begin("preview", 2200);
+    this.finding("A 540p preview, with captions timed word by word.");
+    await this.show({ state: "run", title: "Previewing", sub: this.sub("preview"), lead: "A quick 540p render so you can watch the whole cut before the full one.", body: screenHTML });
+    if (gen !== this.gen) return;
+    this.play(gen);
+    await this.wait(2200, gen);
+    this.end("preview", `Preview ready: ${fmt(CUT_S)} at 540p`);
+
+    /* Gate 3: preview */
+    this.finding("Watch the preview. Approve it to render every size and language.");
+    await this.gate("gate-preview", "Review the preview", "Describe a change in plain words and the director revises the edit, or approve it.", screenHTML, `Approve and render ${v().length}`, gen, {
+      extra: `<label class="sr" for="pc-${this.autopilot ? "a" : "b"}">Ask the director for a change</label><input id="pc-${this.autopilot ? "a" : "b"}" placeholder="Ask for a change, like “hold longer on the filters”"><button type="button" class="ab ab-f2" data-rev>Send to the director</button>`,
+      after: () => {
+        this.play(gen);
+        this.q("[data-rev]").addEventListener("click", async () => { const inp = this.q(".rv-foot input"); const t = inp.value.trim(); if (!t) { inp.focus(); return; } inp.value = ""; inp.placeholder = "The director is revising the edit…"; this.log(`Change asked: “${t}”`); await sleep(1600); if (inp.isConnected) { inp.placeholder = "Revised and checked. Watch it again."; this.log("Director revised the edit; motion lint passed"); } });
+      },
+    });
+    this.log("Preview approved");
+
+    /* Render */
+    const outs = v();
+    this.begin("render", 3200);
+    this.finding(`Rendering ${outs.length} ${outs.length === 1 ? "video" : "videos"} at 1080p.`);
+    await this.show({ state: "run", title: "Rendering", sub: this.sub("render"), lead: "HyperFrames renders every size and language from the one approved edit.",
+      body: outs.map((x) => `<div class="vr"><span><b>${JOB.host.split(".")[0]}-launch-${x.size.replace(":", "x")}-${x.lang.slice(0, 2).toLowerCase()}.mp4</b><small>${x.size === "16:9" ? "1920 × 1080" : "1080 × 1920"} · ${x.lang}</small></span><span class="bar2"><i data-rb></i></span><span class="pct" data-rp>0%</span></div>`).join("") });
+    if (gen !== this.gen) return;
+    const rbs = $$("[data-rb]", this.root), rps = $$("[data-rp]", this.root);
+    if (G && !RM) rbs.forEach((b, j) => G.to(b, { scaleX: 1, duration: 2.6 + j * 0.25, ease: "power1.inOut", onUpdate() { rps[j].textContent = Math.round(this.progress() * 100) + "%"; } }));
+    else rps.forEach((p) => (p.textContent = "100%"));
+    await this.wait(3200, gen);
+    this.end("render", `Rendered ${outs.length} ${outs.length === 1 ? "video" : "videos"}`);
+
+    /* Done */
+    this.finished = true; this.cur = null;
+    const total = STAGES.reduce((a, [k]) => a + ((this.st[k].b ?? 0) - (this.st[k].a ?? 0)), 0);
+    console.assert(Math.abs(total - this.clock) < 0.01, "stage times should add up to the elapsed time", total, this.clock);
+    this.q("[data-ttl-act]").innerHTML = "";
+    this.finding(`${outs.length} ${outs.length === 1 ? "video" : "videos"} rendered from the real product in ${took(this.clock)}.`);
+    this.log("Job finished");
+    this.metaUpd(); this.tl();
+    await this.show({ state: "done", title: "Ready", clock: fmt(CUT_S), sub: "each video", lead: "Filmed on the real product, cut to the voice, captioned word by word.",
+      body: `<div class="done-grid"><div><div class="outs2">${outs.map((x) => `<div class="outv"><button type="button" data-ui class="th ${x.size === "9:16" ? "v" : "w"}" aria-label="Play the ${x.size} ${x.lang} video"><span class="thf">${states[0].frames.at(-1)}</span><span class="thc">${x.lang === "Hindi" ? "आपकी सूची, सरल।" : esc(BEATS[0].line)}</span></button><span><b>${x.size} · ${x.lang}</b><small>${x.size === "16:9" ? "1920 × 1080" : "1080 × 1920"} · ${fmt(CUT_S)}</small></span></div>`).join("")}</div>
+        <div class="done-act"><button type="button" class="ab ab-f" data-rerun>Re-run on latest UI <span class="arr" aria-hidden="true">→</span></button><a class="ab ab-f2" href="#top">Make another video</a></div></div>
+        <div><h3 class="done-h">In the cut</h3><ol class="blist">${BEATS.map((b, i) => `<li><time>${fmt(BEATS.slice(0, i).reduce((a, x) => a + x.s, 0))}</time><span>${esc(b.line)}</span></li>`).join("")}</ol></div></div>` });
+    this.q("[data-rerun]")?.addEventListener("click", () => this.start());
+    if (this.autopilot) { await this.wait(8000, gen); this.start(); }
+  }
+  async play(gen) {
+    const cap = this.q("[data-cap]"); if (!cap) return;
+    const tc = this.q("[data-tc]"), prog = this.q("[data-prog]"), el = cap;
+    let t0 = 0;
+    while (el.isConnected && gen === this.gen) {
+      for (let i = 0; i < BEATS.length && el.isConnected; i++) {
+        const words = BEATS[i].line.split(" ");
+        cap.innerHTML = words.map((w) => `<span>${esc(w)}</span>`).join(" ");
+        $$("[data-bl]", this.root).forEach((li) => li.classList.toggle("on", +li.dataset.bl === i));
+        const spans = $$("span", cap), per = Math.min(420, (BEATS[i].s * 1000) / words.length / 3);
+        for (let w = 0; w < spans.length && el.isConnected; w++) {
+          spans.forEach((s, k) => s.classList.toggle("on", k === w));
+          const vt = t0 + (BEATS[i].s * (w + 1)) / spans.length;
+          tc.textContent = `${fmt(Math.floor(vt))} / ${fmt(CUT_S)}`; prog.style.transform = `scaleX(${vt / CUT_S})`;
+          await sleep(RM ? 600 : per);
+        }
+        t0 += BEATS[i].s;
+      }
+      t0 = 0;
+    }
+  }
+}
+const SIMS = [];
+// A little of the hero's dust in each field, in the field's own ink.
+function dustFrame(now) {
+  for (const sim of SIMS) {
+    const d = sim.dust; if (!d || !d.c || !d.c.isConnected || !sim.visible) continue;
+    const c = d.c, r = c.getBoundingClientRect();
+    if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
+      c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+      d.dots = Array.from({ length: Math.round((r.width * r.height) / 9000) }, () => ({ x: Math.random() * r.width, y: Math.random() * r.height, z: rand(0.3, 1) }));
+    }
+    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, r.width, r.height);
+    const state = c.parentElement.dataset.state;
+    x.fillStyle = state === "wait" ? "#05060f" : state === "done" ? "#1423b8" : "#ffffff";
+    const t = now * 0.0002;
+    for (const p of d.dots) {
+      if (!RM) { const a = Math.sin(p.x * 0.004 + t) * Math.cos(p.y * 0.005 - t) * 6.28; p.x += Math.cos(a) * 0.25 * p.z; p.y += Math.sin(a) * 0.25 * p.z; }
+      if (p.x < 0) p.x = r.width; if (p.x > r.width) p.x = 0; if (p.y < 0) p.y = r.height; if (p.y > r.height) p.y = 0;
+      x.globalAlpha = 0.12 + 0.3 * p.z; const s = 0.8 + p.z * 1.4; x.fillRect(p.x, p.y, s, s);
+    }
+  }
+  if (!RM) requestAnimationFrame(dustFrame);
+}
+requestAnimationFrame(dustFrame);
+const jobLanding = new JobSim($("#job-landing"), { autopilot: true });
+let jobFull = null;
+
+/* ══════════ Routing: #job shows the app ══════════ */
+const landing = $("#landing"), appView = $("#app-view"), foot = $("#foot");
+function route() {
+  const isJob = location.hash === "#job";
+  landing.hidden = isJob; foot.hidden = isJob; appView.hidden = !isJob;
+  if (isJob) {
+    if (!jobFull) jobFull = new JobSim($("#job-full"), { autopilot: false });
+    lenis ? lenis.scrollTo(0, { immediate: true }) : scrollTo(0, 0);
+  } else {
+    requestAnimationFrame(() => {
+      if (ST) ST.refresh();
+      const target = location.hash && location.hash.length > 1 ? document.getElementById(location.hash.slice(1)) : null;
+      if (target && target !== hero) scrollToEl(target, { immediate: true });
+    });
+  }
+}
+addEventListener("hashchange", route);
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[href^='#']"); if (!a) return;
+  const id = a.getAttribute("href").slice(1);
+  if (id === "job") return;
+  if (location.hash === "#job") return;
+  const el = document.getElementById(id);
+  if (el) { e.preventDefault(); scrollToEl(el); if (a.dataset.to === "hero") setTimeout(() => $("#hero-url").focus({ preventScroll: true }), 1200); }
+});
+
+/* ══════════ Motion layer ══════════ */
+if (G && ST && !RM) {
+  // Entrances, section by section
+  $$(".page > section").forEach((sec) => {
+    const parts = $$("[data-rise]", sec);
+    if (!parts.length) return;
+    G.from(parts, { y: 28, autoAlpha: 0, duration: 0.9, ease: "expo.out", stagger: 0.08, scrollTrigger: { trigger: sec, start: "top 78%", once: true } });
+  });
+  // Switch bands slide in from alternating sides
+  $$(".band").forEach((b, i) => G.from(b.querySelector(".band-in"), { x: i % 2 ? 60 : -60, autoAlpha: 0, duration: 1, ease: "expo.out", scrollTrigger: { trigger: b, start: "top 88%", once: true } }));
+  // Table rows
+  G.from("#modes-t tbody tr, #modes-t tfoot tr", { y: 24, autoAlpha: 0, duration: 0.8, ease: "expo.out", stagger: 0.07, scrollTrigger: { trigger: "#modes", start: "top 70%", once: true } });
+  // CTA: the two lines close in from the edges, the swish draws with the scroll
+  G.fromTo("#cl1", { xPercent: -28 }, { xPercent: 0, ease: "none", scrollTrigger: { trigger: "#start", start: "top bottom", end: "top 20%", scrub: 1 } });
+  G.fromTo("#cl2", { xPercent: 28 }, { xPercent: 0, ease: "none", scrollTrigger: { trigger: "#start", start: "top bottom", end: "top 20%", scrub: 1 } });
+  const cp = $("#cta-path"), cl = cp.getTotalLength();
+  G.fromTo(cp, { strokeDasharray: cl, strokeDashoffset: cl }, { strokeDashoffset: 0, ease: "none", scrollTrigger: { trigger: "#start", start: "top 70%", end: "top top", scrub: 1 } });
+  // Hero drifts up and away as you leave it
+  G.to(".statement", { yPercent: -18, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
+  // The footer wordmark rises as the curtain opens
+  G.from(".foot-mark", { yPercent: 40, ease: "none", scrollTrigger: { trigger: "#start", start: "bottom bottom", end: "bottom top", scrub: true } });
+  // Magnetic buttons
+  $$(".magnet").forEach((m) => {
+    const xTo = G.quickTo(m, "x", { duration: 0.5, ease: "power3.out" }), yTo = G.quickTo(m, "y", { duration: 0.5, ease: "power3.out" });
+    m.addEventListener("pointermove", (e) => { const r = m.getBoundingClientRect(); xTo((e.clientX - r.left - r.width / 2) * 0.22); yTo((e.clientY - r.top - r.height / 2) * 0.3); });
+    m.addEventListener("pointerleave", () => { xTo(0); yTo(0); });
+  });
+} else {
+  const cp = $("#cta-path"); cp.style.strokeDasharray = "none";
+}
+
+/* ══════════ Boot ══════════ */
+function layout() { heroSize(); buildSwish(); filmSize(); moveCaret(); }
+let resizeT;
+addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { layout(); swish.style.strokeDashoffset = 0; if (ST) ST.refresh(); }, 200); });
+const ready = document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, sleep(1500)]) : Promise.resolve();
+ready.then(() => {
+  layout();
+  swish.style.strokeDashoffset = swishLen;
+  setTimeout(() => drawSwish(true), RM ? 0 : 1050);
+  requestAnimationFrame(heroFrame); requestAnimationFrame(filmFrame);
+  route();
+  if (ST) ST.refresh();
+});
+})();
+</script>

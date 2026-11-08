@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import type { Llm } from "./llm";
 import { wordBudget } from "./prompt";
+import { copyIssues } from "./copy";
 import {
   Script,
   type CreativeBrief,
@@ -149,7 +150,7 @@ export async function writeScript(
       tutorial
         ? 'This is a how-to: speak in imperative steps ("Click New project, then name it").'
         : input.led
-          ? "This is a launch film, not a tutorial. Sell outcomes in very few words. Never name clicks, menus, field labels, usernames or typed values; the picture shows those."
+          ? "This is a launch film, not a tutorial. Sell outcomes in very few words. Never name clicks, menus, field labels, usernames or typed values; the picture shows those. Every line must be true of this product and of no other: no stock phrases (\"Ship faster\", \"Build with momentum\", \"Get started\"), no number the product brief doesn't state, and no two lines built the same way."
           : "This is a launch-style video, not a tutorial. Sell outcomes: say what the viewer gets and why it matters. Never narrate clicks, menu names, field labels, usernames or typed values; the picture shows those. Beats without footage are headlines: their line says the headline's idea out loud. Keep lines short and confident; the music and the cuts carry the rest.",
       "Return:",
       input.led
@@ -172,7 +173,11 @@ export async function writeScript(
       timeoutMs: 300_000,
       prompt,
     });
-    let problems = checkScript(draft, storyboard, lang, input.led);
+    // A music-led film's words are all on screen, so they get the copy lint too. Its findings go to the
+    // repair round, but never fail the script: copy that still trips it after one round stands.
+    const lint = (d: Draft) =>
+      input.led ? copyIssues({ titleCard: d.titleCard, hook: d.hook, cta: d.cta, onScreen: d.lines.flatMap((l) => l.onScreen) }, lang, input.product).map((i) => `copy: ${i}`) : [];
+    let problems = [...checkScript(draft, storyboard, lang, input.led), ...lint(draft)];
     if (problems.length) {
       await writeFile(
         join(dir, "previous-script.json"),

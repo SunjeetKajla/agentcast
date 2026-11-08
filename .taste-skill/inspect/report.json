@@ -1,0 +1,3133 @@
+{
+ "url": ".taste-skill/agentcast-redesign.html",
+ "at": "2026-11-07T15:28:11.253Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 12,
+   "filled": [
+    1,
+    0.78,
+    0.78,
+    0.78,
+    0.77,
+    0.77,
+    0.75,
+    1,
+    0.57,
+    0.82,
+    0.67,
+    0.79
+   ],
+   "motion": {
+    "elements": 73,
+    "css": 22,
+    "transitions": 14,
+    "scripted": 37,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 13679,
+     "screens": 15.2,
+     "words": 791,
+     "img": 0,
+     "video": 0,
+     "canvas": 2,
+     "svg": 3,
+     "sections": 9,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 6,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 2,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "link in. video out.",
+     "words": 4,
+     "chars": 19,
+     "lines": 2,
+     "size": 221.8,
+     "vw": 15.4,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.055,
+     "leading": 0.86,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.94,
+     "top": 137,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "link in. video out.",
+     "words": 4,
+     "lines": 2,
+     "size": 221.8,
+     "font": "Schibsted Grotesk"
+    },
+    "headings": [
+     {
+      "text": "link in. video out.",
+      "words": 4,
+      "chars": 19,
+      "lines": 2,
+      "size": 221.8,
+      "vw": 15.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.86,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 137,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Understand",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 106.6,
+      "vw": 7.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.9,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.4,
+      "top": 1077,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Try a link",
+      "words": 3,
+      "chars": 10,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.19,
+      "top": 6170,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Choose what comes out",
+      "words": 4,
+      "chars": 21,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.48,
+      "top": 7334,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Narrate it in Hindi as well.",
+      "words": 6,
+      "chars": 28,
+      "lines": 1,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.41,
+      "top": 7495,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Cut a vertical 9:16 for Reels.",
+      "words": 6,
+      "chars": 30,
+      "lines": 1,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.45,
+      "top": 7648,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Let the music set the pace.",
+      "words": 6,
+      "chars": 27,
+      "lines": 1,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.43,
+      "top": 7837,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Let me approve each gate.",
+      "words": 5,
+      "chars": 25,
+      "lines": 1,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.43,
+      "top": 7990,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Watch the agents work",
+      "words": 4,
+      "chars": 21,
+      "lines": 2,
+      "size": 64,
+      "vw": 4.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.46,
+      "top": 8552,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 2.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.15,
+      "top": 9021,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 2.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.15,
+      "top": 9021,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 2.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.15,
+      "top": 9021,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "Ways to film",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 43.2,
+      "vw": 3,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.22,
+      "top": 9895,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Live",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 43.2,
+      "vw": 3,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.21,
+      "top": 9895,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Studio",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 43.2,
+      "vw": 3,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.21,
+      "top": 9895,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Fallback",
+      "words": 1,
+      "chars": 8,
+      "lines": 1,
+      "size": 43.2,
+      "vw": 3,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.21,
+      "top": 9895,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "60 fps",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 43.2,
+      "vw": 3,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.21,
+      "top": 9938,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "60 fps",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 43.2,
+      "vw": 3,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.21,
+      "top": 9938,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "4–6 fps",
+      "words": 2,
+      "chars": 7,
+      "lines": 1,
+      "size": 43.2,
+      "vw": 3,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.21,
+      "top": 9938,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Your link",
+      "words": 2,
+      "chars": 9,
+      "lines": 1,
+      "size": 158.4,
+      "vw": 11,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 11858,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "or ours?",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 158.4,
+      "vw": 11,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 12544,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 21,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 5,
+     "centered": 5,
+     "medianWords": 2,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Schibsted Grotesk",
+       "share": 0.93,
+       "mono": false
+      },
+      {
+       "family": "Helvetica Neue",
+       "share": 0.07,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      13,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      26,
+      43,
+      52,
+      64,
+      107,
+      158,
+      222
+     ],
+     "sizeCount": 14,
+     "notLoaded": [],
+     "body": {
+      "font": "Schibsted Grotesk",
+      "size": 19,
+      "leading": 1.45,
+      "weight": 400,
+      "tracking": -0.01,
+      "contrast": 20.2
+     },
+     "measureChars": 69,
+     "max": {
+      "size": 221.8,
+      "vw": 15.4,
+      "font": "Schibsted Grotesk",
+      "text": "link in."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.07,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#05060f",
+     "bodyBgHsl": {
+      "h": 234,
+      "s": 0.5,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#1423b8",
+       "top": 8,
+       "hsl": {
+        "h": 235,
+        "s": 0.8,
+        "l": 0.4
+       }
+      },
+      {
+       "color": "#05060f",
+       "top": 908,
+       "hsl": {
+        "h": 234,
+        "s": 0.5,
+        "l": 0.04
+       }
+      },
+      {
+       "color": "#f7dd47",
+       "top": 5948,
+       "hsl": {
+        "h": 51,
+        "s": 0.92,
+        "l": 0.62
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 8,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.39
+      },
+      {
+       "color": "#a3a9cc",
+       "share": 0.27
+      },
+      {
+       "color": "#05060f",
+       "share": 0.14
+      },
+      {
+       "color": "#4b56c9",
+       "share": 0.08
+      },
+      {
+       "color": "#1423b8",
+       "share": 0.03
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#1423b8"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 15,
+     "inHero": 1,
+     "radius": 0,
+     "height": 57,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Make the video →"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 3,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 2,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 3,
+       "iconTopped": true,
+       "rounded": false,
+       "top": 8903
+      },
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 10086
+      },
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 10241
+      }
+     ]
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 0.98
+     },
+     {
+      "type": "svg",
+      "ratio": 0.98
+     },
+     {
+      "type": "svg",
+      "ratio": 0.23
+     }
+    ],
+    "nav": {
+     "links": 4,
+     "fixed": false,
+     "height": 26,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "schibsted grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 13679,
+    "margins": {
+     "left": 40,
+     "right": 40
+    },
+    "sections": [
+     {
+      "sel": "section#top.hero",
+      "tag": "section",
+      "top": 8,
+      "height": 900,
+      "words": 40,
+      "media": 2,
+      "middle": 0,
+      "heading": {
+       "text": "link in.",
+       "size": 222,
+       "tag": "h1"
+      },
+      "left": 40,
+      "right": 40,
+      "textLeft": 40,
+      "textRight": 40,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how.film",
+      "tag": "section",
+      "top": 908,
+      "height": 5040,
+      "words": 56,
+      "media": 1,
+      "middle": 13,
+      "heading": {
+       "text": "Understand",
+       "size": 107,
+       "tag": "h3"
+      },
+      "left": 40,
+      "right": 40,
+      "textLeft": 40,
+      "textRight": 40,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": true
+     },
+     {
+      "sel": "section#try.try",
+      "tag": "section",
+      "top": 5948,
+      "height": 1214,
+      "words": 149,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Try a link",
+       "size": 64,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 40,
+      "textLeft": 40,
+      "textRight": 47,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#outputs.switches",
+      "tag": "section",
+      "top": 7162,
+      "height": 1208,
+      "words": 92,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Choose what comes out",
+       "size": 64,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 40,
+      "textLeft": 40,
+      "textRight": 44,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#watch.watch",
+      "tag": "section",
+      "top": 8370,
+      "height": 1353,
+      "words": 203,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Watch the agents work",
+       "size": 64,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 60,
+      "textLeft": 40,
+      "textRight": 66,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#modes.modes",
+      "tag": "section",
+      "top": 9722,
+      "height": 971,
+      "words": 112,
+      "media": 0,
+      "middle": 122,
+      "heading": {
+       "text": "Ways to film",
+       "size": 43,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 60,
+      "textLeft": 40,
+      "textRight": 66,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#faq.faq",
+      "tag": "section",
+      "top": 10694,
+      "height": 1133,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#start.cta.wrap",
+      "tag": "section",
+      "top": 11826,
+      "height": 900,
+      "words": 25,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Your link",
+       "size": 158,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 40,
+      "textLeft": 244,
+      "textRight": 271,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer#foot.foot.wrap",
+      "tag": "footer",
+      "top": 8,
+      "height": 900,
+      "words": 67,
+      "media": 0,
+      "middle": 135,
+      "heading": {
+       "text": "The page",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 40,
+      "right": 40,
+      "textLeft": 40,
+      "textRight": 40,
+      "fullBleed": false,
+      "footer": true,
+      "hero": true,
+      "continues": false,
+      "pinned": true
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "link in. video out.",
+      "size": 222,
+      "top": 137,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 40,
+      "n": 10
+     },
+     {
+      "x": 361,
+      "n": 1
+     },
+     {
+      "x": 744,
+      "n": 1
+     },
+     {
+      "x": 866,
+      "n": 1
+     },
+     {
+      "x": 936,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 14,
+    "bodySize": 19,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 12,
+   "filled": [
+    1,
+    0.68,
+    0.69,
+    0.68,
+    0.67,
+    0.68,
+    0.78,
+    0.84,
+    0.46,
+    0.79,
+    0.78,
+    0.93
+   ],
+   "motion": {
+    "elements": 75,
+    "css": 15,
+    "transitions": 14,
+    "scripted": 46,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 14232,
+     "screens": 13.9,
+     "words": 844,
+     "img": 0,
+     "video": 0,
+     "canvas": 2,
+     "svg": 3,
+     "sections": 9,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 6,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 2,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "link in. video out.",
+     "words": 4,
+     "chars": 19,
+     "lines": 2,
+     "size": 118.3,
+     "vw": 15.4,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.055,
+     "leading": 0.86,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.94,
+     "top": 148,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "link in. video out.",
+     "words": 4,
+     "lines": 2,
+     "size": 118.3,
+     "font": "Schibsted Grotesk"
+    },
+    "headings": [
+     {
+      "text": "link in. video out.",
+      "words": 4,
+      "chars": 19,
+      "lines": 2,
+      "size": 118.3,
+      "vw": 15.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.86,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 148,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Understand",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 56.8,
+      "vw": 7.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.9,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.4,
+      "top": 1199,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Try a link",
+      "words": 3,
+      "chars": 10,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.25,
+      "top": 6830,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Choose what comes out",
+      "words": 4,
+      "chars": 21,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.64,
+      "top": 7901,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Narrate it in Hindi as well.",
+      "words": 6,
+      "chars": 28,
+      "lines": 1,
+      "size": 28,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.72,
+      "top": 8144,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Cut a vertical 9:16 for Reels.",
+      "words": 6,
+      "chars": 30,
+      "lines": 1,
+      "size": 28,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.73,
+      "top": 8321,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Let the music set the pace.",
+      "words": 6,
+      "chars": 27,
+      "lines": 1,
+      "size": 28,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.73,
+      "top": 8533,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Let me approve each gate.",
+      "words": 5,
+      "chars": 25,
+      "lines": 1,
+      "size": 28,
+      "vw": 3.6,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.64,
+      "top": 8710,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Watch the agents work",
+      "words": 4,
+      "chars": 21,
+      "lines": 2,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.44,
+      "top": 9231,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Trying flows",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 26,
+      "vw": 3.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.035,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.62,
+      "top": 9454,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 4.9,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.13,
+      "top": 9674,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 4.9,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.13,
+      "top": 9674,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 4.9,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.13,
+      "top": 9674,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "Ways to film",
+      "words": 3,
+      "chars": 12,
+      "lines": 2,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.21,
+      "top": 10385,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Live",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.18,
+      "top": 10385,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Studio",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.18,
+      "top": 10385,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Fallback",
+      "words": 1,
+      "chars": 8,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.18,
+      "top": 10385,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "60 fps",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.18,
+      "top": 10415,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "60 fps",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.18,
+      "top": 10415,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "4–6 fps",
+      "words": 2,
+      "chars": 7,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.18,
+      "top": 10415,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Before you paste a link",
+      "words": 5,
+      "chars": 23,
+      "lines": 2,
+      "size": 44,
+      "vw": 5.7,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.05,
+      "leading": 0.92,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.44,
+      "top": 11395,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Your link",
+      "words": 2,
+      "chars": 9,
+      "lines": 1,
+      "size": 84.5,
+      "vw": 11,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 12208,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "or ours?",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 84.5,
+      "vw": 11,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 13092,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 23,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 5,
+     "centered": 5,
+     "medianWords": 2,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Schibsted Grotesk",
+       "share": 0.94,
+       "mono": false
+      },
+      {
+       "family": "Helvetica Neue",
+       "share": 0.06,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      13,
+      15,
+      16,
+      17,
+      18,
+      20,
+      23,
+      28,
+      30,
+      44,
+      45,
+      57,
+      85,
+      118
+     ],
+     "sizeCount": 14,
+     "notLoaded": [],
+     "body": {
+      "font": "Schibsted Grotesk",
+      "size": 17,
+      "leading": 1.45,
+      "weight": 500,
+      "tracking": -0.011,
+      "contrast": 1
+     },
+     "measureChars": 56,
+     "max": {
+      "size": 118.3,
+      "vw": 15.4,
+      "font": "Schibsted Grotesk",
+      "text": "link in."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.05,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#05060f",
+     "bodyBgHsl": {
+      "h": 234,
+      "s": 0.5,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#1423b8",
+       "top": 8,
+       "hsl": {
+        "h": 235,
+        "s": 0.8,
+        "l": 0.4
+       }
+      },
+      {
+       "color": "#05060f",
+       "top": 988,
+       "hsl": {
+        "h": 234,
+        "s": 0.5,
+        "l": 0.04
+       }
+      },
+      {
+       "color": "#f7dd47",
+       "top": 6722,
+       "hsl": {
+        "h": 51,
+        "s": 0.92,
+        "l": 0.62
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 8,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.33
+      },
+      {
+       "color": "#a3a9cc",
+       "share": 0.21
+      },
+      {
+       "color": "#c3c9f4",
+       "share": 0.19
+      },
+      {
+       "color": "#05060f",
+       "share": 0.11
+      },
+      {
+       "color": "#4b56c9",
+       "share": 0.07
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#1423b8"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 11,
+     "inHero": 1,
+     "radius": 0,
+     "height": 52,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Make the video →"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 3,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 2,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 3,
+       "iconTopped": true,
+       "rounded": false,
+       "top": 9546
+      },
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 10568
+      },
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 10848
+      }
+     ]
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 0.94
+     },
+     {
+      "type": "svg",
+      "ratio": 0.94
+     },
+     {
+      "type": "svg",
+      "ratio": 0.13
+     }
+    ],
+    "nav": {
+     "links": 4,
+     "fixed": false,
+     "height": 26,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "schibsted grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 14232,
+    "margins": {
+     "left": 25,
+     "right": 25
+    },
+    "sections": [
+     {
+      "sel": "section#top.hero",
+      "tag": "section",
+      "top": 8,
+      "height": 980,
+      "words": 40,
+      "media": 2,
+      "middle": 0,
+      "heading": {
+       "text": "link in.",
+       "size": 118,
+       "tag": "h1"
+      },
+      "left": 25,
+      "right": 25,
+      "textLeft": 25,
+      "textRight": 25,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how.film",
+      "tag": "section",
+      "top": 988,
+      "height": 5734,
+      "words": 56,
+      "media": 1,
+      "middle": 12,
+      "heading": {
+       "text": "Understand",
+       "size": 57,
+       "tag": "h3"
+      },
+      "left": 25,
+      "right": 25,
+      "textLeft": 25,
+      "textRight": 25,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": true
+     },
+     {
+      "sel": "section#try.try",
+      "tag": "section",
+      "top": 6722,
+      "height": 1083,
+      "words": 149,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Try a link",
+       "size": 45,
+       "tag": "h2"
+      },
+      "left": 25,
+      "right": 25,
+      "textLeft": 25,
+      "textRight": 52,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#outputs.switches",
+      "tag": "section",
+      "top": 7805,
+      "height": 1236,
+      "words": 92,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Choose what comes out",
+       "size": 45,
+       "tag": "h2"
+      },
+      "left": 25,
+      "right": 25,
+      "textLeft": 25,
+      "textRight": 67,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#watch.watch",
+      "tag": "section",
+      "top": 9041,
+      "height": 1248,
+      "words": 183,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Watch the agents work",
+       "size": 45,
+       "tag": "h2"
+      },
+      "left": 25,
+      "right": 0,
+      "textLeft": 25,
+      "textRight": -19,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#modes.modes",
+      "tag": "section",
+      "top": 10289,
+      "height": 1011,
+      "words": 112,
+      "media": 0,
+      "middle": 80,
+      "heading": {
+       "text": "Ways to film",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 25,
+      "right": 39,
+      "textLeft": 25,
+      "textRight": 39,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#faq.faq",
+      "tag": "section",
+      "top": 11299,
+      "height": 877,
+      "words": 209,
+      "media": 0,
+      "middle": 16,
+      "heading": {
+       "text": "Before you paste a link",
+       "size": 44,
+       "tag": "h2"
+      },
+      "left": 25,
+      "right": 27,
+      "textLeft": 25,
+      "textRight": 27,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#start.cta.wrap",
+      "tag": "section",
+      "top": 12176,
+      "height": 1024,
+      "words": 25,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Your link",
+       "size": 84,
+       "tag": "h2"
+      },
+      "left": 25,
+      "right": 25,
+      "textLeft": 113,
+      "textRight": 113,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer#foot.foot.wrap",
+      "tag": "footer",
+      "top": 8,
+      "height": 1024,
+      "words": 67,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "The page",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 25,
+      "right": 25,
+      "textLeft": 25,
+      "textRight": 25,
+      "fullBleed": false,
+      "footer": true,
+      "hero": true,
+      "continues": false,
+      "pinned": true
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "link in. video out.",
+      "size": 118,
+      "top": 148,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 25,
+      "n": 14
+     },
+     {
+      "x": 264,
+      "n": 6
+     },
+     {
+      "x": 408,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 21,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 12,
+   "filled": [
+    1,
+    0.83,
+    0.89,
+    0.85,
+    0.85,
+    0.84,
+    0.85,
+    1,
+    0.92,
+    0.53,
+    0.86,
+    0.81
+   ],
+   "motion": {
+    "elements": 62,
+    "css": 11,
+    "transitions": 14,
+    "scripted": 37,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 13435,
+     "screens": 15.9,
+     "words": 698,
+     "img": 0,
+     "video": 0,
+     "canvas": 2,
+     "svg": 3,
+     "sections": 9,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 6,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 2,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 1,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "link in. video out.",
+     "words": 4,
+     "chars": 19,
+     "lines": 2,
+     "size": 67.1,
+     "vw": 17.2,
+     "font": "Schibsted Grotesk",
+     "weight": 800,
+     "tracking": -0.055,
+     "leading": 0.9,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.88,
+     "top": 157,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "link in. video out.",
+     "words": 4,
+     "lines": 2,
+     "size": 67.1,
+     "font": "Schibsted Grotesk"
+    },
+    "headings": [
+     {
+      "text": "link in. video out.",
+      "words": 4,
+      "chars": 19,
+      "lines": 2,
+      "size": 67.1,
+      "vw": 17.2,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.9,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 157,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Understand",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 54.6,
+      "vw": 14,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.9,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 1450,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Try a link",
+      "words": 3,
+      "chars": 10,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.36,
+      "top": 6012,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Choose what comes out",
+      "words": 4,
+      "chars": 21,
+      "lines": 2,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 7440,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Narrate it in Hindi as well.",
+      "words": 6,
+      "chars": 28,
+      "lines": 2,
+      "size": 25,
+      "vw": 6.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.5,
+      "top": 7697,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Cut a vertical 9:16 for Reels.",
+      "words": 6,
+      "chars": 30,
+      "lines": 2,
+      "size": 25,
+      "vw": 6.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.5,
+      "top": 7830,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Let the music set the pace.",
+      "words": 6,
+      "chars": 27,
+      "lines": 2,
+      "size": 25,
+      "vw": 6.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.5,
+      "top": 8018,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Let me approve each gate.",
+      "words": 5,
+      "chars": 25,
+      "lines": 2,
+      "size": 25,
+      "vw": 6.4,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.5,
+      "top": 8151,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Watch the agents work",
+      "words": 4,
+      "chars": 21,
+      "lines": 2,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 8633,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Trying flows",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 26,
+      "vw": 6.7,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.035,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.81,
+      "top": 9068,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "todos",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 37.4,
+      "vw": 9.6,
+      "font": "Helvetica Neue",
+      "weight": 200,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.67,
+      "top": 9299,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "Ways to film",
+      "words": 3,
+      "chars": 12,
+      "lines": 2,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.38,
+      "top": 9903,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Live",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.33,
+      "top": 9903,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Studio",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.33,
+      "top": 9903,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Fallback",
+      "words": 1,
+      "chars": 8,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.04,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.33,
+      "top": 9903,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "60 fps",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.33,
+      "top": 9933,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "60 fps",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.33,
+      "top": 9933,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "4–6 fps",
+      "words": 2,
+      "chars": 7,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Schibsted Grotesk",
+      "weight": 400,
+      "tracking": -0.04,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.33,
+      "top": 9933,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Your link",
+      "words": 2,
+      "chars": 9,
+      "lines": 1,
+      "size": 62.4,
+      "vw": 16,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 11771,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "or ours?",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 62.4,
+      "vw": 16,
+      "font": "Schibsted Grotesk",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 12496,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 20,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 5,
+     "centered": 3,
+     "medianWords": 2,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Schibsted Grotesk",
+       "share": 0.98,
+       "mono": false
+      },
+      {
+       "family": "Helvetica Neue",
+       "share": 0.02,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      13,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      25,
+      30,
+      33,
+      55,
+      62,
+      67
+     ],
+     "sizeCount": 13,
+     "notLoaded": [],
+     "body": {
+      "font": "Schibsted Grotesk",
+      "size": 17,
+      "leading": 1.3,
+      "weight": 400,
+      "tracking": -0.02,
+      "contrast": 10.7
+     },
+     "measureChars": 40,
+     "max": {
+      "size": 67.1,
+      "vw": 17.2,
+      "font": "Schibsted Grotesk",
+      "text": "link in."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.07,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#05060f",
+     "bodyBgHsl": {
+      "h": 234,
+      "s": 0.5,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#1423b8",
+       "top": 8,
+       "hsl": {
+        "h": 235,
+        "s": 0.8,
+        "l": 0.4
+       }
+      },
+      {
+       "color": "#05060f",
+       "top": 852,
+       "hsl": {
+        "h": 234,
+        "s": 0.5,
+        "l": 0.04
+       }
+      },
+      {
+       "color": "#f7dd47",
+       "top": 5916,
+       "hsl": {
+        "h": 51,
+        "s": 0.92,
+        "l": 0.62
+       }
+      },
+      {
+       "color": "#0d0f1f",
+       "top": 6398,
+       "hsl": {
+        "h": 233,
+        "s": 0.41,
+        "l": 0.09
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 8,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.42
+      },
+      {
+       "color": "#a3a9cc",
+       "share": 0.25
+      },
+      {
+       "color": "#05060f",
+       "share": 0.17
+      },
+      {
+       "color": "#4b56c9",
+       "share": 0.1
+      },
+      {
+       "color": "#1423b8",
+       "share": 0.03
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#1423b8"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 10,
+     "inHero": 1,
+     "radius": 0,
+     "height": 52,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Make the video →"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 1,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 2,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 3,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 9181
+      },
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 10086
+      },
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 10391
+      }
+     ]
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 0.95
+     },
+     {
+      "type": "svg",
+      "ratio": 0.95
+     }
+    ],
+    "nav": {
+     "links": 2,
+     "fixed": false,
+     "height": 26,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "schibsted grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 13435,
+    "margins": {
+     "left": 24,
+     "right": 24
+    },
+    "sections": [
+     {
+      "sel": "section#top.hero",
+      "tag": "section",
+      "top": 8,
+      "height": 844,
+      "words": 34,
+      "media": 2,
+      "middle": 0,
+      "heading": {
+       "text": "link in.",
+       "size": 67,
+       "tag": "h1"
+      },
+      "left": 8,
+      "right": 8,
+      "textLeft": 24,
+      "textRight": 24,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how.film",
+      "tag": "section",
+      "top": 852,
+      "height": 5064,
+      "words": 43,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Understand",
+       "size": 55,
+       "tag": "h3"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 37,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": true
+     },
+     {
+      "sel": "section#try.try",
+      "tag": "section",
+      "top": 5916,
+      "height": 1428,
+      "words": 149,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Try a link",
+       "size": 33,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 32,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#outputs.switches",
+      "tag": "section",
+      "top": 7344,
+      "height": 1192,
+      "words": 92,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Choose what comes out",
+       "size": 33,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 37,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#watch.watch",
+      "tag": "section",
+      "top": 8537,
+      "height": 1270,
+      "words": 130,
+      "media": 0,
+      "middle": 152,
+      "heading": {
+       "text": "Watch the agents work",
+       "size": 33,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 0,
+      "textLeft": 24,
+      "textRight": -220,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#modes.modes",
+      "tag": "section",
+      "top": 9807,
+      "height": 1036,
+      "words": 112,
+      "media": 0,
+      "middle": 164,
+      "heading": {
+       "text": "Ways to film",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 0,
+      "textLeft": 24,
+      "textRight": -304,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#faq.faq",
+      "tag": "section",
+      "top": 10842,
+      "height": 897,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#start.cta.wrap",
+      "tag": "section",
+      "top": 11739,
+      "height": 844,
+      "words": 25,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Your link",
+       "size": 62,
+       "tag": "h2"
+      },
+      "left": 7,
+      "right": 18,
+      "textLeft": 7,
+      "textRight": 18,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer#foot.foot.wrap",
+      "tag": "footer",
+      "top": 8,
+      "height": 844,
+      "words": 67,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "The page",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 31,
+      "fullBleed": false,
+      "footer": true,
+      "hero": true,
+      "continues": false,
+      "pinned": true
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "link in. video out.",
+      "size": 67,
+      "top": 157,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 24,
+      "n": 15
+     }
+    ],
+    "leftBlocks": 15,
+    "bodySize": 17,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "icon-cards",
+   "width": 1440,
+   "message": "1 row(s) of identical cards each topped with a small icon (3 cards).",
+   "fix": "Replace with one composed section from the direction: a narrative split, a list set in large type, or real imagery per item.",
+   "alsoAt": [
+    768
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "size-count",
+   "width": 1440,
+   "message": "14 different font sizes (13, 15, 16, 17, 18, 19, 20, 26, 43, 52, 64, 107, 158, 222).",
+   "fix": "A page needs about five: display, heading, lead, body, small.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "few-pictures",
+   "width": 1440,
+   "message": "Only 2 picture(s) on the page (0 photographs, footage or raster images, 2 interface fragments). Drawings in SVG do not count.",
+   "fix": "Find real pictures of the subject's world with scripts/assets.mjs (photographs, archival images, maps, engravings, footage), download them to assets/ and give them room: a hero picture, one per section that has a subject, a full-width band. At least four, usually six to twelve."
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "WARN",
+   "id": "grey-body",
+   "width": 768,
+   "message": "The running text is a soft grey on its ground (1:1).",
+   "fix": "Set body copy in the full ink (7:1 or more). Keep the muted ink for secondary notes; pages read thin and unfinished when everything is grey."
+  },
+  {
+   "level": "WARN",
+   "id": "card-rows",
+   "width": 390,
+   "message": "3 rows of identical boxed cards.",
+   "fix": "Vary the composition; not every section is a card grid."
+  },
+  {
+   "level": "WARN",
+   "id": "side-scroll",
+   "width": 390,
+   "message": "1 row(s) scroll sideways with content past their edge.",
+   "fix": "Jurors and most visitors read a row cut at the edge as clipped, not as scrollable. Wrap it onto more lines, or end it inside the grid."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/desktop-fold.jpg",
+   "pages": [
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/desktop-page-01.jpg",
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/desktop-page-02.jpg",
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/desktop-page-03.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/tablet-fold.jpg",
+   "pages": [
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/tablet-page-01.jpg",
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/tablet-page-02.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/mobile-fold.jpg",
+   "pages": [
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/mobile-page-01.jpg",
+    "/home/kaustav/hackathon/agentcast/.taste-skill/inspect/mobile-page-02.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

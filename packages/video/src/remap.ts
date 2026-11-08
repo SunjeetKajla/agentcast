@@ -135,11 +135,12 @@ export function remapEdl(
     if (seg.kind === "statement" || seg.kind === "stat" || seg.kind === "scene") return [seg];
     if (seg.kind === "primitive") {
       const p = seg.primitive;
-      if (p.type === "label" || p.type === "swap" || p.type === "ticker") return [seg];
+      // Moves without footage carry over as they are; a product output stays the one first recorded.
+      if (p.type === "label" || p.type === "swap" || p.type === "ticker" || p.type === "wall" || p.type === "orbit" || p.type === "output") return [seg];
       if (!kept(p.flowId)) return [];
       const map = timeMap(retakes[p.flowId]!, p.flowId);
       const length = retakes[p.flowId]!.after.duration;
-      if (p.type === "build") return [{ ...seg, primitive: { ...p, ...{ at: span(map, p.at, p.at, length).in } } }];
+      if (p.type === "build" || p.type === "pill") return [{ ...seg, primitive: { ...p, ...{ at: span(map, p.at, p.at, length).in } } }];
       return [{ ...seg, primitive: { ...p, ...span(map, p.in, p.out, length) } }];
     }
     if (seg.kind === "montage") {

@@ -1,6 +1,10 @@
 import { access, copyFile, mkdir } from "node:fs/promises";
 import { z } from "zod";
 import {
+  ArtDirection,
+  BeatSheet,
+  BrandKit,
+  ProductOutputs,
   Brand,
   CreativeBrief,
   Edl,
@@ -23,18 +27,17 @@ import {
 } from "@agentcast/director";
 import {
   baselineEdl,
-  beatsOf,
+  beatSheetOf,
   filmSeconds,
-  ledEdl,
-  ledStyle,
   loadMusicLibrary,
   musicDir,
   musicStyle,
   pickTrack,
+  planLedFilm,
   planMusic,
+  planParts,
   premixMusic,
   renderStills,
-  shotContent,
   snapToGrid,
   stillMoments,
 } from "@agentcast/video";
@@ -67,6 +70,8 @@ export function makeDirect(
   return async (ctx) => {
     const decision = await ctx.decision("gate-preview");
     const revise = decision?.action === "revise" ? decision.revise : undefined;
+    // A revision of one part: named, or the part the preview was playing at the second the person marked.
+    const scene = decision?.action === "revise" ? (decision.scene ?? (decision.at !== undefined ? await partAt(ctx, decision.at) : undefined)) : undefined;
     if (fixtureStages()) {
       if (revise) ctx.log(`Revising: ${revise}`);
       ctx.emit({
@@ -118,7 +123,7 @@ export function makeDirect(
     } else {
       ctx.log(
         revising
-          ? `Revising the edit: "${revise}"`
+          ? `Revising ${scene ? `"${scene}"` : "the edit"}: "${revise}"`
           : "The director is planning the edit (Claude Code, a few minutes).",
       );
       let turns = 0;
@@ -130,6 +135,8 @@ export function makeDirect(
             ? {
                 revise,
                 ...(state.sessionId ? { resume: state.sessionId } : {}),
+                // One part is a small job: a short turn, so a stuck one costs minutes, not eight.
+                ...(scene ? { scene, timeoutMs: 4 * 60_000 } : {}),
               }
             : {}),
           renderStills:
@@ -174,6 +181,12 @@ export function makeDirect(
       if (snapped.moved) ctx.log(`Moved ${snapped.moved} part(s) back onto the beat.`, "warn");
       edl = snapped.edl;
       await premixLedMusic(ctx, edl);
+      // The beat sheet again, for the edit as it now is: the director may have moved things.
+      const planned = await optional(ctx.read(jobPaths.beatSheet, BeatSheet));
+      if (planned) {
+        const beat = 60 / (edl.style.music.bpm ?? 120);
+        await ctx.write(jobPaths.beatSheet, BeatSheet, beatSheetOf(edl, { skeletonId: planned.skeletonId, thesis: planned.thesis, grid: { beat, bar: beat * 4 }, dropped: planned.dropped }));
+      }
     }
     await ctx.write(jobPaths.edl, Edl, edl);
     const count = (kind: string) =>
@@ -184,6 +197,16 @@ export function makeDirect(
   };
 }
 export const direct = makeDirect();
+
+/** The part of the current edit playing at second `at` of the preview: a segment id, "intro" or "outro". */
+async function partAt(ctx: StageContext, at: number): Promise<string | undefined> {
+  const edl = await optional(ctx.read(jobPaths.edl, Edl));
+  if (!edl) return undefined;
+  const { parts } = planParts(edl, []);
+  const part = parts.find((p) => at * edl.fps >= p.from && at * edl.fps < p.from + p.frames) ?? parts.at(-1);
+  if (!part) return undefined;
+  return part.kind === "segment" ? edl.segments[part.index]!.id : part.kind;
+}
 
 /** The music as this film plays it: entered at a strong bar, leaving through the track's own ending. */
 async function premixLedMusic(ctx: StageContext, edl: Edl) {
@@ -242,29 +265,51 @@ async function workspaceFor(ctx: StageContext) {
     );
   const library = await loadMusicLibrary().catch(() => undefined);
   const led = musicLed(ctx.config);
-  // The music bed (PRD §9.7.2): the library's best fit for the personality and grammar. A music-led
-  // film needs it first: the track's grid sets every length. No library, no music.
-  const track = pickTrack(library, {
-    personality: creative.personality,
-    edit: led ? "trailer" : storyboard.edit,
-    seconds: creative.targetSeconds,
-    seed: ctx.jobId,
-    led,
-  });
   const scriptsByLang = Object.fromEntries(scripts.map((s) => [s.lang, s]));
-  const content = led ? await shotContent(ctx.path(jobPaths.recording("desktop")), storyboard, timeline, ctx.signal) : undefined;
-  const baseline = led
-    ? ledEdl({
-        ...(content ? { content } : {}),
+  // A music-led film: the track, the skeleton and the edit, planned the way the script stage planned its
+  // beat sheet, now on the approved script (PRD §9.7.7).
+  const direction = led ? await optional(ctx.read(jobPaths.artDirection, ArtDirection)) : undefined;
+  const kit = led ? await optional(ctx.read(jobPaths.brandKit, BrandKit)) : undefined;
+  const outputs = led ? await optional(ctx.read(jobPaths.outputs, ProductOutputs)) : undefined;
+  const film = led
+    ? await planLedFilm({
+        ...(direction ? { direction } : {}),
+        root: ctx.dir,
+        ...(kit ? { kit } : {}),
+        ...(outputs ? { outputs } : {}),
+        thirdPartyLogos: ctx.config.thirdPartyLogos === true,
+        recording: ctx.path(jobPaths.recording("desktop")),
         timeline,
         storyboard,
         scripts: scriptsByLang,
-        personality: creative.personality,
-        targetSeconds: creative.targetSeconds,
-        ...(track ? { music: ledStyle(track), grid: beatsOf(track) } : {}),
-        ...(product?.keyTerms ? { terms: product.keyTerms } : {}),
+        creative,
+        ...(product ? { product } : {}),
         ...(brand ? { brand } : {}),
+        seed: ctx.jobId,
+        site: ctx.config.url,
+        signal: ctx.signal,
       })
+    : undefined;
+  // The music bed (PRD §9.7.2): the library's best fit for the personality and grammar. A music-led
+  // film picked it first: the track's grid sets every length. No library, no music.
+  const track = film
+    ? film.track
+    : pickTrack(library, {
+        personality: creative.personality,
+        edit: storyboard.edit,
+        seconds: creative.targetSeconds,
+        seed: ctx.jobId,
+      });
+  if (film) {
+    ctx.log(`Skeleton: ${film.plan.skeleton.name} (${film.plan.skeleton.id}).`);
+    await ctx.write(
+      jobPaths.beatSheet,
+      BeatSheet,
+      beatSheetOf(film.plan.edl, { skeletonId: film.plan.skeleton.id, thesis: creative.summary, grid: film.grid, dropped: film.plan.dropped }),
+    );
+  }
+  const baseline = film
+    ? film.plan.edl
     : baselineEdl({
         timeline,
         storyboard,

@@ -47,6 +47,33 @@ export function contentBox(gray: Uint8Array, w: number, h: number): { box: Rect;
   return { box: [x0 / w, y0 / h, (x1 - x0 + 1) / w, (y1 - y0 + 1) / h], fill: active / (w * (h - top)) };
 }
 
+/**
+ * The half-width, half-height window with the most content in it, as shares of the frame: where to look
+ * when content covers the whole page. Slides in steps of a twentieth of the frame, below the nav band.
+ */
+export function busiestRegion(gray: Uint8Array, w: number, h: number): Rect {
+  const sorted = [...gray].sort((a, b) => a - b);
+  const background = sorted[sorted.length >> 1]!;
+  const top = Math.ceil(h * NAV);
+  // A summed-area table of content pixels, for each window's count in four lookups.
+  const sum = new Float64Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const on = y >= top && Math.abs(gray[y * w + x]! - background) > THRESHOLD ? 1 : 0;
+      sum[(y + 1) * (w + 1) + x + 1] = on + sum[y * (w + 1) + x + 1]! + sum[(y + 1) * (w + 1) + x]! - sum[y * (w + 1) + x]!;
+    }
+  const ww = Math.round(w / 2);
+  const wh = Math.round(h / 2);
+  const step = Math.max(1, Math.round(w / 20));
+  let best = { n: -1, x: 0, y: top };
+  for (let y = top; y + wh <= h; y += Math.max(1, Math.round(h / 20)))
+    for (let x = 0; x + ww <= w; x += step) {
+      const n = sum[(y + wh) * (w + 1) + x + ww]! - sum[y * (w + 1) + x + ww]! - sum[(y + wh) * (w + 1) + x]! + sum[y * (w + 1) + x]!;
+      if (n > best.n) best = { n, x, y };
+    }
+  return [best.x / w, best.y / h, ww / w, wh / h];
+}
+
 /** Pixels this far from the background count when looking for columns: mock-ups on dark pages are faint. */
 const FAINT = 7;
 
@@ -161,9 +188,10 @@ export async function shotContent(file: string, storyboard: Storyboard, timeline
     if (beat.flowId === undefined || beat.in === undefined || beat.out === undefined) continue;
     const settled = timeline.events.filter((e) => e.kind === "settled" && e.flowId === beat.flowId && e.t >= beat.in! && e.t <= beat.out!).at(-1);
     const t = settled?.t ?? (beat.in + beat.out) / 2;
-    const { box, fill } = contentBox(await frameAt(file, t, signal), W, H);
+    const gray = await frameAt(file, t, signal);
+    const { box, fill } = contentBox(gray, W, H);
     const toView = (r: Rect): Rect => [Math.round(r[0] * view.w), Math.round(r[1] * view.h), Math.round(r[2] * view.w), Math.round(r[3] * view.h)];
-    out[beat.id] = { t, box: toView(box), fill };
+    out[beat.id] = { t, box: toView(box), fill, focus: toView(busiestRegion(gray, W, H)) };
     // A page with no structure in its DOM, just before each action: is it a drawn board?
     const moments = timeline.events.filter((e) => e.flowId === beat.flowId && e.t >= beat.in! && e.t <= beat.out! && e.layout && !e.layout.panel && !e.layout.groups.some((g) => g.kind !== "rows"));
     for (const event of moments) {

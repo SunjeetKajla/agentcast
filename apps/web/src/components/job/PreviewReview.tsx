@@ -50,69 +50,41 @@ export default function PreviewReview({
   };
 
   return (
-    <section ref={root} className="space-y-6" aria-labelledby="preview-title">
-      <div data-preview-part className="space-y-1">
-        <h2 id="preview-title" className="font-serif text-3xl text-white">
-          Watch the preview
-        </h2>
-        <p className="text-sm text-white/60">
-          A quick 540p cut{first ? ` of the ${first.aspect === "16x9" ? "16:9" : "9:16"} ${first.lang.toUpperCase()} version` : ""}.
-          {rounds > 1 ? ` Revision ${rounds - 1}.` : ""} Approve it to render every format at full quality.
-        </p>
-      </div>
-
-      <div data-preview-part>
+    <section ref={root} className="pvw" aria-label="The preview">
+      <div data-preview-part className="pvw-player" data-ui>
         <VideoPlayer
           key={version}
           src={fileUrl(job.id, jobPaths.preview, version)}
           format={first?.aspect === "9x16" ? "9:16" : "16:9"}
         />
       </div>
-
-      <div data-preview-part className="rounded-2xl border border-white/10 bg-[#121215]/80 p-4 space-y-3">
-        <label htmlFor="revise" className="text-sm font-medium text-white">
-          Want something changed?
-        </label>
+      <div data-preview-part className="pvw-side">
+        <p className="pvw-what">
+          A quick 540p cut{first ? ` of the ${first.aspect === "16x9" ? "16:9" : "9:16"} ${first.lang === "hi" ? "Hindi" : "English"} version` : ""}.
+          {rounds > 1 ? ` Revision ${rounds - 1}.` : ""}
+        </p>
+        <label htmlFor="revise" className="pvw-label">Want something changed?</label>
         <textarea
           id="revise"
           value={revise}
           onChange={(e) => setRevise(e.target.value)}
-          rows={2}
-          placeholder="Make the intro shorter and zoom harder on the AI panel"
-          className="w-full resize-y rounded-xl border border-white/[0.06] bg-black/30 p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-accent/50"
+          rows={3}
+          placeholder="Make the intro shorter and zoom harder on the main panel"
         />
-        <div className="flex flex-wrap gap-2">
+        <div className="pvw-ex">
           {EXAMPLES.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => setRevise(e)}
-              className="rounded-full border border-white/[0.07] bg-white/[0.04] px-3 py-1 text-xs text-white/60 transition-colors hover:bg-white/[0.09] hover:text-white"
-            >
-              {e}
-            </button>
+            <button key={e} type="button" onClick={() => setRevise(e)}>{e}</button>
           ))}
         </div>
-      </div>
-
-      <div data-preview-part className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => send({ action: "approve" })}
-          disabled={Boolean(sending)}
-          className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition-all hover:bg-white/90 active:scale-[0.98] disabled:opacity-30"
-        >
-          {sending === "approve" ? "Approving…" : "Approve & render all formats"}
-        </button>
-        <button
-          type="button"
-          onClick={() => send({ action: "revise", revise: revise.trim() })}
-          disabled={Boolean(sending) || !revise.trim()}
-          className="rounded-full border border-white/15 bg-white/[0.05] px-5 py-2 text-sm font-medium text-white transition-all hover:bg-white/10 active:scale-[0.98] disabled:opacity-30"
-        >
-          {sending === "revise" ? "Sending…" : "Revise"}
-        </button>
-        {problem && <p className="text-sm text-red-400">{problem}</p>}
+        <div className="pvw-acts">
+          <button type="button" className="ab ab-f2" onClick={() => send({ action: "revise", revise: revise.trim() })} disabled={Boolean(sending) || !revise.trim()}>
+            {sending === "revise" ? "Sending…" : "Send to the director"}
+          </button>
+          <button type="button" className="ab ab-f" onClick={() => send({ action: "approve" })} disabled={Boolean(sending)}>
+            {sending === "approve" ? "Approving…" : "Approve and render"} <span className="arr" aria-hidden="true">→</span>
+          </button>
+        </div>
+        {problem && <p className="field-err" role="alert">{problem}</p>}
       </div>
     </section>
   );

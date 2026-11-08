@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#050505",
-        foreground: "#FAFAFA",
+        background: "#05060f",
+        foreground: "#ffffff",
         card: {
           DEFAULT: "#121215",
           foreground: "#FAFAFA",
@@ -20,13 +20,14 @@ const config: Config = {
           DEFAULT: "#1E1E22",
           foreground: "#A1A1AA",
         },
+        // The redesign's palette: yellow is the highlight on media controls.
         accent: {
-          DEFAULT: "#8B5CF6",
-          foreground: "#FAFAFA",
+          DEFAULT: "#f7dd47",
+          foreground: "#05060f",
         },
         border: "rgba(255, 255, 255, 0.08)",
         input: "rgba(255, 255, 255, 0.08)",
-        ring: "#8B5CF6",
+        ring: "#f7dd47",
       },
       borderRadius: {
         xl: "14px",
@@ -34,7 +35,7 @@ const config: Config = {
         "3xl": "24px",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+        sans: ["var(--font-schibsted)", "Schibsted Grotesk", "Helvetica Neue", "Arial", "sans-serif"],
         serif: [
           "Playfair Display",
           "Newsreader",

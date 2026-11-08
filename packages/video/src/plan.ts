@@ -27,7 +27,16 @@ export type VideoInput = {
     tagline?: string;
     /** Shown without the scheme. */
     site: string;
-    logo?: { src: string; width: number; height: number; plate: boolean };
+    logo?: {
+      src: string;
+      width: number;
+      height: number;
+      plate: boolean;
+      /** The brand kit's logo on no background (its vector, or the capture keyed out), for the end card. */
+      art?: string;
+      /** The brand kit's parts, as shares of the logo's width: for revealing it piece by piece. */
+      parts?: { kind: "mark+wordmark" | "wordmark" | "mark"; mark?: [number, number]; letters: [number, number][] };
+    };
     /** The landing page's first screen (brand kit): the split title and the hero backdrop. */
     hero?: string;
   };

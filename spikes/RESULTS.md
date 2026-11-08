@@ -125,3 +125,270 @@ with hand-written scenes, hand-measured positions and hand-placed sounds. It use
 Merged `origin/hyperframes` (`dd8f604`) into the Browser Harness branch. Exploration remains local with the logged-in coding agent; rendering now uses pinned HyperFrames 0.8.189. CLI dispatch preserves both doctor and music add/list/analyze. The director declares its direct HyperFrames dependency so guide loading works under pnpm. Missing untracked audio is excluded from track selection; director tests use an explicit empty test library. Job schema v5 introduces the incoming mode-dependent voiceover default, with lightweight reads for v2–v4.
 
 Validation: full workspace typecheck, 389 regression tests (97 optional skipped), production web build, two local Browser Harness integration checks and the real short HyperFrames H.264 render fixture all passed. The music list command also passed without downloading audio. The render used system Chrome via `HYPERFRAMES_BROWSER_PATH=/opt/google/chrome/chrome`; no model or voice-provider calls were made.
+
+## S12: music-led films through the real worker (2026-11-07)
+
+Question: do Phases 2 and 3 produce a good film with nothing placed by hand? `pnpm --filter @agentcast/spikes e2e --home <dir> --job <id>` runs Linear through the worker with
+real LLM copy and a live recording, and no TinyFish or ElevenLabs quota.
+
+- **Result:** the job finished at 18.0 s and −14.1 LUFS in both formats, with copy, moves and music chosen automatically. Frames of both formats look right.
+- **Short film:** the third shot ("Progress, always in view") passed script review and was then dropped for too little on screen, against a 30 s target. See `docs/REFERENCE_WORKFLOW.md`.
+- **Director:** it used its full 8 minutes and produced nothing, so the film is the template's edit. `docs/REFERENCE_WORKFLOW.md` proposes replacing this pass.
+- **Bug found and fixed:** the worker's 1080p render came out with tiny shots in the top-left corner. Each recompile rewrites `compiled.json`, and a failed director turn restored the scene
+  files but not that list, so the compiler's old 540p files read as the director's and were reused. `runDirector` now restores both, and a primitive's file is always made for the variant's size.
+  Regression tests cover both changes, and both fail with the fix taken out.
+- **Replay of the fix:** on a copy of the job, a fake director recompiled a changed edit and timed out, then `renderVideo` ran at 1080p with the scene folder. No scene read as the director's. The 16:9 film
+  matches the corrected render (SSIM 0.9999). Renders took 24 s (16:9) and 21 s (9:16).
+- **Second brand (shadcn):** `bench --jobs job_mvmoy4njdfc2fa --led --rerecord --height 1080` passed the stall check on an idle machine, so the earlier failure was load. Both formats came out at 18.0 s, −14.1 LUFS and
+  −1.7 dBFS true peak, and rendered in 22 s each. The light theme, column build and logo work. The bench films only the first flow and reuses the job's older copy, so this tests the moves and not the new copy writer or the film's length.
+- **Weak spots on shadcn:** the second proof shows the whole Components page, against the guide's "a piece of the page" rule, so its text is small, and in 9:16 unreadable. In 9:16 the build shows only 2 columns, then holds for about 3 s
+  (40% still, against 0% in 16:9). In 16:9 the build also finishes early and only drifts for its last 2 s or so.
+- **Not proven:** the fix hasn't had a full run through the worker's render stage. Effects are still the synthesised fallback, and only one track has a dependable grid. `sharpLogo` hasn't run on a real job, so the logo is the old low-res capture.
+
+## S13: skeletons from the reference library (2026-11-08)
+
+Question: does a skeleton change a film enough to tell films apart, before a library is worth building on?
+`pnpm --filter @agentcast/spikes bench --led --skeleton <id>` cut three real recordings with each of the four
+skeletons in `assets/references/` at 1080p: Linear (`job_e2eled0001`), shadcn (`job_mvmoy4njdfc2fa`) and Sarvam
+signed in (`job_mw6o12r65ef81c`). That's 12 films in `spikes/output/bench/sk-<skeleton>/`. All master to −14 LUFS and
+render in 29–53 s.
+
+| Skeleton | Lengths (Linear, shadcn, Sarvam) | Cuts per 10 s, counted from the edit | What it looks like |
+| --- | --- | --- | --- |
+| `modules` | 18, 18, 18 s | about 3 | The old shape, with the framing fixes. |
+| `rapid` | 14, 12.5, 12.5 s | about 5–6 | Clearly faster: half-beat labels, two angles per shot, frequent inversions. Short, because these recordings give only two usable shots and the 4 s end card is 30% of the film. |
+| `glide` | 26, 20, 20 s | about 1 | Clearly different: no labels between proofs. On Sarvam, one take travels from the hero to the Rail helpline player, the pricing and the playground. On Linear the third take is a mostly black marketing page, which is weak content. |
+| `type-led` | 20, 20, 20 s | about 2 | Clearly different: big lines on alternating light and dark grounds, the product answering each. The lines hold still for 2–3 s once built, which feels slow. |
+
+- **Telling them apart:** yes. Side by side, the four cuts of one recording read as four different films, where before every brand had the same shape.
+- **Auto pick:** Linear and shadcn read as boards and got `rapid`. Sarvam has typing and got `glide`.
+- **Bug found and fixed:** Sarvam's recording has a lower pixel density (1.33), so the sharpness limit made its typing close-up a 660×298 px window, zoomed out instead of in. Regions are now widened until their window fills the frame, and the close-up is always closer than the view it pulls back to. Re-rendered and checked: a full-size close-up of the Tamil typing that pulls back to the panel.
+- **The automated metrics still misjudge these films:**
+  - **Scene changes:** the colour-histogram detector misses cuts between near-white cards.
+  - **Sync:** `rapid` scores at or below chance (0.08–0.11 against 0.15–0.26), even though its cues come from each move's own timing. The likely cause is that its cuts come faster than the effect gaps and per-second budget let sounds through. Not investigated yet.
+- **Not proven:**
+  - **Listening:** nobody has listened.
+  - **Variety:** the music is still the one usable track for every film.
+  - **Rapid length:** it needs more shots or angles to reach 20 s.
+  - **Type-led motion:** its type needs motion after it lands (swaps, a push).
+
+## S14: Checkpoint B, hand-built brand motion (2026-11-08)
+
+Question: do brand moves (logo, wall of pages, rising cards, a lifted panel, a hand cursor, a mockup) make a film
+look like the references, before building capture and art direction for them (`docs/BRAND_MOTION_PLAN.md` §9)?
+
+`pnpm --filter @agentcast/spikes brand-capture` captures the layers:
+
+- **Logo:** linear.app's logo as an SVG, cleaned to shapes only, with colours resolved.
+- **Logo parts:** the mark found as the shapes left of the widest gap. The six letters of the wordmark, which is a single
+  path, found from ink-free columns in a render.
+- **Pages:** 14 of linear.app's own pages as viewport captures.
+- **Board:** read from the recording at 8.0 s.
+
+`brand-checkpoint` builds a 24 s film from `job_e2eled0001`'s recording with hand-written scenes and hand-placed
+sound. It renders in about 50 s at 1080p, −14.2 LUFS, −0.6 dBTP.
+
+| Time | Scene | Result by eye |
+| --- | --- | --- |
+| 0–4 s | Mark sweeps in on a bloom of light, then the wordmark slides out from behind it | Clean once the wordmark moved as one strip. Moving each letter separately made later letters cross earlier ones. |
+| 4–8 s | Wall of 25 tiles (14 pages) on a tilted plane, columns sliding against each other, diving into one | Reads as the Lovable wall. Linear's pages are dark, so the tiles are dim. |
+| 8–12 s | Match cut into the footage; hand cursor clicks "Projects" on the beat; the panel lifts out on its own layer over the dimmed page, and the hand runs down the rows with the highlight | The cut is seamless once the target tile is the recording's own frame. With a page capture, the headline jumped. The hand reads as a hand at about 3% of the frame width. |
+| 12–13 s | Label on white, letters landing in a wave | Works. 170 px nearly touched the edges, so it's 150 px. |
+| 13–16 s | The board cut into 15 cards rising column by column; the hand clicks one card and it lifts to the middle | Works. |
+| 16–20 s | A laptop we draw turns into view on the strong bar, then the camera zooms through its screen | Works, but plain: dark screen content and a flat base. |
+| 20–24 s | The mark as soft light sharpens into the mark, the wordmark comes out, the address pill rises | Works. |
+
+Still open:
+
+- **Not verified:**
+  - Nobody has listened.
+  - The 540p render is wrong, because the scenes are written in 1080p pixels.
+- **Not tried yet:**
+  - The mascot and product-logo moves, which need a brand that has them.
+  - Art direction, which this checkpoint doesn't exercise.
+- **Hand-drawn assets:** the hand cursor is a first drawing and could be refined.
+
+## S15: Checkpoint C, brand motion for a different product (2026-11-08)
+
+Question: does a different kind of product get a clearly different film from the same toolkit, as art direction
+(`docs/BRAND_MOTION_PLAN.md` §7) would choose it?
+
+- **Product:** Sarvam, a voice AI product.
+- **Look:** light, with brand colour in its hero's orbs. The captured palette was monochrome.
+- **Logo:** a vector wordmark only.
+- **Recording:** `job_mw6o12r65ef81c` at 1920×1200 (1.33×). The text-to-speech playground: a Tamil line typed, then
+  Generate, then the cURL and Python tabs.
+
+`pnpm --filter @agentcast/spikes brand-capture-sarvam` captures:
+
+- **Logo:** the header logo, kept as an SVG (an `<img>` of an .svg, fetched and cleaned).
+- **Letters:** five units from a 4× render. "v" and "a" touch, so they're one.
+- **Hero:** the hero at 2×, for the orbs.
+
+`brand-sarvam` renders 24 s in about 45 s at 1080p, −14.1 LUFS, −1.8 dBTP.
+
+| Time | Scene | Result by eye |
+| --- | --- | --- |
+| 0–4 s | Orbs cut from the hero float in on the eighth notes, the big one rising like a sun; "Built in India." then "For India." | Works. Multiply blending hides the white around each orb on the paper ground. |
+| 4–8 s | A line opens into a white pill inside a ring of the orbs' colours; the recorded Tamil line types in; a "தமிழ் · Tamil" chip; the hand presses "Generate with Bulbul V4", which turns into a spinner; the pill folds back into a line | Works after three fixes. A rotated blurred rectangle made a diagonal smear, so it's now a ring whose colours flow along it. Splitting at "!" typed one word. Flex layout dropped the spaces between graphemes. |
+| 8–12 s | The real playground as a window: the line finishes typing, the hand presses the real Generate, and the real player arrives | Works. Footage at 1.33× limits the window to about 1.62× its CSS size. |
+| 12–16 s | "Don't take our word for it. Listen." (the site's own line); the hand presses the big orb's play button; a Bulbul V4 sample plays for 3.5 s while a waveform of its real audio lights up in the brand's colours, the music ducked | Works. In the speech band, the voice section is −12.4 LUFS against −19 to −22 for the music around it. The orb's capture ends 82% of the way down, so it sits low enough that the cut is off frame. |
+| 16–20 s | The real cURL card lifted out of the page slides in, tilted, beside "Bulbul V4" and `bulbul:v4-flash`, with the product's terms on a ticker | Works. The card is small, because of the footage density. |
+| 20–24 s | The wordmark's letters rise out of their own masks (it has no mark to lead with), the orbs come back, then the call to action and the address | Works. |
+
+- **The voice isn't the typed line.** Generating it again in a fresh automated browser was refused (a 403 from
+  the playground's session check, "Could not verify your browser"), and we don't work around that. So the film plays
+  a sample the page itself publishes (`deck-classroom-tamil.mp3`), labelled "Bulbul V4 · Tamil" in the film. **Correction
+  (2026-11-08): the excerpt is English, not Tamil.** It was picked by its file name and never heard, so the film's tag was
+  wrong. It
+  isn't presented as the typed line read aloud. Real capture should keep the output inside the recording session,
+  which got the audio when it clicked Generate.
+- **Different from Checkpoint B (Linear)?** Yes, by eye:
+
+  | | Linear | Sarvam |
+  | --- | --- | --- |
+  | Ground | Dark | Paper |
+  | Brand world | A grey bloom | Colour orbs |
+  | Logo | Mark lockup | Rising letters |
+  | Opener | Page wall | Glow pill |
+  | Proof | Board cards | Waveform |
+
+  Both use the same toolkit: the hand cursor, lifted footage windows and the ticker.
+- **Not verified:** nobody has listened; the music is still the one track; and the hand-drawn hand is a first
+  drawing.
+
+## S16: art direction on saved jobs (2026-11-08)
+
+Question: does art direction, from the product type (A) and what was captured (B), give different films through the
+real compiler, not hand-built scenes?
+
+`pnpm --filter @agentcast/spikes bench --tag art --jobs job_e2eled0001,job_mw6o12r65ef81c --height 1080 --led --art` runs
+the script stage's chain on job copies with the rules table (no LLM):
+
+1. logo parts and a keyed cut-out from `brief/logo.png`
+2. layers cut from the recording
+3. the inventory
+4. `rulesDirection` and `checkDirection`
+5. the edit
+
+Results:
+
+- **Linear:**
+  - **Call:** `project-tool`, rapid-fire, lockup, hand, bloom, built around cards, panel and build. Nothing changed by
+    the check.
+  - **Film:** 14 s.
+  - **Logo:** the end card's mark lands alone, then slides aside as the wordmark comes out from behind it.
+  - **Cursor:** the hand glides to "Initiatives", the row the recording clicked, and presses with a ring.
+  - **Layers:** 24 cut from the recording.
+- **Sarvam:**
+  - **Call:** `voice-audio`, type-led, letters, hand, plain (its captured accent is grey, so no colour field), built
+    around the typing.
+  - **Film:** 20 s.
+  - **Logo:** the end card's five letter parts rise one after another.
+
+Bugs found and fixed on the way:
+
+- **Logo background:** taken as the commonest colour, it was the letters on Sarvam's peach gradient, so the whole
+  logo read as one span. It's now the median of the border.
+- **Seams:** pieces covering only their own ink left seams; they now tile the logo.
+- **Peach plate:** the old capture's plate showed, so the end card now uses the cut-out (or the vector).
+- **"field" on a grey accent** read as smudges; it now needs a colourful brand.
+- **Rapid-fire's 1.5 s proofs** held a click too early to glide to. A panel proof now starts just before the click
+  that opened it when the direction wants a cursor.
+
+Not verified:
+
+- **The director's own turn:** not run on these jobs; unit tests cover its check and fallback.
+- **The understand stage's new capture** isn't verified through a worker job. Its browser step was run live on its own
+  (`recorderAdapter().inspect`):
+  - **linear.app:** the inline SVG kept clean (3,083 chars), read as mark+wordmark with 6 letters, plus 9 page
+    captures, in 29 s.
+  - **sarvam.ai:** the `<img>` .svg kept clean (2,955 chars), read as a wordmark with 5 parts, plus 9 page captures, in
+    18 s.
+  - That time overlaps the product brief's LLM work, which runs in parallel.
+  - Linear's page list includes /contact and /docs, which the skip list could exclude.
+- **Listening:** nobody has listened.
+
+## S17: brand moves through the compiler (2026-11-08)
+
+`bench --tag art2 --led --art` on job copies, with art direction by the rules table (no LLM):
+
+- **Linear:**
+  - **Call:** `project-tool`, rapid-fire, opens on its logo, lockup, hand, bloom, built around wall, cards and panel.
+    The copy's `brief/captures/` holds the 14 page captures from Checkpoint B.
+  - **Film, 18 s:**
+    1. The mark lands, the name slides out from behind it, then the line.
+    2. A wall of linear.app's pages slides on a tilted plane and dives into the home page.
+    3. The panel, with the hand pressing "Initiatives".
+    4. The board.
+    5. The lockup end card.
+- **Sarvam:**
+  - **Call:** `voice-audio`, type-led, letters, hand, plain, built around glow pill and output.
+  - **Output material, demo only:** the recording predates the output watcher. So on the copy only, Sarvam's
+    published sample (`deck-classroom-tamil.mp3`) stands in as the playground's output. **Correction:** the excerpt
+    is English, not Tamil, so it doesn't match the typed line; it was picked by name and never heard.
+  - **Film, 25.5 s:**
+    1. The opener.
+    2. A pill types the recorded Tamil line's first sentence; the hand presses send.
+    3. A solid ink disc is pressed, and the sample plays for 4.5 s while its waveform lights bar by bar and the music
+       ducks.
+    4. The ticker.
+    5. The end card's letters.
+
+Bugs found and fixed:
+
+- **Grey brands:** a near-black accent made the pill's "light" a dark smear and the output's disc grey. A grey brand now
+  gets a soft ring of its ink and a solid ink disc.
+- **Lit bars never lit:** GSAP can't tween to a CSS variable, so they're switched by class.
+- **Output length:** it ran 7 s, now capped at 4.5 s.
+- **Pill typing:** a long line was still typing when the hand pressed send. Typing now fits the time before the press,
+  and a long value types its first sentence.
+- **Logo cloud on Linear:** captured live, with six logos (OpenAI, Vercel, Figma, Cursor, Coinbase, Ramp). Tight crops
+  made keying eat the white letters. Captures now have a margin, and keying is skipped when the border isn't one even
+  colour. The orbit's tiles use the brand's surface colour.
+
+Not verified:
+
+- **Not seen in a render:** the mockup and the orbit. Unit tests cover both through the compiler.
+- **Not through a real worker job:** the output watcher. Its JSON-audio parsing is unit-tested.
+- **The director's own art-direction turn.**
+- **Listening:** nobody has listened.
+
+## S18: the pipeline's Sarvam film against the hand-built one (2026-11-08)
+
+**Question.** After S17 the pipeline's Sarvam film had generic moves on a plain ground, next to the hand-built
+film's orbs, glow pill and coloured waveform. Can the pipeline get there on its own, built the way a new job would
+be?
+
+**Run.** `bench --tag art8 --jobs job_mw6o12r65ef81c --height 1080 --led --art --live-kit --director`: sarvam.ai
+inspected live in local Chrome (the brand kit as understand builds it), brand imagery from the pages and the
+recording, the director's art direction call with shot calls (one fast-tier turn), the film planned by
+`planLedFilm`. Output: `spikes/output/bench/art8/job_mw6o12r65ef81c/job_mw6o12r65ef81c.mp4`, 23.5 s, rendered in 34 s.
+
+**What it made.** Director: voice-audio, `glide`, world `imagery`, opener `logo`, featured glow-pill, output,
+prompt; shot calls with headlines "Voices that sound Indian" (from the script) and "Type Tamil, hear Tamil" (from the
+script). The film: the wordmark revealing with three of Sarvam's orbs floating in; "Built in India. For India.";
+the TTS page in a tilted window opening on the whole page and gliding in, the orbs around it; the glow pill typing
+"வணக்கம்! நான் உங்கள் உதவியாளர்." under chips "தமிழ் · Tamil" and "Shubh · Conversational", the hand pressing
+"Generate with Bulbul V4"; the output on the maroon orb with a waveform in the orbs' colours; the orbs ringing the
+end card.
+
+**Imagery.** The home page has no orbs (its hero is an orange and blue glow); they're on the TTS page, so the
+recording frames find them. Of the five, the big magenta one carries the site's play button (dropped) and the amber
+one is bitten by it (dropped). Objects are found at 960 px and cut at full size, with the mask's edge blurred.
+
+**Voice.** The stand-in output is Sarvam's published sample `deck-classroom-tamil.mp3` (the TTS playground blocks
+automated browsers, so no real output could be recorded). Transcribed with ElevenLabs Scribe it is Tamil, but
+code-mixed: its first 4.5 s, which the earlier films played, are "Okay class கொஞ்சம் silence please. அர்ஜுன் it's
+actually a very good question", mostly English words. The bench copy now plays 5.30–9.45 s, "இப்போ பாரு ஒரு
+rectangle ஓட length எட்டு centimeters". It still isn't what the pill typed; a recorded output would be.
+
+**Still behind the hand-built film.** No "Listen." beat from the site's own line, no ticker of terms, no code card;
+the orbs are larger and one (orange) keeps a sliver of its neighbour's ring; on a cut an orb can pass over the middle
+of the frame. The cookie banner shows in the proofs because this recording predates the consent hiding.
+
+## Referential architecture merge validation — 2026-11-08
+
+Merged `origin/referential-architecture` (`d138f0f`) into `tinyfish-destruction`, retaining local Browser Harness exploration, sealed local sign-in, cancellation handling and HyperFrames rendering alongside the incoming UI, reference skeletons, beat sheets and brand art direction. Secret-report issues remain session-neutral and are deduplicated. Fixed the incoming watchable-take test fixture’s mutable `gaps` type.
+
+Validation: workspace typecheck, 448 regression tests (97 optional skipped) and the production web build passed, with the pre-existing local HyperFrames peer-reference repair restored in the lockfile. No live model or voice-provider calls were made.

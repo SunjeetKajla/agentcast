@@ -5,9 +5,11 @@ export interface HygieneOptions {
   secretValues?: readonly string[];
   redactSelectors?: readonly string[];
   dismissCookies?: boolean;
+  /** Hides cookie and consent banners for the whole take (default on). Off when the flow itself works one. */
+  hideConsent?: boolean;
   signal?: AbortSignal;
 }
-type Config = { secretValues: string[]; selectors: string[] };
+type Config = { secretValues: string[]; selectors: string[]; hideConsent?: boolean };
 
 /** Runs before website scripts on every document. Keep all helpers inside for serialization. */
 function install(config: Config) {
@@ -17,7 +19,19 @@ function install(config: Config) {
   const style = document.createElement("style");
   style.setAttribute("data-agentcast-style", "");
   style.textContent =
-    "*{caret-color:transparent!important;scrollbar-width:none!important}::-webkit-scrollbar{display:none!important}[data-agentcast-redact]{filter:blur(12px)!important;color:transparent!important;text-shadow:none!important}";
+    "*{caret-color:transparent!important;scrollbar-width:none!important}::-webkit-scrollbar{display:none!important}[data-agentcast-redact]{filter:blur(12px)!important;color:transparent!important;text-shadow:none!important}[data-agentcast-hide]{display:none!important}";
+  // A cookie or consent banner: pinned to the screen, about cookies or consent, with buttons, and small (not the page).
+  const consent = /\bcookies?\b|\bconsent\b|value your privacy/i;
+  const hideBanner = (from: Element) => {
+    let el: Element | null = from;
+    for (let depth = 0; el && el !== document.body && depth < 10; depth++, el = el.parentElement) {
+      const position = getComputedStyle(el).position;
+      if (position !== "fixed" && position !== "sticky") continue;
+      const text = el.textContent ?? "";
+      if (text.length < 1500 && el.querySelector("button,[role=button],a[href]") && !el.hasAttribute("data-agentcast-hide")) el.setAttribute("data-agentcast-hide", "");
+      return;
+    }
+  };
   const sensitive =
     /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\b(?:sk-[\w-]{8,}|(?:tf|el)[_-][\w-]{8,}|eyJ[\w-]+\.[\w-]+(?:\.[\w-]+)?)\b/i;
   const selector = [
@@ -60,6 +74,7 @@ function install(config: Config) {
         privateText(node.textContent ?? "")
       )
         mark(parent);
+      if (config.hideConsent && parent && consent.test(node.textContent ?? "") && !parent.closest("[data-agentcast-hide]")) hideBanner(parent);
     }
   };
   const queue = () => {
@@ -103,6 +118,7 @@ export async function installRecordingHygiene(
   const config: Config = {
     secretValues: [...(options.secretValues ?? [])].filter(Boolean),
     selectors: [...(options.redactSelectors ?? [])],
+    hideConsent: options.hideConsent !== false,
   };
   const valid = await page.evaluate(
     (selectors) =>

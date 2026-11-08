@@ -81,15 +81,83 @@ const groundScript = `  var g = S.el("ground");
   else if (v.ground === "dark") g.className = "ac-fill ac-ground-dark";
   if (v.ground === "field" || v.ground === "dark") { S.el("out").classList.add(v.ground === "dark" ? "ac-on-dark" : "ac-on-field"); g.insertAdjacentHTML("beforeend", '<div class="ac-fill ac-grain"></div>'); }`;
 
+/** Where the brand's objects sit between cuts: at the frame's edges, partly off it, clear of the middle (x, y as shares; d as a share of the height). */
+const EDGE_SLOTS: [number, number, number][] = [
+  [0.93, 0.84, 0.4],
+  [0.07, 0.16, 0.34],
+  [0.52, 1.04, 0.3],
+  [0.1, 0.88, 0.26],
+  [0.9, 0.12, 0.22],
+  [0.48, -0.05, 0.2],
+];
+const TALL_SLOTS: [number, number, number][] = [
+  [0.9, 0.93, 0.24],
+  [0.1, 0.08, 0.2],
+  [0.5, 1.02, 0.18],
+  [0.06, 0.9, 0.16],
+  [0.92, 0.1, 0.13],
+  [0.5, -0.02, 0.12],
+];
+
+/**
+ * The imagery world's objects (brand kit imagery placed as assets/imagery/*): one element each, sized for the
+ * canvas. They float in around the opener's line, move to new places on every cut, drift between, and ring
+ * the end card.
+ */
+function imageryLayer(size: Size, objects: { src: string }[]) {
+  const tall = size.h > size.w;
+  const slots = tall ? TALL_SLOTS : EDGE_SLOTS;
+  const n = Math.min(objects.length, slots.length);
+  const d = (k: number) => Math.round(slots[k]![2] * size.h);
+  const html = objects
+    .slice(0, n)
+    .map((o, i) => `<div id="S-o${i}" class="obj" style="width: ${d(i)}px; height: ${d(i)}px; margin: ${-d(i) / 2}px 0 0 ${-d(i) / 2}px; background-image: url(${o.src});"></div>`)
+    .join("");
+  return { html, slots: slots.slice(0, n).map(([x, y]) => [Math.round(x * size.w), Math.round(y * size.h)]) };
+}
+
 /** The ground of a music-led film: the brand's own colour held still, so footage's edges disappear into it. */
-export function plainGroundScene(id: string, size: Size, vars: Vars) {
+export function plainGroundScene(id: string, size: Size, vars: Vars, o: { imagery?: { src: string }[] } = {}) {
+  const layer = vars.world === "imagery" && o.imagery?.length ? imageryLayer(size, o.imagery) : undefined;
+  const v = layer ? { ...vars, slots: JSON.stringify(layer.slots) } : vars;
   return sceneFile(
     id,
     size,
-    vars,
-    `#S-base { position: absolute; inset: 0; background: radial-gradient(70% 60% at 50% 45%, var(--ac-lift) 0%, var(--ac-bg) 70%); }`,
-    `    <div id="S-base"></div>`,
-    "",
+    v,
+    `#S-base { position: absolute; inset: 0; background: radial-gradient(70% 60% at 50% 45%, var(--ac-lift) 0%, var(--ac-bg) 70%); }
+#S-bloom { position: absolute; left: -15%; right: -15%; top: 40%; height: 130%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--ac-accent) 24%, transparent), color-mix(in srgb, var(--ac-accent) 7%, transparent) 55%, transparent 100%); filter: blur(calc(40 * var(--ac-u))); opacity: 0; }
+#S-field { position: absolute; inset: 0; background: radial-gradient(55% 50% at 12% 88%, color-mix(in srgb, var(--ac-accent) 20%, transparent), transparent 70%), radial-gradient(50% 45% at 90% 10%, color-mix(in srgb, var(--ac-accent2, var(--ac-accent)) 18%, transparent), transparent 70%); opacity: 0; }
+.obj { position: absolute; left: 0; top: 0; background-size: contain; background-repeat: no-repeat; background-position: center; filter: drop-shadow(0 calc(24 * var(--ac-u)) calc(40 * var(--ac-u)) var(--ac-shade)); opacity: 0; }`,
+    `    <div id="S-base"></div><div id="S-field"></div><div id="S-bloom"></div>${layer?.html ?? ""}`,
+    // Art direction's world (PRD §9.7.8): a bloom of the brand's light rising and breathing, or its colours in the corners.
+    `  if (v.world === "bloom") {
+    tl.fromTo(S.el("bloom"), { opacity: 0, y: 240 }, { opacity: 0.9, y: 0, duration: 2.5, ease: "power2.out" }, 0);
+    tl.fromTo(S.el("bloom"), { scale: 1 }, { scale: 1.15, duration: Math.max(0.1, S.dur - 2.5), ease: "none" }, 2.5);
+  }
+  if (v.world === "field") tl.fromTo(S.el("field"), { opacity: 0 }, { opacity: 1, duration: 1.5, ease: "power2.out" }, 0);
+  if (v.world === "imagery" && v.slots) {
+    // The brand's own objects: in around the opener, a new place on every cut, a ring round the end card.
+    var slots = AC.json(v.slots, []), cuts = AC.json(v.cuts, []), n = slots.length, W = AC.size().w, H = AC.size().h;
+    var openEnd = Number(v.openEnd) || 2, endAt = Number(v.endAt) || S.dur;
+    var near = function (k, f) { var s = slots[k % n]; return [W / 2 + (s[0] - W / 2) * f, H / 2 + (s[1] - H / 2) * f]; };
+    for (var i = 0; i < n; i++) {
+      var o = S.el("o" + i), home = near(i, 0.72), out = near(i, 1.9);
+      // In from beyond the frame's edge, one after another, a little inside their places, around the line.
+      tl.fromTo(o, { x: out[0], y: out[1], opacity: 1, scale: 0.5, rotation: -25 }, { x: home[0], y: home[1], scale: 1, rotation: 0, duration: 1, ease: "back.out(1.2)" }, 0.15 + i * 0.18);
+      var at = openEnd - 0.15, k = i, step = 0;
+      // Every cut (until the end card) moves each object one place on, so the world turns with the edit.
+      cuts.filter(function (t) { return t >= openEnd - 0.01 && t < endAt - 0.01; }).forEach(function (t) {
+        k = i + ++step;
+        var to = near(k, 1);
+        tl.to(o, { x: to[0], y: to[1], rotation: (step % 2 ? 8 : -8), duration: 0.9, ease: "expo.inOut" }, Math.max(0, t - 0.2));
+        tl.to(o, { y: to[1] + (i % 2 ? 14 : -14) * AC.u(), duration: 1.6, ease: "sine.inOut" }, t + 0.7);
+      });
+      // The end card: a ring round the logo.
+      var a = -Math.PI / 2 + (i + 0.5) * (2 * Math.PI / n), rx = W * (W > H ? 0.36 : 0.4), ry = H * (W > H ? 0.36 : 0.3);
+      tl.to(o, { x: W / 2 + Math.cos(a) * rx, y: H / 2 + Math.sin(a) * ry, scale: 0.7, rotation: 0, duration: 1.1, ease: "expo.inOut" }, Math.max(0, endAt - 0.2 + i * 0.06));
+      tl.to(o, { rotation: (i % 2 ? 6 : -6), duration: Math.max(0.2, S.dur - endAt - 1), ease: "sine.inOut" }, endAt + 1);
+    }
+  }`,
   );
 }
 

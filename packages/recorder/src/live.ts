@@ -53,6 +53,8 @@ export interface LiveOptions {
     "quality" | "maxQueueBytes" | "firstFrameTimeoutMs"
   >;
   encoding?: Omit<EncodingOptions, "signal">;
+  /** Keep a take that failed the stall checks when this says so; its `stall.status` stays "failed". */
+  acceptStall?: (stall: StallReport) => boolean;
 }
 
 export interface LiveRecording extends EncodedVideo {
@@ -237,7 +239,11 @@ export async function recordLive(
       // longer than the flow did, so it runs under its own limit and only the caller can cancel it.
       clearTimeout(timer);
       browserOptions = { ...browserOptions, gpu: result.gpu.backend };
-      if (result.stall.status === "failed") continue;
+      if (
+        result.stall.status === "failed" &&
+        !options.acceptStall?.(result.stall)
+      )
+        continue;
       const video = await encodeCfrMp4(result.recorded, outputPath, {
         ...options.encoding,
         signal: options.signal,

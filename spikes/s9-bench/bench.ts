@@ -1,7 +1,7 @@
 // The edit bench: re-renders fixed jobs' baseline edits and measures them against the launch-film
 // targets (docs/MOTION_SOUND_MUSIC_PLAN.md §7). Works on copies, so the jobs stay as they are, with
 // the director off, so it spends no provider quota.
-//   pnpm --filter @agentcast/spikes bench --tag <name> [--jobs <id,id>] [--height 540] [--led] [--rerecord] [--aspect 16x9|9x16]
+//   pnpm --filter @agentcast/spikes bench --tag <name> [--jobs <id,id>] [--height 540] [--led] [--skeleton <id|auto>] [--art [--live-kit] [--director]] [--rerecord] [--aspect 16x9|9x16]
 // --led cuts the film to its music, with no voice. --rerecord films the job's approved flows again in a
 // local browser, for a recording with its page structure (the sites are public; no provider quota).
 import { execFile } from "node:child_process";
@@ -34,6 +34,14 @@ const { values } = parseArgs({
     aspect: { type: "string", default: "16x9" },
     led: { type: "boolean", default: false },
     rerecord: { type: "boolean", default: false },
+    /** With --led: a skeleton from assets/references/, or auto (the one the worker would pick). */
+    skeleton: { type: "string", default: "auto" },
+    /** With --led: art direction by the rules table, as the script stage makes it (brand kit, layers, inventory). */
+    art: { type: "boolean", default: false },
+    /** With --art: inspect the live site in local Chrome first, as understand does, and build the brand kit from it. */
+    "live-kit": { type: "boolean", default: false },
+    /** With --art: the director's art direction call (spends the LLM login's quota), with its per-shot calls. */
+    director: { type: "boolean", default: false },
   },
 });
 if (!values.tag) throw new Error("--tag <name> is required");
@@ -89,7 +97,7 @@ for (const job of jobs) {
     await writeFile(join(root, "state.json"), JSON.stringify(state));
   }
   if (values.rerecord) await rerecord(root, job);
-  const edl = await rebuiltEdl(root, job);
+  const edl = await rebuiltEdl(root, job, values.skeleton, values.art, { liveKit: values["live-kit"], director: values.director });
   const aspect = values.aspect as Aspect;
   const input = await jobInput(root, aspect, "en", Number(values.height), edl);
   const file = join(root, `${job}.mp4`);

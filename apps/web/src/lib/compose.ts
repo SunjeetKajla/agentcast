@@ -37,10 +37,11 @@ export const DEFAULT_CHOICES: ComposerChoices = {
   voiceover: false,
 };
 
-export function toJobConfig(url: string, prompt: string, c: ComposerChoices): JobConfigInput {
+export function toJobConfig(url: string, prompt: string, c: ComposerChoices, focus = ""): JobConfigInput {
   return {
     url,
     stylePrompt: prompt,
+    ...(focus.trim() ? { focusPrompt: focus.trim() } : {}),
     mode: c.mode,
     auth: { mode: c.auth },
     variants: { aspects: c.aspects, langs: c.langs, formFactors: ["desktop"] },

@@ -1,0 +1,148 @@
+- generic [active] [ref=f6e1]:
+  - generic [ref=f6e2]:
+    - region [ref=f6e3]:
+      - generic [ref=f6e4]:
+        - generic [ref=f6e5]:
+          - link "AgentCast" [ref=f6e6] [cursor=pointer]:
+            - /url: "#top"
+          - navigation "Page" [ref=f6e7]:
+            - link "How it works" [ref=f6e8] [cursor=pointer]:
+              - /url: "#how"
+            - link "Try a link" [ref=f6e9] [cursor=pointer]:
+              - /url: "#try"
+            - link "Job view" [ref=f6e10] [cursor=pointer]:
+              - /url: "#job"
+        - heading "link in. video out." [level=1] [ref=f6e11]:
+          - generic [ref=f6e12]: link in.
+          - generic [ref=f6e14]: video out.
+        - generic [ref=f6e16]:
+          - paragraph [ref=f6e17]: AgentCast turns your product’s link into a demo video. Web agents explore it, film the flows worth showing at 60 fps and cut a narrated edit.
+          - generic [ref=f6e18]:
+            - generic [ref=f6e19]: Your product’s link
+            - textbox "Your product’s link" [ref=f6e20]:
+              - /placeholder: your-product.com
+            - button "Make the video" [ref=f6e21] [cursor=pointer]:
+              - text: Make the video
+              - generic [aria-hidden] [ref=f6e22]: →
+    - region [ref=f6e23]:
+      - generic [ref=f6e24]:
+        - generic [ref=f6e25]:
+          - heading "How a link becomes a video" [level=2] [ref=f6e26]
+          - article [ref=f6e28]:
+            - heading "Render" [level=3] [ref=f6e29]
+          - list "Pipeline stages" [ref=f6e30]:
+            - listitem [ref=f6e31]:
+              - button "Understand" [ref=f6e32] [cursor=pointer]
+            - listitem [ref=f6e33]:
+              - button "Explore" [ref=f6e34] [cursor=pointer]
+            - listitem [ref=f6e35]:
+              - button "Record" [ref=f6e36] [cursor=pointer]
+            - listitem [ref=f6e37]:
+              - button "Direct" [ref=f6e38] [cursor=pointer]
+            - listitem [ref=f6e39]:
+              - button "Render" [ref=f6e40] [cursor=pointer]
+        - figure "16:9 and 9:16 · English and Hindi · captions word by word" [ref=f6e41]
+    - region [ref=f6e44]:
+      - heading "Try a link" [level=2] [ref=f6e47]
+    - region [ref=f6e48]:
+      - heading "Choose what comes out" [level=2] [ref=f6e50]
+      - generic [ref=f6e52]:
+        - generic [ref=f6e53]:
+          - paragraph [ref=f6e54]: Narrate it in Hindi as well.
+          - paragraph: 2 languages. A script, voice and captions for each, timed word by word.
+        - switch "Narrate it in Hindi as well." [ref=f6e55] [cursor=pointer]
+      - generic [ref=f6e58]:
+        - generic [ref=f6e59]:
+          - paragraph [ref=f6e60]: Cut a vertical 9:16 for Reels.
+          - paragraph [ref=f6e61]: Every language also renders at 1080 × 1920, reframed around the action.
+        - switch "Cut a vertical 9:16 for Reels." [checked] [ref=f6e62] [cursor=pointer]
+      - generic [ref=f6e65]:
+        - generic [ref=f6e66]:
+          - paragraph [ref=f6e67]: Let the music set the pace.
+          - paragraph: No voice. The track’s beats set every cut and big type carries the words.
+        - switch "Let the music set the pace." [ref=f6e68] [cursor=pointer]
+      - generic [ref=f6e71]:
+        - generic [ref=f6e72]:
+          - paragraph [ref=f6e73]: Let me approve each gate.
+          - paragraph [ref=f6e74]: "3 gates: the flows, the script, the preview. Off runs on autopilot."
+        - switch "Let me approve each gate." [checked] [ref=f6e75] [cursor=pointer]
+      - paragraph [ref=f6e77]: "This setup renders 2 videos: 16:9 in English and 9:16 in English. You approve the flows, the script and the preview."
+    - region [ref=f6e78]:
+      - heading "Watch the agents work" [level=2] [ref=f6e80]
+    - region [ref=f6e83]:
+      - table [ref=f6e85]:
+        - rowgroup [ref=f6e86]:
+          - row [ref=f6e87]:
+            - columnheader [ref=f6e88]:
+              - heading "Ways to film" [level=2] [ref=f6e89]
+            - columnheader "Live 60 fps local Chromium · default 60 frames in one second" [ref=f6e90]:
+              - generic [ref=f6e91]: Live
+              - generic [ref=f6e92]: 60 fps
+              - generic [ref=f6e93]: local Chromium · default
+              - generic "60 frames in one second" [ref=f6e94]
+            - columnheader "Studio 60 fps on our virtual clock · opt-in 60 frames in one second" [ref=f6e155]:
+              - generic [ref=f6e156]: Studio
+              - generic [ref=f6e157]: 60 fps
+              - generic [ref=f6e158]: on our virtual clock · opt-in
+              - generic "60 frames in one second" [ref=f6e159]
+            - columnheader "Fallback 4–6 fps TinyFish remote browser 5 frames in one second" [ref=f6e220]:
+              - generic [ref=f6e221]: Fallback
+              - generic [ref=f6e222]: 4–6 fps
+              - generic [ref=f6e223]: TinyFish remote browser
+              - generic "5 frames in one second" [ref=f6e224]
+        - rowgroup [ref=f6e230]
+        - rowgroup [ref=f6e231]
+    - region "Before you paste a link" [ref=f6e232]
+    - region [ref=f6e235]:
+      - heading "Your link, or ours?" [level=2] [ref=f6e236]:
+        - generic [ref=f6e237]: Your link
+      - generic [ref=f6e238]:
+        - generic [ref=f6e239]:
+          - link "Make a video" [ref=f6e240] [cursor=pointer]:
+            - /url: "#top"
+          - generic [ref=f6e241]: or
+          - link "Watch a run" [ref=f6e242] [cursor=pointer]:
+            - /url: "#job"
+        - paragraph [ref=f6e243]: Making one opens a live job page. Watching opens one already in progress.
+      - paragraph [aria-hidden] [ref=f6e244]:
+        - generic [ref=f6e245]: or ours?
+  - contentinfo [ref=f6e246]:
+    - generic [ref=f6e247]:
+      - generic [ref=f6e248]:
+        - heading "The page" [level=2] [ref=f6e249]
+        - list [ref=f6e250]:
+          - listitem [ref=f6e251]:
+            - link "How it works" [ref=f6e252] [cursor=pointer]:
+              - /url: "#how"
+          - listitem [ref=f6e253]:
+            - link "Try a link" [ref=f6e254] [cursor=pointer]:
+              - /url: "#try"
+          - listitem [ref=f6e255]:
+            - link "Three ways to film" [ref=f6e256] [cursor=pointer]:
+              - /url: "#modes"
+          - listitem [ref=f6e257]:
+            - link "Questions" [ref=f6e258] [cursor=pointer]:
+              - /url: "#faq"
+      - generic [ref=f6e259]:
+        - heading "Made with" [level=2] [ref=f6e260]
+        - list [ref=f6e261]:
+          - listitem [ref=f6e262]: TinyFish agents
+          - listitem [ref=f6e263]: Playwright and Chromium
+          - listitem [ref=f6e264]: Claude Code or Codex
+          - listitem [ref=f6e265]: ElevenLabs and HyperFrames
+      - generic [ref=f6e266]:
+        - heading "Runs on" [level=2] [ref=f6e267]
+        - list [ref=f6e268]:
+          - listitem [ref=f6e269]: Your machine
+          - listitem [ref=f6e270]: Your logged-in coding agent
+          - listitem [ref=f6e271]: Node 22, Chrome and ffmpeg
+      - generic [ref=f6e272]:
+        - heading "Made by" [level=2] [ref=f6e273]
+        - list [ref=f6e274]:
+          - listitem [ref=f6e275]: Four people
+          - listitem [ref=f6e276]: in 24 hours
+          - listitem [ref=f6e277]: at a hackathon
+    - img "AgentCast" [ref=f6e279]
+    - paragraph [ref=f6e281]:
+      - generic [ref=f6e282]: Only record sites you own or are allowed to demo.
+      - generic [ref=f6e283]: A redesign proposal for AgentCast, November 2026.

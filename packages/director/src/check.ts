@@ -67,7 +67,7 @@ export async function checkWorkspace(dir: string, o: CheckOptions = {}): Promise
 }
 
 /** The style fields the director doesn't own. */
-const FIXED = ["palette", "fonts", "music", "edit", "pacing", "timing"] as const;
+const FIXED = ["palette", "fonts", "music", "edit", "pacing", "timing", "brand"] as const;
 
 /** Puts the baseline's fixed style fields (and look.theme) back into `raw`; returns what changed. */
 function restoreFixed(raw: unknown, baseline: { style: Record<string, unknown> }): string[] {

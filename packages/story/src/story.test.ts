@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Llm } from "./llm";
 import { type ProductBrief } from "@agentcast/shared";
-import { creativeBrief, deterministicBrief } from "./index";
+import { checkDirection, checkShots, copyIssues, creativeBrief, deterministicBrief, directArt, productTypeOf, rulesDirection } from "./index";
 
 const product: ProductBrief = {
   schemaVersion: 1,
@@ -502,5 +502,99 @@ describe("a film without a voice", () => {
     const draft = { hook: "h", titleCard: "t", cta: "c", posting: { title: "t", description: "d", hashtags: [] }, lines: [{ beatId: "b", text: "", onScreen: [] }] } as never;
     expect(checkScript(draft, board, "en", true)).toEqual([]);
     expect(checkScript(draft, board, "en", false).join()).toMatch(/is empty/);
+  });
+});
+
+describe("the copy lint", () => {
+  const product = { name: "Sarvam", oneLiner: "AI for India in 22 languages", valueProps: ["Voice agents that sound human"], keyTerms: ["Bulbul", "Indus"] };
+  const copy = (onScreen: string[], over = {}) => ({ titleCard: "Built in India", hook: "Built in India", cta: "Try Sarvam APIs", onScreen, ...over });
+
+  it("passes copy that is true of this product", () => {
+    expect(copyIssues(copy(["Voices that sound Indian", "22 languages", "Write Tamil. Hear Tamil."]), "en", product)).toEqual([]);
+  });
+
+  it("flags stock phrases, numbers the product never stated, and lines built the same way", () => {
+    expect(copyIssues(copy(["Ship faster"]), "en")).toEqual([expect.stringMatching(/stock phrase \("ship faster"\)/)]);
+    expect(copyIssues(copy([], { cta: "Get started with Linear" }), "en")).toEqual([expect.stringMatching(/get started/)]);
+    expect(copyIssues(copy(["10x faster calls"]), "en", product)).toEqual([expect.stringMatching(/says 10x/)]);
+    expect(copyIssues(copy(["One click", "One platform", "One voice"]), "en", product)).toEqual([expect.stringMatching(/3 on-screen lines open with "one"/)]);
+  });
+
+  it("leaves other languages' wording alone", () => {
+    expect(copyIssues(copy(["Ship faster"]), "hi")).toEqual([]);
+  });
+});
+
+describe("art direction", () => {
+  const inv = (over: Partial<import("@agentcast/shared").Inventory> = {}): import("@agentcast/shared").Inventory => ({
+    typing: false, board: false, list: false, panel: false, cards: false, clicks: 0, captures: 0, logo: "none", hero: false, theme: "dark", colourful: false, density: 2, layers: {}, outputs: 0, cloud: 0, imagery: 0, ...over,
+  });
+  const skeletons = [
+    { id: "modules", name: "Label, then proof", feel: "", suits: [] },
+    { id: "rapid", name: "Rapid-fire", feel: "", suits: ["board", "list", "panel", "page"] },
+    { id: "glide", name: "One take", feel: "", suits: ["prompt", "list", "panel"] },
+    { id: "type-led", name: "Type-led", feel: "", suits: ["page", "prompt"] },
+  ];
+  const linear = { oneLiner: "The product development system for teams and agents", valueProps: ["Plan roadmaps", "Track issues"], keyTerms: ["Projects", "Cycles"] };
+  const sarvam = { oneLiner: "India-built AI platform for voice, documents, agents", valueProps: [], keyTerms: ["Text to Speech", "bulbul:v4-flash"] };
+
+  it("reads the product's type from its brief", () => {
+    expect(productTypeOf(linear)).toBe("project-tool");
+    expect(productTypeOf(sarvam)).toBe("voice-audio");
+  });
+
+  it("gives a project tool and a voice product different films, kept to what was recorded", () => {
+    const lin = rulesDirection({ productType: "project-tool", inventory: inv({ board: true, panel: true, list: true, cards: true, clicks: 5, logo: "vector", logoKind: "mark+wordmark" }), skeletons, shape: "board", seed: "linear.app" });
+    expect(lin).toMatchObject({ skeletonId: "rapid", brand: { logo: "lockup", cursor: "hand", world: "bloom", opener: "logo" }, by: "rules" });
+    expect(lin.featured).toEqual(["cards", "panel", "build"]);
+    // With its pages captured, it opens on a wall of them.
+    expect(rulesDirection({ productType: "project-tool", inventory: inv({ board: true, cards: true, captures: 9, logoKind: "mark+wordmark" }), skeletons, shape: "board", seed: "linear.app" }).featured).toEqual(["wall", "cards", "build"]);
+    const sv = rulesDirection({ productType: "voice-audio", inventory: inv({ typing: true, panel: true, clicks: 3, logo: "vector", logoKind: "wordmark", theme: "light", hero: true }), skeletons, shape: "prompt", seed: "sarvam.ai" });
+    // Its captured accent is grey, so no colour field: a plain light ground; a wordmark, so it opens on its line.
+    expect(sv).toMatchObject({ skeletonId: "type-led", brand: { logo: "letters", cursor: "hand", world: "plain", opener: "line" } });
+    // No output was kept from this recording, so the glow pill and the panel carry it; with one, it plays.
+    expect(sv.featured).toEqual(["glow-pill", "panel"]);
+    expect(rulesDirection({ productType: "voice-audio", inventory: inv({ typing: true, outputs: 1, logoKind: "wordmark" }), skeletons, shape: "prompt", seed: "sarvam.ai" }).featured).toEqual(["glow-pill", "output"]);
+  });
+
+  it("takes out what the job or the compiler can't back, and says so", () => {
+    const d = rulesDirection({ productType: "other", inventory: inv(), skeletons, shape: "page", seed: "x" });
+    const checked = checkDirection({ ...d, skeletonId: "glide", featured: ["mascot", "prompt"], brand: { logo: "lockup", cursor: "hand", world: "plain", opener: "line" } }, { inventory: inv({ logo: "raster", logoKind: "wordmark" }), skeletons, shape: "page", seed: "x" });
+    expect(checked.featured).toEqual([]);
+    expect(checked.brand).toEqual({ logo: "letters", cursor: "none", world: "plain", opener: "line" });
+    // Other companies' logos only with consent: none counted, so no orbit.
+    expect(checkDirection({ ...d, featured: ["orbit"] }, { inventory: inv(), skeletons, shape: "page", seed: "x" }).featured).toEqual([]);
+    expect(checked.skeletonId).not.toBe("glide");
+    expect(checked.changed.join("\n")).toMatch(/not in the compiler yet[\s\S]*doesn't have what it needs[\s\S]*wordmark[\s\S]*no recorded clicks/);
+  });
+
+  it("grounds a brand with its own objects in them, and only then", () => {
+    const sv = rulesDirection({ productType: "voice-audio", inventory: inv({ typing: true, imagery: 5, colourful: true, theme: "light", logoKind: "wordmark" }), skeletons, shape: "prompt", seed: "sarvam.ai" });
+    expect(sv.brand.world).toBe("imagery");
+    const one = checkDirection({ ...sv }, { inventory: inv({ imagery: 1, colourful: true, theme: "light" }), skeletons, shape: "prompt", seed: "x" });
+    expect(one.brand.world).toBe("field");
+    expect(one.changed.join()).toMatch(/one object isn't a world/);
+  });
+
+  it("keeps a shot call's headline only when the site or the script says it", () => {
+    const shots = [{ beatId: "a", title: "x", clicks: 2, typed: true, outputs: 1 }, { beatId: "b", title: "y", clicks: 0, typed: false, outputs: 0 }];
+    const { shots: kept, changed } = checkShots(
+      { a: { crop: "acted", headline: "Built for the depth of Indian speech." }, b: { crop: "acted", headline: "The best TTS on earth" }, z: { crop: "page" } },
+      { shots, sources: ["## Built for the depth of Indian speech\nNot just speaking India's languages"] },
+    );
+    expect(kept).toEqual({ a: { crop: "acted", headline: "Built for the depth of Indian speech" }, b: { crop: "focus" } });
+    expect(changed.join("\n")).toMatch(/b: acted crop → focus[\s\S]*isn't in the site's text[\s\S]*no such shot/);
+  });
+
+  it("checks the director's call, and uses the rules when its turn fails", async () => {
+    const product = { schemaVersion: 1 as const, url: "https://x.example", name: "X", pages: [], audience: "a", tone: [], ...linear };
+    const creative = { schemaVersion: 1 as const, audience: "teams", goal: "g", targetSeconds: 30, tone: ["calm"], personality: "premium" as const, cta: "Try", mustShow: [], avoid: [], inferred: true, summary: "s" };
+    const input = { product, creative, inventory: inv({ cards: true, clicks: 2 }), skeletons, shape: "board", seed: "x" };
+    const choice = { productType: "project-tool", skeletonId: "rapid", brand: { logo: "fade", cursor: "hand", world: "bloom", opener: "line" }, featured: ["mascot", "cards"], avoid: [], reasons: { skeleton: "fast" } };
+    const llm: Llm = { json: async ({ schema }) => schema.parse(choice) };
+    const made = await directArt(llm, input);
+    expect(made).toMatchObject({ by: "director", skeletonId: "rapid", featured: ["cards"] });
+    const failing: Llm = { json: async () => { throw new Error("llm.limit"); } };
+    expect(await directArt(failing, input)).toMatchObject({ by: "rules", productType: "project-tool" });
   });
 });

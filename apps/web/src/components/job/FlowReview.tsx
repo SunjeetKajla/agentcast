@@ -43,6 +43,9 @@ function merge(rows: Row[] | undefined, flows: Flow[]): Row[] {
   return [...kept, ...added];
 }
 
+/** A rehearsal's reason, each part once (older flows.json files repeat a part per step). */
+const reasonOf = (reason?: string) => [...new Set((reason ?? "unknown").split(/;\s*/).map((r) => r.trim()).filter(Boolean))].join("; ");
+
 const ROLE = {
   setup: "Setup",
   core: "Core",
@@ -136,8 +139,8 @@ export default function FlowReview({
     flipState.current = undefined;
   }, [rows]);
 
-  if (error) return <p className="text-sm text-red-400">Couldn&apos;t load the flows: {error}</p>;
-  if (!rows) return <p className="text-sm text-white/50">Loading the flows the agents found…</p>;
+  if (error) return <p className="field-err">Couldn’t load the flows: {error}</p>;
+  if (!rows) return <p className="field-wait">Loading the flows the agents found…</p>;
 
   const move = (i: number, by: number) => {
     const j = i + by;
@@ -169,200 +172,107 @@ export default function FlowReview({
   };
 
   return (
-    <section ref={root} className="space-y-6" aria-labelledby="flows-title">
-      <div className="space-y-1">
-        <h2 id="flows-title" className="font-serif text-3xl text-white">
-          Which flows should we film?
-        </h2>
-        <p className="text-sm text-white/60">
-          The agents tried these on your product and rehearsed each one in a fresh browser. Pick and order the ones for
-          the video; rename any to change its chapter title.
-        </p>
-      </div>
-
-      <ol className="space-y-3">
+    <section ref={root} className="rv-flows" aria-label="Flows to film">
+      <ol className="rv">
         {rows.map((row, i) => {
           const { flow } = row;
           const expanded = open === flow.id;
           const replayed = flow.rehearsal?.ok !== false;
+          const frames = flow.steps
+            .map((st) => (st.frame ? fileUrl(jobId, st.frame) : st.screenshotUrl))
+            .filter((f): f is string => Boolean(f));
+          const pick = frames.length <= 4 ? frames : [0, 1, 2, 3].map((k) => frames[Math.round((k * (frames.length - 1)) / 3)]!);
           return (
-            <li
-              key={flow.id}
-              data-flip-id={flow.id}
-              data-flow-row
-              className={`overflow-hidden rounded-2xl border bg-[#121215]/80 transition-colors ${
-                row.selected ? "border-accent/40" : "border-white/10 opacity-70"
-              }`}
-            >
-              <div className="flex items-start gap-3 p-4">
+            <li key={flow.id} data-flip-id={flow.id} data-flow-row className={`rv-item ${row.selected ? "" : "off"}`}>
+              <div className="rv-main">
                 <input
                   type="checkbox"
+                  className="chk"
                   checked={row.selected}
                   disabled={!replayed || sending || working}
                   onChange={(e) => update(i, { selected: e.target.checked })}
-                  aria-label={`Film "${row.title}"`}
-                  className="mt-1.5 h-4 w-4 cursor-pointer accent-[#8B5CF6]"
+                  aria-label={`Film “${row.title}”`}
                 />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <input
+                <div className="rv-text">
+                  <textarea
+                    className="rv-title"
+                    rows={1}
                     value={row.title}
-                    onChange={(e) => update(i, { title: e.target.value })}
+                    onChange={(e) => update(i, { title: e.target.value.replace(/\n/g, " ") })}
+                    onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                     aria-label="Flow title"
-                    className="w-full rounded-lg bg-transparent px-1 -mx-1 text-base font-medium text-white outline-none focus:bg-white/[0.04] focus:ring-1 focus:ring-accent/40"
                   />
-                  <p className="text-sm text-white/60">{flow.whyItMatters}</p>
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    {flow.scoring && (
-                      <>
-                        <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-accent">
-                          {ROLE[flow.scoring.storyRole]}
-                        </span>
-                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-white/70">
-                          score {flow.scoring.score.toFixed(2)}
-                        </span>
-                      </>
-                    )}
-                    <span className="text-white/50">
-                      {flow.steps.length} steps
-                      {flow.rehearsal?.seconds ? ` · ~${Math.round(flow.rehearsal.seconds)} s` : ""}
-                    </span>
-                    {flow.source === "tour" && <span className="text-white/50">· Guided tour</span>}
-                    {!replayed && (
-                      <span className="text-amber-400">
-                        · didn&apos;t replay: {flow.rehearsal?.reason ?? "unknown"}
-                      </span>
-                    )}
-                  </div>
-                  {flow.scoring?.rationale && <p className="text-xs italic text-white/45">{flow.scoring.rationale}</p>}
+                  {flow.whyItMatters && <p className="rv-why">{flow.whyItMatters}</p>}
+                  <p className="rv-meta">
+                    {flow.scoring && <>{ROLE[flow.scoring.storyRole]} · judge score {Math.round(flow.scoring.score * 100)} · </>}
+                    {flow.steps.length} steps
+                    {flow.rehearsal?.seconds ? ` · about ${Math.round(flow.rehearsal.seconds)} s` : ""}
+                    {flow.source === "tour" && " · guided tour"}
+                    {!replayed && <span className="rv-bad"> · didn’t replay: {reasonOf(flow.rehearsal?.reason)}</span>}
+                  </p>
                 </div>
-                <div className="flex shrink-0 flex-col items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => move(i, -1)}
-                    disabled={i === 0}
-                    aria-label="Move up"
-                    className="rounded-md px-2 py-0.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
-                  >
-                    ▲
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(i, 1)}
-                    disabled={i === rows.length - 1}
-                    aria-label="Move down"
-                    className="rounded-md px-2 py-0.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
-                  >
-                    ▼
-                  </button>
+                <div className="frames" data-ui>
+                  {pick.length ? pick.map((src, k) => <img key={k} className="fr" src={src} alt={`${row.title}, frame ${k + 1}`} loading="lazy" />) : <span className="fr fr-empty">No frames</span>}
+                </div>
+                <div className="rv-order">
+                  <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Move “${row.title}” up`}>↑</button>
+                  <button type="button" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label={`Move “${row.title}” down`}>↓</button>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setOpen(expanded ? undefined : flow.id)}
-                aria-expanded={expanded}
-                className="flex w-full items-center justify-between border-t border-white/[0.05] px-4 py-2 text-xs text-white/50 transition-colors hover:bg-white/[0.03] hover:text-white"
-              >
-                <span>{expanded ? "Hide steps" : "Show steps"}</span>
-                <span className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}>▾</span>
+              <button type="button" className="rv-toggle" onClick={() => setOpen(expanded ? undefined : flow.id)} aria-expanded={expanded}>
+                {expanded ? "Hide the steps" : `Show the ${flow.steps.length} steps`}
               </button>
               {expanded && (
-                <ol className="grid gap-3 border-t border-white/[0.05] p-4 sm:grid-cols-2">
+                <ol className="steps">
                   {flow.steps.map((step, n) => {
                     const frame = step.frame ? fileUrl(jobId, step.frame) : step.screenshotUrl;
-                    const target =
-                      step.target?.text ?? step.target?.label ?? step.target?.placeholder ?? step.target?.role;
+                    const target = step.target?.text ?? step.target?.label ?? step.target?.placeholder ?? step.target?.role;
+                    const isEditing = editing?.flowId === flow.id && editing.stepId === step.id;
                     return (
-                      <li key={step.id} className="overflow-hidden rounded-xl border border-white/[0.06] bg-black/30">
-                        {frame && (
-                          <img
-                            src={frame}
-                            alt={`After step ${n + 1}`}
-                            className="aspect-video w-full object-cover"
-                            loading="lazy"
-                          />
-                        )}
-                        <p className="p-3 text-xs text-white/70">
-                          <span className="capitalize text-white">{step.action}</span>
+                      <li key={step.id} className="step">
+                        {frame ? <img src={frame} alt={`After step ${n + 1}`} loading="lazy" data-ui /> : <span className="step-noframe">No frame</span>}
+                        <p>
+                          <b>{n + 1}. {step.action}</b>
                           {target && <> “{target}”</>}
-                          {step.value && <span className="text-white/45"> = {step.secret ? "••••" : step.value}</span>}
-                          {step.expected && <span className="block pt-1 text-white/40">{step.expected}</span>}
+                          {step.value && <span className="step-val"> = {step.secret ? "••••" : step.value}</span>}
+                          {step.expected && <span className="step-exp">{step.expected}</span>}
                         </p>
-                        {editing?.flowId === flow.id && editing.stepId === step.id ? (
+                        {isEditing ? (
                           <form
-                            className="space-y-2 border-t border-white/[0.06] p-3"
+                            className="step-edit"
                             onSubmit={async (e) => {
                               e.preventDefault();
                               const body = {
                                 flowId: flow.id,
                                 stepId: step.id,
-                                ...(editing.text.trim() && editing.text.trim() !== target
-                                  ? { text: editing.text.trim() }
-                                  : {}),
+                                ...(editing.text.trim() && editing.text.trim() !== target ? { text: editing.text.trim() } : {}),
                                 ...(step.action === "type" || step.action === "select" ? { value: editing.value } : {}),
                               };
                               if (await run("edit-step", body)) setEditing(undefined);
                             }}
                           >
-                            <label className="block text-[11px] text-white/50">
-                              The element&apos;s text
-                              <input
-                                value={editing.text}
-                                onChange={(e) =>
-                                  setEditing({
-                                    ...editing,
-                                    text: e.target.value,
-                                  })
-                                }
-                                className="mt-1 w-full rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs text-white outline-none focus:border-accent/50"
-                              />
+                            <label>
+                              The element’s text
+                              <input value={editing.text} onChange={(e) => setEditing({ ...editing, text: e.target.value })} />
                             </label>
                             {(step.action === "type" || step.action === "select") && (
-                              <label className="block text-[11px] text-white/50">
+                              <label>
                                 {step.action === "type" ? "Text to type" : "Option to choose"}
-                                <input
-                                  value={editing.value}
-                                  onChange={(e) =>
-                                    setEditing({
-                                      ...editing,
-                                      value: e.target.value,
-                                    })
-                                  }
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs text-white outline-none focus:border-accent/50"
-                                />
+                                <input value={editing.value} onChange={(e) => setEditing({ ...editing, value: e.target.value })} />
                               </label>
                             )}
-                            <div className="flex gap-2">
-                              <button
-                                type="submit"
-                                disabled={working}
-                                className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-black disabled:opacity-30"
-                              >
-                                Try it again
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditing(undefined)}
-                                className="text-[11px] text-white/50 hover:text-white"
-                              >
-                                Cancel
-                              </button>
+                            <div className="step-acts">
+                              <button type="submit" className="ab ab-f" disabled={working}>Try it again</button>
+                              <button type="button" className="ab ab-f2" onClick={() => setEditing(undefined)}>Cancel</button>
                             </div>
                           </form>
                         ) : (
                           editable(step) && (
                             <button
                               type="button"
+                              className="step-btn"
                               disabled={working}
-                              onClick={() =>
-                                setEditing({
-                                  flowId: flow.id,
-                                  stepId: step.id,
-                                  text: target ?? "",
-                                  value: step.value ?? "",
-                                })
-                              }
-                              className="w-full border-t border-white/[0.06] px-3 py-1.5 text-left text-[11px] text-white/50 transition-colors hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                              onClick={() => setEditing({ flowId: flow.id, stepId: step.id, text: target ?? "", value: step.value ?? "" })}
                             >
                               Edit this step
                             </button>
@@ -379,60 +289,35 @@ export default function FlowReview({
       </ol>
 
       <form
-        className="space-y-2 rounded-2xl border border-dashed border-white/10 p-4"
+        className="rv-foot"
         onSubmit={async (e) => {
           e.preventDefault();
           if (describe.trim().length >= 3 && (await run("add-flow", { description: describe.trim() }))) setDescribe("");
         }}
       >
-        <label htmlFor="describe-flow" className="text-sm text-white/80">
-          Describe another flow to film
-        </label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            id="describe-flow"
-            value={describe}
-            onChange={(e) => setDescribe(e.target.value)}
-            placeholder="e.g. Create a project from a template and invite a teammate"
-            className="min-w-0 flex-1 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-accent/50"
-          />
-          <button
-            type="submit"
-            disabled={working || describe.trim().length < 3}
-            className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-sm text-white transition-colors hover:bg-white/10 disabled:opacity-30"
-          >
-            Explore it
-          </button>
-        </div>
-        <p className="text-xs text-white/40">
-          An agent tries it on your product, then it&apos;s rehearsed in a fresh browser like the others.
-        </p>
+        <label htmlFor="describe-flow" className="sr">Describe another flow to film</label>
+        <input
+          id="describe-flow"
+          value={describe}
+          onChange={(e) => setDescribe(e.target.value)}
+          placeholder="Describe another flow, like “create a project from a template”"
+        />
+        <button type="submit" className="ab ab-f2" disabled={working || describe.trim().length < 3}>Send to an agent</button>
+        <span className="spacer" />
+        <button type="button" className="ab ab-f" onClick={approve} disabled={sending || working || chosen === 0}>
+          {sending ? "Approving…" : `Approve ${chosen} ${chosen === 1 ? "flow" : "flows"}`} <span className="arr" aria-hidden="true">→</span>
+        </button>
       </form>
-
       {action && (
-        <p
-          role="status"
-          className={`text-sm ${action.status === "failed" ? "text-red-400" : action.status === "done" ? "text-green-400" : "text-white/60"}`}
-        >
+        <p role="status" className={`rv-status ${action.status}`}>
           {action.status === "started"
             ? action.name === "add-flow"
-              ? "Exploring the flow you described, then rehearsing it…"
-              : "Rehearsing the flow with your edit…"
+              ? "An agent is exploring the flow you described, then it’s rehearsed like the others…"
+              : "Rehearsing the flow again with your edit…"
             : action.message}
         </p>
       )}
-
-      <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="button"
-          onClick={approve}
-          disabled={sending || working || chosen === 0}
-          className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition-all hover:bg-white/90 active:scale-[0.98] disabled:opacity-30"
-        >
-          {sending ? "Approving…" : `Approve & record ${chosen} flow${chosen === 1 ? "" : "s"}`}
-        </button>
-        {problem && <p className="text-sm text-red-400">{problem}</p>}
-      </div>
+      {problem && <p className="field-err" role="alert">{problem}</p>}
     </section>
   );
 }

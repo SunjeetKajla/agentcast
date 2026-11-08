@@ -32,7 +32,7 @@ export {
   type EncodedVideo,
   type VideoEncoder,
 } from "./encode.ts";
-export { checkStalls, STALL, type StallReport, type MotionWindow } from "./timing.ts";
+export { checkStalls, STALL, WATCHABLE, watchable, type StallReport, type MotionWindow } from "./timing.ts";
 export { selectMatch, type Match } from "./flow/select.ts";
 export {
   resolveTarget,
@@ -79,3 +79,4 @@ export {
   installRecordingHygiene,
   type HygieneOptions,
 } from "./flow/hygiene.ts";
+export { audioInJson, watchOutputs, type OutputOptions } from "./flow/output.ts";

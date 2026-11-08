@@ -113,6 +113,22 @@ describe("Live take orchestration", () => {
     expect(await readdir(directory)).toEqual([]);
   });
 
+  it("keeps a stalled take when the caller accepts it, still reporting it as failed", async () => {
+    smoothAfter = Infinity;
+    const acceptStall = vi.fn().mockReturnValue(true);
+    const result = await recordLive(
+      { outputPath: join(directory, "clip.mp4"), maxTakes: 1, acceptStall },
+      async ({ motion }) => {
+        await motion(async () => {
+          clock += 1000;
+        });
+      },
+    );
+    expect(acceptStall).toHaveBeenCalledOnce();
+    expect(result.stall.status).toBe("failed");
+    expect(mocks.encode).toHaveBeenCalledOnce();
+  });
+
   it("fails after at most three stalled takes and leaves no partial artifact", async () => {
     smoothAfter = Infinity;
     await expect(

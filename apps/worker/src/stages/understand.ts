@@ -1,12 +1,14 @@
 import { mkdir } from "node:fs/promises";
 import {
   Brand,
+  BrandKit,
   ProductBrief,
   CreativeBrief,
   jobPaths,
 } from "@agentcast/shared";
 import {
   brandPalette,
+  brandKitOf,
   pickFont,
   googleFontAvailable,
   recorderAdapter,
@@ -110,6 +112,27 @@ export function makeUnderstand(
     await ctx.write(jobPaths.brand, Brand, brand);
     if (brand.hero) ctx.artifact(brand.hero.file);
     if (brand.logo) ctx.artifact(brand.logo.file);
+    // The brand kit (PRD §9.7.8): the logo's parts for revealing it piece by piece, its vector when the site
+    // had one, and the site's own pages. A failure here costs brand moves, never the job.
+    try {
+      const kit = await brandKitOf({
+        dir: ctx.dir,
+        ...(brand.logo ? { logo: { file: brand.logo.file, ...(brand.logo.plate ? { plate: true } : {}) } } : {}),
+        ...(brand.hero ? { hero: brand.hero.file } : {}),
+        captures: look?.captures ?? [],
+        cloud: look?.cloud ?? [],
+        signal: ctx.signal,
+      });
+      const svg = kit.logo?.svg;
+      if (kit.logo?.cut) ctx.artifact(kit.logo.cut);
+      await ctx.write(jobPaths.brandKit, BrandKit, kit);
+      for (const c of [...kit.captures, ...kit.cloud, ...kit.imagery]) ctx.artifact(c.file);
+      if (svg) ctx.artifact(svg);
+      ctx.log(`Brand kit: ${kit.logo ? `${svg ? "vector" : "raster"} ${kit.logo.kind} logo (${kit.logo.letters.length} letter parts)` : "no logo"}, ${kit.captures.length} page capture(s), ${kit.cloud.length} logo(s) of other companies${kit.cloud.length ? ` (${kit.cloud[0]!.kind}; used only if allowed)` : ""}, ${kit.imagery.length} brand object(s)${kit.colours.length ? `, colours ${kit.colours.join(" ")}` : ""}.`);
+    } catch (error) {
+      ctx.signal.throwIfAborted();
+      ctx.log(`Couldn't build the brand kit (${(error as Error).message.slice(0, 160)}); the film uses plain logo moves.`, "warn");
+    }
     ctx.progress(1, "Product and creative brief ready");
   };
 }

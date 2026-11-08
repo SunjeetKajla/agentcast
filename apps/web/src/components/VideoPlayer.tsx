@@ -152,10 +152,10 @@ export default function VideoPlayer({
   // Format classes based on ratio
   const aspectClass =
     format === "9:16"
-      ? "max-w-[360px] aspect-[9/16] mx-auto shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
+      ? "max-w-[360px] aspect-[9/16] mx-auto"
       : format === "1:1"
-      ? "max-w-[500px] aspect-square mx-auto shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
-      : "w-full aspect-video shadow-[0_20px_60px_rgba(0,0,0,0.8)]";
+      ? "max-w-[500px] aspect-square mx-auto"
+      : "w-full aspect-video";
 
   return (
     <motion.div
@@ -165,7 +165,7 @@ export default function VideoPlayer({
       ref={containerRef}
       onMouseMove={resetHideTimer}
       onClick={resetHideTimer}
-      className={`group relative overflow-hidden rounded-2xl border border-border/80 bg-black ${aspectClass}`}
+      className={`group relative overflow-hidden bg-black ${aspectClass}`}
     >
       <video
         ref={activeVideo}
@@ -184,7 +184,7 @@ export default function VideoPlayer({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={togglePlay}
-            className="absolute inset-0 m-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/90 text-white shadow-2xl backdrop-blur-md transition-transform hover:scale-110 active:scale-95 cursor-pointer z-10"
+            className="absolute inset-0 m-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent text-[#05060f] transition-transform hover:scale-110 active:scale-95 cursor-pointer z-10"
             aria-label="Play video"
           >
             <svg className="h-7 w-7 ml-1" fill="currentColor" viewBox="0 0 24 24">
@@ -195,7 +195,7 @@ export default function VideoPlayer({
       </AnimatePresence>
 
       {/* Floating format badge */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 rounded-md bg-black/60 px-2.5 py-1 text-xs font-mono backdrop-blur-md border border-white/10 text-white/90">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/70 px-2.5 py-1 text-xs font-semibold tabular-nums text-white/90">
         <span>{format}</span>
         <span className="text-accent">•</span>
         <span className="capitalize">{playbackRate}x</span>
@@ -205,7 +205,7 @@ export default function VideoPlayer({
       <motion.div
         animate={{ opacity: showControls || !isPlaying ? 1 : 0 }}
         transition={{ duration: 0.2 }}
-        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pt-10"
+        className="absolute inset-x-0 bottom-0 z-20 bg-black/70 p-4 pt-3"
       >
         {/* Scrubber Bar */}
         <div
@@ -213,7 +213,7 @@ export default function VideoPlayer({
           className="group/scrub relative mb-3 h-2 w-full cursor-pointer rounded-full bg-white/20 transition-all hover:h-2.5"
         >
           <div
-            className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-accent to-purple-400"
+            className="absolute left-0 top-0 h-full rounded-full bg-accent"
             style={{ width: `${progressPercent}%` }}
           />
           <div
@@ -260,7 +260,7 @@ export default function VideoPlayer({
             </button>
 
             {/* Timers */}
-            <span className="font-mono text-white/80">
+            <span className="tabular-nums text-white/80">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
@@ -269,7 +269,7 @@ export default function VideoPlayer({
             {/* Speed Toggle */}
             <button
               onClick={cycleSpeed}
-              className="rounded px-2 py-0.5 font-mono text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors cursor-pointer"
+              className="px-2 py-0.5 tabular-nums text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors cursor-pointer"
               title="Playback speed"
             >
               {playbackRate}x

@@ -10,6 +10,7 @@ export {
   type StoryboardInput,
 } from "./storyboard";
 export { writeScript, checkScript, toScript } from "./script";
+export { copyIssues, type FilmCopy } from "./copy";
 export { workspaceLlm, availableLlm, type Llm } from "./llm";
 export {
   readPrompt,
@@ -17,3 +18,4 @@ export {
   wordBudget,
   type PromptReading,
 } from "./prompt";
+export { available, checkDirection, checkShots, directArt, productTypeOf, rulesDirection, scriptLinesOf, shotBriefsOf, siteTextOf, TENDENCIES, type ShotBrief, type SkeletonChoice } from "./art";
