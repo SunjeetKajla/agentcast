@@ -5,6 +5,19 @@ made a launch film: gather pacing references, choose the music, write a timestam
 first draft, then refine one scene at a time before the final render. It covers whether AgentCast should
 work the same way, whether the genjutsu skill would help, and whether we should drop our frameworks.
 
+## Status (2026-11-08)
+
+| Part | State |
+| --- | --- |
+| Reference library | **Built.** Four skeletons in `assets/references/` (`modules`, `rapid`, `glide`, `type-led`), chosen by product shape and seeded by site. The 12-film comparison is in `spikes/RESULTS.md` S13. |
+| Beat sheet | **Built.** `script/beat-sheet.json`, written by the script stage before review and rewritten for the final edit. Not yet shown in `apps/web` at script review. |
+| Scene refinement | **Built in the worker.** A preview revision with `scene` or `at` is limited to one part, with a 4-minute turn. No single-scene render is needed: a full re-render takes about 22 s. Not yet in `apps/web` (a "change this part" control on the player). |
+| genjutsu | **Borrowed.** The copy lint (`copyIssues`) runs in the script writer's repair round. Use `cast` for `apps/web` work, not `paint`. |
+| Frameworks | **Unchanged**, as decided below. |
+| Competitor text, user-attached references | Not started. |
+
+The doc below is the reasoning, written before the build.
+
 ## Decisions at a glance
 
 | Question | Recommendation |

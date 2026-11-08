@@ -399,12 +399,21 @@ importers:
       '@agentcast/director':
         specifier: workspace:*
         version: link:../packages/director
+      '@agentcast/explore':
+        specifier: workspace:*
+        version: link:../packages/explore
+      '@agentcast/llm':
+        specifier: workspace:*
+        version: link:../packages/llm
       '@agentcast/recorder':
         specifier: workspace:*
         version: link:../packages/recorder
       '@agentcast/shared':
         specifier: workspace:*
         version: link:../packages/shared
+      '@agentcast/story':
+        specifier: workspace:*
+        version: link:../packages/story
       '@agentcast/video':
         specifier: workspace:*
         version: link:../packages/video

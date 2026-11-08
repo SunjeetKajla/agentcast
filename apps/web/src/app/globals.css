@@ -820,3 +820,46 @@ h1, h2, h3 { text-wrap: balance; }
   .hide-s { display: none; }
   .jl th, .jl td { padding: 10px 6px; }
 }
+
+/* The filming table with two columns of plans */
+.modes-t.two td, .modes-t.two thead th:not(:first-child) { width: 36%; }
+
+/* The hero composer: the prompt in plain sight, every other setting behind one line */
+.cmp { display: grid; gap: 8px; }
+.hero-foot { align-items: flex-start; }
+.cmp-prompt, .cmp-focus { width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-radius: 0; background: var(--blue-3); color: var(--white); font-size: 16px; }
+.cmp-prompt::placeholder, .cmp-focus::placeholder { color: var(--blue-soft); }
+.cmp-sum { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; border: 0; border-radius: 0; padding: 10px 12px; background: var(--blue-2); color: var(--white); text-align: left; transition: background-color .2s; }
+.cmp-sum:hover { background: var(--blue-3); }
+.cmp-sum b { flex: none; font-size: 14px; font-weight: 700; padding: 6px 10px; background: var(--white); color: var(--blue); }
+.cmp-chips { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 14px; }
+.cmp-chips span { padding: 2px 8px; background: var(--blue-3); }
+.cmp-panel { display: grid; gap: 12px; padding: 14px; background: var(--blue-3); }
+.cmp-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px 12px; align-items: center; }
+.cmp-l { font-size: 14px; font-weight: 600; color: var(--blue-soft); }
+.cmp-hint { grid-column: 2; font-size: 14px; color: var(--blue-soft); }
+.seg { display: flex; flex-wrap: wrap; gap: 2px; }
+.seg button { border: 0; border-radius: 0; padding: 8px 12px; min-height: 40px; background: var(--blue-2); color: var(--white); font-size: 15px; font-weight: 600; transition: background-color .2s, color .2s; }
+.seg button:hover { background: var(--blue); }
+.seg button[aria-pressed="true"] { background: var(--white); color: var(--blue); }
+.cmp-focus { background: var(--blue-2); min-height: 40px; font-size: 15px; }
+@media (max-width: 760px) {
+  .cmp-row { grid-template-columns: minmax(0, 1fr); }
+  .cmp-hint { grid-column: 1; }
+}
+
+/* Job page: log lines wrap inside the field instead of running past it */
+.work-side .notes li span, .work-side .notes li span:last-child { white-space: normal; color: inherit; }
+.work-side .notes li { color: var(--f-ink); }
+
+/* Job page: the plan */
+.plan-blk { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px 40px; }
+.plan-sum { margin-top: 10px; font-size: 22px; line-height: 1.3; letter-spacing: -0.02em; font-weight: 500; }
+.plan-prod { margin-top: 12px; font-size: 15px; color: var(--black-soft); }
+.plan-prod b { color: var(--white); font-weight: 600; }
+.plan-vp { margin-top: 10px; display: grid; gap: 4px; font-size: 14px; color: var(--black-soft); }
+.plan-vp li::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; background: var(--yellow); vertical-align: middle; }
+@container app (max-width: 700px) { .plan-blk { grid-template-columns: minmax(0, 1fr); } }
+
+/* Flow titles wrap to their length instead of clipping */
+.rv-title { display: block; resize: none; overflow: hidden; field-sizing: content; min-height: 1.3em; line-height: 1.2; font-family: inherit; }

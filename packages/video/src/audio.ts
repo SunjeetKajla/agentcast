@@ -86,7 +86,7 @@ export function sfxCues(
     const end = (part.from + part.frames) / fps;
     if (auto && part.kind !== "segment" && (edl.intro.component === "Opener" || edl.outro.component === "EndCard")) {
       const card = part.kind === "intro" ? edl.intro : edl.outro;
-      const own = cardCues(card, part.frames / fps, beat, mix.lang ?? "en");
+      const own = cardCues(card, part.frames / fps, beat, mix.lang ?? "en", part.kind === "intro" && edl.style.brand?.opener === "logo");
       if (own) {
         for (const cue of own) add(cue.kind, start + cue.at, cue.priority, cue.factor);
         continue;

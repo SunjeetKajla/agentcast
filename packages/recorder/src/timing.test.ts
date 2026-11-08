@@ -3,6 +3,7 @@ import {
   alignFrames,
   buildCfrPlan,
   checkStalls,
+  watchable,
   type CapturedFrame,
 } from "./timing.ts";
 
@@ -151,5 +152,17 @@ describe("Live stall check", () => {
     );
     expect(report.motionDurationMs).toBe(200);
     expect(report.status).toBe("passed");
+  });
+});
+
+describe("watchable", () => {
+  const report = (effectiveFps: number, p95GapMs: number, maxGapMs: number) =>
+    ({ status: "failed", effectiveFps, p95GapMs, maxGapMs, motionDurationMs: 3000, gaps: [] }) as const;
+  it("keeps the near misses of a heavy page (sarvam.ai at 4/3) and drops frozen-looking takes", () => {
+    expect(watchable(report(30, 73.4, 284))).toBe(true);
+    expect(watchable(report(25.6, 122, 575))).toBe(true);
+    expect(watchable(report(16.7, 206, 456))).toBe(false);
+    expect(watchable(report(26, 90, 900))).toBe(false);
+    expect(watchable({ ...report(10, 300, 900), status: "passed" })).toBe(true);
   });
 });

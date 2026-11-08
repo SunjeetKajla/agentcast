@@ -1,3 +1,4 @@
+import { watchOutputs, type OutputOptions } from "./output.ts";
 import { access, link, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import {
@@ -14,6 +15,7 @@ import {
   type LiveOptions,
   type LiveRecording,
 } from "../live.ts";
+import { watchable } from "../timing.ts";
 import { createActuator, type CursorSample } from "./act.ts";
 import { abortable } from "./control.ts";
 import { redactor, type RepairContext } from "./heal.ts";
@@ -60,6 +62,13 @@ export interface FlowOptions extends LiveOptions {
   random?: () => number;
   /** Sanitized progress, suitable for the worker's existing log/event hooks. */
   onTake?: (take: FlowTake) => void;
+  /** Keep audio the product makes during the flow (PRD §9.7.8): `<dir>/<flowId>-NN.<ext>` and `<dir>/<flowId>.json`. */
+  outputs?: OutputOptions;
+  /**
+   * On the last take, keep footage that missed the stall limits but is still watchable (WATCHABLE)
+   * instead of failing the flow. The take is reported "ok" with a reason saying how uneven it is.
+   */
+  acceptUneven?: boolean;
 }
 export interface FlowTake {
   attempt: number;
@@ -174,8 +183,13 @@ export async function recordFlow(
             ...options,
             outputPath: stagedVideo,
             maxTakes: 1,
+            ...(options.acceptUneven && attempt === maxTakes
+              ? { acceptStall: watchable }
+              : {}),
             prepare: async (session, _innerAttempt, signal) => {
               const hygiene = await installRecordingHygiene(session.page, {
+                // A flow that works the consent banner itself needs to see it.
+                hideConsent: !flow.steps.some((step) => /cookie|consent|accept/i.test(`${step.target?.text ?? ""} ${step.target?.label ?? ""} ${step.target?.near ?? ""}`)),
                 ...options.hygiene,
                 secretValues: secrets,
                 signal,
@@ -233,6 +247,7 @@ export async function recordFlow(
           },
           async (controls) => {
             const { page, signal, now } = controls;
+            if (options.outputs) await watchOutputs(page, { ...options.outputs, flowId: flow.id, now });
             // The page as an action finds it: what the action does next may cover this up.
             let found: Layout | undefined;
             const actuator = createActuator(page, {
@@ -371,7 +386,10 @@ export async function recordFlow(
                         : step.value,
                 });
                 const settledAt = now() / 1000;
-                const layout = await abortable(pageLayout(page, action.bbox), signal);
+                const layout = await abortable(
+                  pageLayout(page, action.bbox),
+                  signal,
+                );
                 events.push({
                   t: settledAt,
                   flowId: flow.id,
@@ -462,7 +480,15 @@ export async function recordFlow(
           if (timelinePublished) await rm(timelinePath, { force: true });
           throw error;
         }
-        const take: FlowTake = { attempt, status: "ok" };
+        const { stall } = recording;
+        const take: FlowTake =
+          stall.status === "failed"
+            ? {
+                attempt,
+                status: "ok",
+                reason: `kept although uneven: ${stall.effectiveFps.toFixed(1)} fps while moving, p95 frame gap ${Math.round(stall.p95GapMs)} ms, longest ${Math.round(stall.maxGapMs)} ms`,
+              }
+            : { attempt, status: "ok" };
         takes.push(take);
         options.onTake?.(take);
         return {

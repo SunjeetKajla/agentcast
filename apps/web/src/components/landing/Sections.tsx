@@ -1,62 +1,34 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { scrollToEl } from "./scroll";
 
-/* ───────── Ways to film: a large table, one second of frames per mode ───────── */
+/* ───────── How it films: the recorder's two capture sizes, as a large table ───────── */
 
-const ROWS: [string, string, string, string][] = [
-  ["How it films", "A screencast of a real browser on your machine", "Frame by frame, with time paused between frames", "State by state in a hosted browser"],
-  ["Speed", "Real time", "Parallel chunks across workers", "About 300 ms per round trip"],
-  ["When a page stalls", "Caught, then shot again automatically", "Can’t happen: the clock waits", "Each state is captured once settled"],
-  ["Best for", "Every job, unless something below applies", "Heavy animation or a slow machine", "Sites a local browser can’t reach"],
-  ["How you get it", "Every job uses it", "agentcast record --mode studio", "Used when local Chrome can’t film"],
+const ROWS: [string, string, string][] = [
+  ["Frames", "2880 × 1800 (2× pixels)", "1920 × 1200 (4/3 pixels)"],
+  ["When", "Every job starts here", "When a site can’t be screencast smoothly at 2× on your machine"],
+  ["Close-ups", "Crisp up to 2.5× zoom", "Crisp up to about 1.7× zoom"],
+  ["Smoothness check", "Every take must hold 30 fps: 95% of frame gaps under 73 ms, none over 400 ms", "The same check"],
+  ["Retakes", "Up to 3 per flow", "Every flow is filmed again at this size, so the takes join cleanly"],
 ];
 
 export function Modes() {
-  const strips = useRef<HTMLTableElement>(null);
-
-  useEffect(() => {
-    const table = strips.current!;
-    const all = Array.from(table.querySelectorAll<HTMLElement>(".fps")).map((el) => {
-      const n = Number(el.dataset.fps);
-      el.innerHTML = "<i></i>".repeat(n);
-      return { n, ticks: Array.from(el.children) };
-    });
-    const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let visible = false, raf = 0, alive = true;
-    const io = new IntersectionObserver((e) => { visible = Boolean(e[0]?.isIntersecting); });
-    io.observe(table);
-    const frame = (now: number) => {
-      if (!alive) return;
-      if (visible || RM) {
-        const t = RM ? 0.999 : (now % 2000) / 2000;
-        for (const s of all) { const k = Math.floor(t * s.n); s.ticks.forEach((tk, i) => tk.classList.toggle("on", i <= k)); }
-      }
-      if (!RM) raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
-    return () => { alive = false; cancelAnimationFrame(raf); io.disconnect(); };
-  }, []);
-
   const head = [
-    ["Live", "60 fps", "local Chromium · default", 60],
-    ["Studio", "60 fps", "on our virtual clock · opt-in", 60],
-    ["Fallback", "4–6 fps", "TinyFish remote browser", 5],
+    ["Full sharpness", "2×", "local Chrome · default"],
+    ["Lighter capture", "4/3", "local Chrome · automatic"],
   ] as const;
 
   return (
     <section className="modes" id="modes" aria-labelledby="modes-h">
       <div className="wrap table-scroll">
-        <table className="modes-t" ref={strips}>
+        <table className="modes-t two">
           <thead>
             <tr>
-              <th scope="col"><h2 id="modes-h">Ways to film</h2></th>
-              {head.map(([n, fps, q, f], i) => (
+              <th scope="col"><h2 id="modes-h">How it films</h2></th>
+              {head.map(([n, px, q], i) => (
                 <th key={n} scope="col" className={i === 0 ? "is-pick" : ""}>
-                  <span className="pn">{n}</span><span className="pp">{fps}</span><span className="pq">{q}</span>
-                  <span className="fps" data-ui data-fps={f} aria-label={`${f} frames in one second`} />
+                  <span className="pn">{n}</span><span className="pp">{px}</span><span className="pq">{q}</span>
                 </th>
               ))}
             </tr>
@@ -65,7 +37,7 @@ export function Modes() {
             {ROWS.map(([label, ...cells]) => (
               <tr key={label}>
                 <th scope="row">{label}</th>
-                {cells.map((c, i) => <td key={i} className={i === 0 ? "is-pick" : ""}>{label === "How you get it" && i === 1 ? <code>{c}</code> : c}</td>)}
+                {cells.map((c, i) => <td key={i} className={i === 0 ? "is-pick" : ""}>{c}</td>)}
               </tr>
             ))}
           </tbody>
@@ -141,7 +113,7 @@ export function SiteFooter() {
   return (
     <footer className="foot wrap" id="foot">
       <div className="foot-cols">
-        <div><h2>The page</h2><ul><li><a href="#how">How it works</a></li><li><a href="#try">Try a link</a></li><li><a href="#modes">Ways to film</a></li><li><a href="#faq">Questions</a></li></ul></div>
+        <div><h2>The page</h2><ul><li><a href="#how">How it works</a></li><li><a href="#try">Try a link</a></li><li><a href="#modes">How it films</a></li><li><a href="#faq">Questions</a></li></ul></div>
         <div><h2>Made with</h2><ul><li>TinyFish agents</li><li>Playwright and Chromium</li><li>Claude Code or Codex</li><li>ElevenLabs and HyperFrames</li></ul></div>
         <div><h2>Runs on</h2><ul><li>Your machine</li><li>Your logged-in coding agent</li><li>Node 22, Chrome and ffmpeg</li></ul></div>
         <div><h2>Your work</h2><ul><li><Link href="/jobs">Your videos</Link></li><li><a href="#top">Make a video</a></li></ul></div>

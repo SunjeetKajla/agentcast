@@ -173,6 +173,32 @@ describe("record stage", () => {
     ]);
   });
 
+  it("films every flow again at 4/3 when one can't be screencast smoothly at 2×", async () => {
+    await approveBoth();
+    const ok = fakeFilm();
+    // flow-template stalls at 2× (a heavy page), and films fine at 4/3.
+    const film = vi.fn(async (flow: Flow, options: FlowOptions) => {
+      if (flow.id === "flow-template" && options.browser?.deviceScaleFactor === 2)
+        throw new FlowRecordingError([
+          { attempt: 3, status: "failed", reason: "Live recording failed stall checks after 1 take(s) (p95 90 ms)" },
+        ]);
+      return ok(flow, options);
+    });
+    await makeRecord({ recordFlow: film })(ctx);
+
+    expect(film.mock.calls.map(([flow, o]) => [flow.id, o.browser?.deviceScaleFactor])).toEqual([
+      ["flow-export", 2],
+      ["flow-template", 2],
+      ["flow-export", 4 / 3],
+      ["flow-template", 4 / 3],
+    ]);
+    const timeline = await ctx.read(jobPaths.timeline("desktop"), Timeline);
+    expect(timeline.flows.map((f) => f.flowId)).toEqual(["flow-export", "flow-template"]);
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining("1920 px wide"), "warn");
+    // Uneven footage is only acceptable at the lighter ratio, where nothing smoother can be filmed.
+    expect(film.mock.calls.map(([, o]) => o.acceptUneven)).toEqual([false, false, true, true]);
+  });
+
   it("does not turn cancellation into a recoverable failed flow", async () => {
     const controller = new AbortController();
     const film = vi.fn(async () => {

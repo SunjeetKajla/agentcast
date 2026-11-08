@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { UNTRUSTED_RULE, type Llm, type OnEvent } from "@agentcast/llm";
 import { Edl } from "@agentcast/shared";
-import { checkWorkspace, describeIssues, errorsOf, type CheckResult } from "./check.ts";
+import { checkWorkspace, describeIssues, errorsOf, type CheckResult, type Issue } from "./check.ts";
 import { COMPOSITION } from "./composition.ts";
 import { CHECK_COMMAND, SNAPSHOT_COMMAND } from "./workspace.ts";
 
@@ -14,6 +14,8 @@ export type DirectorOptions = {
   resume?: string;
   /** What the person asked for at the preview, instead of the first pass. */
   revise?: string;
+  /** With `revise`: the one part that may change (a segment id, "intro" or "outro"). */
+  scene?: string;
   /** Renders frames of an edit and returns their absolute paths; turns on the stills review. */
   renderStills?: (edl: Edl) => Promise<string[]>;
   onEvent?: OnEvent;
@@ -78,6 +80,19 @@ export async function restoreScene(dir: string, id: string, { files, compiled }:
   await writeFile(join(dir, COMPILED), JSON.stringify(now, null, 2));
 }
 
+/** What changed outside the one part a scene revision may change. */
+export function scopeIssues(before: Edl, after: Edl, scene: string): Issue[] {
+  const issues: Issue[] = [];
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  const err = (at: string, message: string) => issues.push({ severity: "error", at, message });
+  if (!same(before.style, after.style)) err("style", `only ${scene} may change in this revision: put style back as it was`);
+  if (scene !== "intro" && !same(before.intro, after.intro)) err("intro", `only ${scene} may change in this revision: put the intro back as it was`);
+  if (scene !== "outro" && !same(before.outro, after.outro)) err("outro", `only ${scene} may change in this revision: put the outro back as it was`);
+  const others = (edl: Edl) => edl.segments.filter((s) => s.id !== scene);
+  if (!same(others(before), others(after))) err("segments", `only ${scene} may change in this revision: every other segment stays as it was, in the same order`);
+  return issues;
+}
+
 /**
  * The Claude Code director (PRD §9.7): one agent turn improves edl.json in the workspace; the worker
  * then checks it itself and sends any errors back to the same session, at most `maxRepairRounds`
@@ -112,7 +127,11 @@ async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes):
     ? ""
     : "\nYou can't run commands in this workspace: ignore the check and snapshot commands in DIRECTOR.md. The worker runs the same check after your turn and sends you anything it finds.";
   const what = hasScenes ? "edl.json and your scene files" : "edl.json";
-  const check = () => checkWorkspace(o.dir, { ...(o.secrets ? { secrets: o.secrets } : {}), ...(o.signal ? { signal: o.signal } : {}) });
+  const scoped = o.revise && o.scene ? o.scene : undefined;
+  const check = async (): Promise<CheckResult> => {
+    const result = await checkWorkspace(o.dir, { ...(o.secrets ? { secrets: o.secrets } : {}), ...(o.signal ? { signal: o.signal } : {}) });
+    return scoped && result.edl ? { ...result, issues: [...result.issues, ...scopeIssues(Edl.parse(JSON.parse(before)), result.edl, scoped)] } : result;
+  };
   let sessionId = o.resume;
   const turn = async (prompt: string, images?: string[]) => {
     const result = await o.llm.agent(
@@ -132,9 +151,12 @@ async function direct(o: DirectorOptions, before: string, scenesBefore: Scenes):
     return result.text.trim();
   };
 
+  const part = scoped === "intro" || scoped === "outro" ? `the ${scoped} (\`${scoped}\` in edl.json)` : `the segment \`${scoped}\` in edl.json`;
   let summary = await turn(
     o.revise
-      ? `${UNTRUSTED_RULE}\nThe person watched the preview and asks for this change:\n${JSON.stringify(o.revise)}\nChange ${what} only as much as that needs (DIRECTOR.md still applies). Run \`${CHECK_COMMAND}\` until it passes, then reply with what you changed.`
+      ? scoped
+        ? `${UNTRUSTED_RULE}\nThe person watched the preview and asks for this change to one part of the film, ${part}${hasScenes ? ` and its scene file composition/compositions/${scoped}.html` : ""}:\n${JSON.stringify(o.revise)}\nChange only that part: its settings, words and length. Leave every other segment, the intro, the outro and the style exactly as they are; the check rejects any other change. DIRECTOR.md still applies. Run \`${CHECK_COMMAND}\` until it passes, then reply with what you changed.`
+        : `${UNTRUSTED_RULE}\nThe person watched the preview and asks for this change:\n${JSON.stringify(o.revise)}\nChange ${what} only as much as that needs (DIRECTOR.md still applies). Run \`${CHECK_COMMAND}\` until it passes, then reply with what you changed.`
       : FIRST + noShell,
   );
 

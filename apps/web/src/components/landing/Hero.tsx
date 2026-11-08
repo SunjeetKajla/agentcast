@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { startHero } from "@/lib/particles";
+import ComposerSettings from "./ComposerSettings";
 import { useComposer } from "./composer";
 
 export default function Hero() {
@@ -12,7 +13,7 @@ export default function Hero() {
   const statement = useRef<HTMLHeadingElement>(null);
   const l1 = useRef<HTMLSpanElement>(null), l2 = useRef<HTMLSpanElement>(null);
   const w1 = useRef<HTMLSpanElement>(null), w2 = useRef<HTMLSpanElement>(null);
-  const { start, busy, error } = useComposer();
+  const { start, busy, error, prompt } = useComposer();
   const [text, setText] = useState("");
 
   useEffect(
@@ -52,7 +53,7 @@ export default function Hero() {
               noValidate
               onSubmit={(e) => {
                 e.preventDefault();
-                void start(text);
+                void start(text, prompt.trim());
               }}
             >
               <label htmlFor="hero-url" className="sr">Your product’s link</label>
@@ -71,10 +72,8 @@ export default function Hero() {
                 {busy ? "Starting…" : "Make the video"} <span className="arr" aria-hidden="true">→</span>
               </button>
             </form>
+            <ComposerSettings promptId="hero-prompt" />
             {error && <p className="form-err" role="alert">{error}</p>}
-            <p className="hero-hint">
-              Uses the settings below: <a href="#outputs">change them</a>.
-            </p>
           </div>
         </div>
       </div>

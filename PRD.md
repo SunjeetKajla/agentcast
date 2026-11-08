@@ -993,6 +993,90 @@ Launch and sales films have no voice by default (`voiced()`, `musicLed()`): most
 - **The director** chooses and tunes moves (`guides/primitives.md`) and may still write a scene. The worker snaps its lengths back to the beat and warns if one moved more than half a beat. With `AGENTCAST_DIRECTOR=off` the compiler's edit stands.
 - **Sound** comes from each move's own timing (`primitives/cues.ts`), so it lands exactly with the picture. See §9.7.2.
 
+#### 9.7.7 Reference library, beat sheet and scene revisions
+
+One template made every music-led film the same shape (`docs/LAUNCH_FILM_TEARDOWN.md` §8). The structure now comes from a library of skeletons, the film is planned bar by bar before review, and a revision can be aimed at one part. The reasoning is in `docs/REFERENCE_WORKFLOW.md`.
+
+- **The reference library** (`assets/references/skeletons.json`, `ReferenceLibrary`): film skeletons learned from the measured reference films, written in our primitives, never footage. Each sets the opener, module and end-card lengths in beats; whether a module has a label, a second angle on the same shot, or a camera that travels the page (`camera: "path"`); cycles of label openings, grounds and tilts; the product shapes it suits; and the references' pacing targets. Four to start: `modules` (label, then proof), `rapid` (rapid-fire), `glide` (one take) and `type-led`.
+- **Choosing one.** `productShape` reads what the recording mostly is (`prompt`, `board`, `list`, `panel` or `page`) and `chooseSkeleton` picks a skeleton that suits it, seeded by the site, so a product keeps its look across jobs and two products differ. The site's seed also picks where the look cycles start.
+- **The beat sheet** (`script/beat-sheet.json`): the film's parts on the bar grid, each with its move, its words and what it shows of the recording, plus the shots left out and why. The script stage plans the film (`planLedFilm`: track, page content, skeleton, edit) as soon as the script is written, so a shot with too little on screen is reported before script review, not dropped after it. The direct stage plans it again on the approved script and rewrites the sheet for the final edit.
+- **Framing.** A proof whose page is full edge to edge frames its busiest half (`busiestRegion`) instead of the whole page, and a nav bar is never framed as a component. A build spreads its pieces over the first part of the move and always lifts a card, so it never lands and holds; on a tall canvas it pans across a wide board instead of cropping to two columns.
+- **Scene revisions.** At the preview a person can name one part (`scene`) or mark a moment (`at`, read as the part playing then). The director is told to change only that part, the worker's check rejects a change anywhere else (`scopeIssues`), and the turn has 4 minutes instead of 8. A full re-render is fast enough (about 22 s for an 18 s film at 1080p) that only the part's scope is limited, not the render.
+- **The copy lint** (`copyIssues`, from genjutsu's checks): a stock phrase that fits any product, a number the product brief doesn't state, or three lines opening the same way goes back to the script writer's repair round. It never fails a script.
+
+#### 9.7.8 Brand kit, layers and art direction
+
+The design varies by what the product is and what we actually captured (`docs/BRAND_MOTION_PLAN.md`).
+
+- **Brand kit** (`brief/brand-kit.json`, written by the understand stage):
+  - **Logo:** the 4× capture as before. Its vector too (`brief/logo.svg`) when the site's logo is an SVG, cleaned in
+    the page to shapes and gradients with paints resolved, then checked again (`svgProblems`).
+  - **Raster cut-out:** a raster logo keyed off the colour it sat on (`brief/logo-cut.png`).
+  - **Logo parts:** the logo's kind (`mark+wordmark`, `wordmark` or `mark`) and the spans of its mark and letters,
+    read from the 4× capture's ink, so any logo can be revealed piece by piece.
+  - **Page captures:** viewport captures of up to eight of the site's own pages (`brief/captures/`). Accounts, legal,
+    docs, help and contact pages are skipped.
+  - **Logo cloud:** a row of five or more other companies' logos on the home page (`brief/logos/`), each captured with
+    a margin of the page and keyed off it, labelled integrations or customers from the text around it. A film shows
+    them only when the job allows it (`JobConfig.thirdPartyLogos`, off by default).
+- **Product outputs** (`record/outputs.json`, written by the record stage): audio the product made while it was
+  recorded. The recorder keeps what the page fetches after the flow starts (`flow/output.ts`), including base64 audio
+  in a JSON reply, with the second it arrived. Audio the page preloads for its own players never counts.
+- **Layers** (`render/layers.json`, written by the script stage): panels, components, cards, columns and rows cut
+  out of the recording from the element map, each at its latest settle.
+- **Inventory:** what a job has, computed and never written by an LLM (`inventoryOf`). It covers:
+  - typing, boards, lists, panels and cards
+  - recorded clicks and page captures
+  - the logo's kind
+  - theme, colour and the recording's pixel density
+- **Brand imagery** (brand kit `imagery`, `colours`): the brand's own objects (Sarvam's orbs, an illustration) found
+  in its hero, its page captures (understand) and frames of the recording (script stage): colourful, free-standing,
+  not clipped, not bitten by another object, without UI on them; touching objects are split apart; each is cut from
+  the full-resolution picture. A brand whose CSS is black and white often keeps all its colour here.
+- **Art direction** (`brief/art-direction.json`, written by the script stage before review):
+  - **What it holds:** the product type, the skeleton, the brand moves (the logo's motion, the cursor, the ground's
+    world), two or three featured moves and moves to avoid, with a reason for each.
+  - **Who chooses:** the director makes the call in one fast schema-checked turn (`directArt`). The rules table
+    (`rulesDirection`, the plan's §7 tendencies) makes it when the director is off or its turn fails.
+  - **The check** (`checkDirection`) changes anything the job or the compiler can't back, and records why. Moves not
+    in the compiler yet (wall, glow pill, mockup, output, orbit, mascot) are never featured. Lockup needs a mark and a
+    wordmark. A colour field needs a colourful brand. The imagery world needs two or more brand objects (the rules
+    choose it whenever there are). The hand needs recorded clicks.
+  - **Shot calls** (`shots`, the director only): for a shot, a crop (`acted`: just where things were clicked, typed
+    and chosen; `focus`; `page`) and a headline over it. `checkShots` keeps a headline only if it appears word for
+    word in the site's text (`brief/pages/*.md`) or the script, and an `acted` crop only on a shot where something
+    is done.
+- **What the compiler draws from it:**
+  - **Edit:** the skeleton and the order moves are tried in (`prefer`, `avoid`).
+  - **EDL `style.brand` (v8):**
+    - **End card logo:** whole, as a lockup (the mark lands alone, then the name slides out from behind it), or
+      letter by letter. Pieces are cut from the clean logo and tile it with no seams.
+    - **Hand cursor:** glides to each recorded click inside a proof, turns into the hand and presses. A panel proof
+      starts just before the click that opened it.
+    - **Ground:** plain, a bloom of the brand's light, its colours in the corners, or its imagery: the brand's
+      objects float in around the opener's line, move to new places at the frame's edges on every cut, drift between
+      and ring the end card.
+    - **Colours:** the kit's colours (EDL `palette.colours`) light the pill's glow, the chips and the waveform.
+- **Brand moves** (EDL v8 primitives). The template places one only when art direction features it and the job has its
+  material:
+  - **`wall`:** the site's pages on a tilted plane, diving into one, after the opener.
+  - **`pill`:** the recorded typing rebuilt as a pill in a ring of the brand's light, with the hand sending if the
+    recording did. It wears the recording's own words: the pressed button's label (from `flows.json`) and the
+    choices made before typing as chips (a language code shown in its own script and in English). In a one-take
+    skeleton a featured pill, mockup, build or prompt still plays. It lasts as long as its typing and press.
+  - **`mockup`:** a shot on a laptop we draw, the camera going through its screen.
+  - **`output`:** the product's own audio, played a beat in, with the music ducked under it and a waveform of its
+    samples lighting up, under the director's headline or the language it speaks, on one of the brand's own round
+    objects as its disc.
+  - **`orbit`:** consented logos around the brand's, lining up under it.
+
+  A grey brand gets a soft ring of its ink, not coloured light.
+- **Opener:** art direction may open on the logo (`brand.opener: "logo"`). It reveals over the first half, as the end
+  card does, then the line takes the rest.
+- **Script review** shows the design with its reasons and the beat sheet, including shots left out (`FilmPlan` in
+  `apps/web`).
+- **Not built yet:** the mascot.
+
 ### 9.8 Render and fan-out
 
 - **Compile, then render.** `compileComposition({ input, sceneDir? })` writes a HyperFrames project per variant into `render/variants/<aspect>-<lang>/`: `index.html` (scene hosts on the plan's timeline, voice, music and sound effects as `<audio>` clips), the scene files (the director's where it wrote them, otherwise the catalogue's), `assets/` (hard links to the footage, logo, hero, fonts, GSAP). `renderVideo()` runs the pinned `hyperframes render` as a child process (telemetry and update checks off, chrome-headless-shell for deterministic BeginFrame capture, NVENC when present) and kills it on cancel. `AGENTCAST_RENDERER=remotion` keeps the old path until parity.
@@ -1306,7 +1390,7 @@ type Voiceover = {
 
 // edl.json — written by the baseline and Claude Code, compiled to a HyperFrames composition (§9.7.5)
 type EDL = {
-  schemaVersion: 5 | 6 | 7; // v7 (additive): primitive segments, style.timing, Opener and EndCard cards. v6 (additive): scene segments, statement accents, blur-zoom and ribbon transitions; writers emit 6
+  schemaVersion: 5 | 6 | 7 | 8; // v8 (additive): a proof's camera path, and style.brand (BrandMotion, §9.7.8); writers emit 8 only when either is used. v7 (additive): primitive segments, style.timing, Opener and EndCard cards. v6 (additive): scene segments, statement accents, blur-zoom and ribbon transitions; writers emit 6
   fps: 30;
   style: {
     palette: {
@@ -1426,12 +1510,88 @@ type EDL = {
 //       | { type: "label"; text: TextByLang; accent?: TextByLang; ground: "base" | "invert" | "field"; open: "rise" | "slit" | "iris" }
 //       | { type: "swap"; lead: TextByLang; words: TextByLang[]; style: "swap" | "rolodex" }
 //       | { type: "ticker"; terms: TextByLang[] }
-//       | { type: "proof"; flowId: string; in: number; out: number; frame: Rect; tilt: "none" | "soft" | "strong"; hops?: Rect[]; ground?: "base" | "field" }
+//       | { type: "proof"; flowId: string; in: number; out: number; frame: Rect; tilt: "none" | "soft" | "strong"; hops?: Rect[]; ground?: "base" | "field";
+//           path?: { at: number; frame: Rect }[]; // v8: the camera eases to each region at `at` seconds into the part (§9.7.7)
+//           headline?: string } // v8: art direction's headline over the window, word for word from the site or the script
+//       | { type: "wall"; pages: string[]; focus: number }                      // v8 brand moves (§9.7.8); paths are job-relative
+//       | { type: "pill"; flowId: string; text: string; at: number; press: boolean; button?: string; chips?: string[] } // button: the pressed button's own words; chips: choices made before typing ("தமிழ் · Tamil")
+//       | { type: "mockup"; flowId: string; in: number; out: number; frame: Rect; device: "laptop" }
+//       | { type: "output"; file: string; from: number; seconds: number; peaks: number[]; title?: string; disc?: string } // disc: a brand kit object as the disc
+//       | { type: "orbit"; logos: string[] }
 //       | { type: "build"; flowId: string; at: number; items: Rect[]; reveal: "rise" | "wireframe"; lift?: Rect }
 //       | { type: "prompt"; flowId: string; in: number; out: number; input: Rect; frame: Rect } }
 // v7: intro { component: "Opener", props: { line: TextByLang } }, outro { component: "EndCard", props: { line: TextByLang } }
 // Named kinds only, so every scene can be compiled; v6 adds blur-zoom (Lovable's zoom through a blur) and ribbon (LangEase's colour sweep).
 type Transition = "cut" | "fade" | "slide" | "zoom-through" | "blur-zoom" | "ribbon";
+
+// brief/brand-kit.json — what the brand gives the film beyond colours and fonts (§9.7.8)
+type BrandKit = {
+  schemaVersion: 1;
+  logo?: { png: string; svg?: string; cut?: string; kind: "mark+wordmark" | "wordmark" | "mark";
+           mark?: [number, number]; letters: [number, number][] }; // spans as shares of the logo's width
+  captures: { file: string; url: string }[];
+  cloud: { file: string; kind: "integrations" | "customers" | "unknown" }[]; // other companies' logos; used only with consent
+  imagery: { file: string; w: number; h: number; colour: string; round: boolean; from: "page" | "recording" }[]; // the brand's own objects (brief/imagery/*.png), cut at full size
+  colours: string[]; // up to 4: the objects' colours first, then the pictures' strongest; empty for a brand with none
+};
+
+// render/layers.json — pieces of the recording cut out as their own images (§9.7.8)
+type LayerList = {
+  schemaVersion: 1;
+  layers: { id: string; kind: "panel" | "component" | "card" | "column" | "row"; file: string; flowId: string;
+            t: number; box: Rect; density: number }[];
+};
+
+// brief/art-direction.json — the design chosen for this film (§9.7.8)
+type ArtDirection = {
+  schemaVersion: 1;
+  productType: "project-tool" | "ai-prompt" | "voice-audio" | "design-canvas" | "dev-tool" | "data-analytics"
+             | "commerce" | "fintech" | "consumer-app" | "suite" | "other";
+  skeletonId: string;
+  brand: BrandMotion; // as EDL style.brand
+  featured: Move[]; // at most 3
+  avoid: Move[];
+  reasons: Record<string, string>;
+  by: "director" | "rules";
+  changed: string[]; // what the worker's check changed, and why
+  shots: Record<string, { crop?: "acted" | "focus" | "page"; headline?: string }>; // by beat id; headlines kept only if the site's text or the script has them
+};
+type Move = "prompt" | "build" | "cards" | "panel" | "list" | "ticker" | "swap" | "wall" | "glow-pill" | "mockup" | "output" | "orbit" | "mascot";
+type BrandMotion = { logo: "lockup" | "letters" | "fade"; cursor: "hand" | "none"; world: "plain" | "bloom" | "field" | "imagery"; opener: "line" | "logo" };
+// EDL v8 style also carries palette.colours?: string[] (the kit's colours, as --ac-c1..c4) and imagery?: { file; colour; round }[] (the imagery world's objects).
+
+// record/outputs.json — what the product made while it was recorded (§9.7.8)
+type ProductOutputs = { schemaVersion: 1; outputs: { file: string; kind: "audio"; type: string; flowId: string; t: number }[] };
+
+// script/beat-sheet.json — a music-led film planned bar by bar, before script review (§9.7.7)
+type BeatSheet = {
+  schemaVersion: 1;
+  skeletonId: string;
+  thesis: string; // the film in one sentence (the creative brief's summary for now)
+  trackId?: string;
+  bpm: number;
+  beat: number;
+  bar: number;
+  seconds: number;
+  beats: { id: string; at: number; seconds: number; bars: [number, number]; move: string; copy?: string; beatId?: string;
+           source?: { flowId: string; from: number; to: number; frame?: Rect } }[];
+  dropped: { beatId: string; title?: string; reason: string }[];
+};
+
+// assets/references/skeletons.json — the reference library (§9.7.7)
+type ReferenceLibrary = {
+  schemaVersion: 1;
+  skeletons: {
+    id: string; name: string; feel: string;
+    learnedFrom: { film: string; took: string }[];
+    suits: ("board" | "list" | "prompt" | "panel" | "page")[]; // empty: any
+    openerBeats: number; endBeats: number;
+    module: { labelBeats: number; proofBeats: number; proofsPerShot: 1 | 2; maxModules: number; camera: "hold" | "path" };
+    look: { labelOpen: ("rise" | "slit" | "iris")[]; grounds: ("base" | "invert" | "field")[]; tilts: ("none" | "soft" | "strong")[]; flipMiddle: boolean };
+    ticker: boolean;
+    target: { changesPer10s: [number, number]; stillPct: number };
+  }[];
+};
 
 // render/music-plan.json — a music-led film's music (§9.7.6)
 type MusicPlan = {
@@ -1529,6 +1689,7 @@ type JobConfig = {
   autopilot: boolean; // default false
   voiceover?: boolean; // default: only a tutorial is narrated. Off on a launch or sales film: music-led (§9.7.6). Off on a tutorial: captioned from the script
   rerun?: { of: string; skipIfUnchanged: boolean }; // a re-run of job `of` (§9.8.1)
+  thirdPartyLogos?: boolean; // let the film show other companies' logos found on the site (§9.7.8); off unless set
 };
 type AuthConfig =
   | { mode: "public" }
@@ -1563,7 +1724,7 @@ type StageState = {
 // POST /jobs/:id/gates/:gate bodies; kept at gates/<gate>.json for later stages
 type FlowsDecision = { action: "approve"; flows?: { id: string; selected: boolean; title?: string }[] }; // array order = new order
 type ScriptDecision = { action: "approve"; edits?: { lang: string; beatId: string; text: string }[] };
-type PreviewDecision = { action: "approve" } | { action: "revise"; revise: string; at?: number }; // revise re-runs direct + preview
+type PreviewDecision = { action: "approve" } | { action: "revise"; revise: string; at?: number; scene?: string }; // revise re-runs direct + preview; scene (or the part playing at `at`) limits it to one part (§9.7.7)
 
 // events.ndjson and the SSE stream (GET /jobs/:id/events; the SSE id is seq, so Last-Event-ID resumes)
 type JobEvent = { seq: number; at: string; jobId: string } & (

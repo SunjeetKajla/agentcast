@@ -24,7 +24,7 @@ export const hostOf = (url: string) => {
 /** The big word in the field, per stage. */
 export const STAGE_TITLE: Record<StageName, string> = {
   understand: "Understanding",
-  auth: "Signing in",
+  auth: "Sign in",
   discover: "Exploring",
   "flow-runs": "Trying flows",
   "gate-flows": "Review flows",
@@ -41,7 +41,7 @@ export const STAGE_TITLE: Record<StageName, string> = {
 /** What a stage does, when the worker hasn't said more. */
 export const STAGE_LEAD: Record<StageName, string> = {
   understand: "Reading your product’s pages to work out its brand and what the video has to prove.",
-  auth: "Waiting for you to sign in, in the Chrome window on the worker’s machine.",
+  auth: "A Chrome window is open on the worker’s machine. Sign in there, then press “I’m signed in” here or close that window. Your password stays in Chrome.",
   discover: "An agent is finding the real way into your app.",
   "flow-runs": "Agents try the flows worth showing, side by side. Each one is replayed in a fresh local Chrome.",
   "gate-flows": "Pick, order and rename the flows to film. These are the frames each one reached when it replayed.",
@@ -78,6 +78,8 @@ export function estimate(job: Job, stage: StageName): number {
 
 /** The stage the job is on: the one running or waiting, else the last that ended. */
 export function currentStage(job: Job): StageName | undefined {
+  // Sign-in runs beside Understand and is the one that needs you, so it takes the field while it runs.
+  if (job.config.auth.mode !== "public" && job.stages.auth.status === "running") return "auth";
   const live = STAGES.find((s) => ["running", "waiting"].includes(job.stages[s.name].status));
   if (live) return live.name;
   const failed = STAGES.find((s) => job.stages[s.name].status === "failed");
@@ -229,7 +231,7 @@ export function facts(job: Job): [string, string][] {
     ["Outputs", `${variantMatrix(v).length} ${variantMatrix(v).length === 1 ? "video" : "videos"}: ${v.aspects.map((a) => SIZE[a] ?? a).join(" and ")} in ${v.langs.map((l) => LANG[l] ?? l).join(" and ")}`],
     ["Sign-in", job.config.auth.mode === "public" ? "Public site" : job.config.auth.mode === "sign-in-once" ? "Signed in once, on the worker’s machine" : "Saved credentials"],
     ["Review gates", job.config.autopilot ? "Off: runs on autopilot" : "Flows, script and preview"],
-    ["Your prompt", job.config.stylePrompt.trim() || "None"],
+    ["Your prompt", [job.config.stylePrompt.trim(), job.config.focusPrompt?.trim() && `focus on ${job.config.focusPrompt.trim()}`].filter(Boolean).join(" · ") || "None"],
   ];
 }
 

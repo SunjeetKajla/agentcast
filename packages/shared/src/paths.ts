@@ -6,6 +6,8 @@ import { Edl } from "./edl.ts";
 import { FlowsFile, ReplayPlan } from "./flow.ts";
 import { Job } from "./job.ts";
 import { MusicPlan } from "./music.ts";
+import { BeatSheet } from "./reference.ts";
+import { ArtDirection, BrandKit, LayerList, ProductOutputs } from "./art.ts";
 import { Script, Storyboard } from "./story.ts";
 import { Timeline } from "./timeline.ts";
 import { Voiceover } from "./voice.ts";
@@ -18,18 +20,23 @@ export const jobPaths = {
   productBrief: "brief/product-brief.json",
   creativeBrief: "brief/creative.json",
   brand: "brief/brand.json",
+  brandKit: "brief/brand-kit.json",
+  artDirection: "brief/art-direction.json",
   hero: "brief/hero.jpg",
   flows: "explore/flows.json",
   recording: (ff: FormFactor) => `record/${ff}/recording.mp4`,
   timeline: (ff: FormFactor) => `record/${ff}/timeline.json`,
   replayPlan: "record/replay-plan.json",
+  outputs: "record/outputs.json",
   changes: "record/changes.json",
   storyboard: "script/storyboard.json",
   script: (lang: Lang) => `script/script.${lang}.json`,
+  beatSheet: "script/beat-sheet.json",
   voice: (lang: Lang) => `voice/${lang}.json`,
   voiceClip: (lang: Lang, beatId: string) => `voice/${lang}/${beatId}.mp3`,
   edl: "render/edl.json",
   musicPlan: "render/music-plan.json",
+  layers: "render/layers.json",
   preview: "out/preview.mp4",
   output: (variantId: string, ext: "mp4" | "srt" | "vtt") => `out/${variantId}.${ext}`,
 } as const;
@@ -40,15 +47,20 @@ export const ARTIFACTS: { pattern: RegExp; schema: z.ZodType }[] = [
   { pattern: /^brief\/product-brief\.json$/, schema: ProductBrief },
   { pattern: /^brief\/creative\.json$/, schema: CreativeBrief },
   { pattern: /^brief\/brand\.json$/, schema: Brand },
+  { pattern: /^brief\/brand-kit\.json$/, schema: BrandKit },
+  { pattern: /^brief\/art-direction\.json$/, schema: ArtDirection },
   { pattern: /^explore\/flows\.json$/, schema: FlowsFile },
   { pattern: /^record\/(desktop|mobile)\/timeline\.json$/, schema: Timeline },
   { pattern: /^record\/replay-plan\.json$/, schema: ReplayPlan },
+  { pattern: /^record\/outputs\.json$/, schema: ProductOutputs },
   { pattern: /^record\/changes\.json$/, schema: ChangeReport },
   { pattern: /^script\/storyboard\.json$/, schema: Storyboard },
   { pattern: /^script\/script\.[a-z-]+\.json$/, schema: Script },
+  { pattern: /^script\/beat-sheet\.json$/, schema: BeatSheet },
   { pattern: /^voice\/[a-z-]+\.json$/, schema: Voiceover },
   { pattern: /^render\/edl\.json$/, schema: Edl },
   { pattern: /^render\/music-plan\.json$/, schema: MusicPlan },
+  { pattern: /^render\/layers\.json$/, schema: LayerList },
 ];
 
 export function schemaForPath(relPath: string): z.ZodType | undefined {

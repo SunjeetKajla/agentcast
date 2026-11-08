@@ -43,6 +43,9 @@ function merge(rows: Row[] | undefined, flows: Flow[]): Row[] {
   return [...kept, ...added];
 }
 
+/** A rehearsal's reason, each part once (older flows.json files repeat a part per step). */
+const reasonOf = (reason?: string) => [...new Set((reason ?? "unknown").split(/;\s*/).map((r) => r.trim()).filter(Boolean))].join("; ");
+
 const ROLE = {
   setup: "Setup",
   core: "Core",
@@ -191,14 +194,21 @@ export default function FlowReview({
                   aria-label={`Film “${row.title}”`}
                 />
                 <div className="rv-text">
-                  <input className="rv-title" value={row.title} onChange={(e) => update(i, { title: e.target.value })} aria-label="Flow title" />
+                  <textarea
+                    className="rv-title"
+                    rows={1}
+                    value={row.title}
+                    onChange={(e) => update(i, { title: e.target.value.replace(/\n/g, " ") })}
+                    onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                    aria-label="Flow title"
+                  />
                   {flow.whyItMatters && <p className="rv-why">{flow.whyItMatters}</p>}
                   <p className="rv-meta">
                     {flow.scoring && <>{ROLE[flow.scoring.storyRole]} · judge score {Math.round(flow.scoring.score * 100)} · </>}
                     {flow.steps.length} steps
                     {flow.rehearsal?.seconds ? ` · about ${Math.round(flow.rehearsal.seconds)} s` : ""}
                     {flow.source === "tour" && " · guided tour"}
-                    {!replayed && <span className="rv-bad"> · didn’t replay: {flow.rehearsal?.reason ?? "unknown"}</span>}
+                    {!replayed && <span className="rv-bad"> · didn’t replay: {reasonOf(flow.rehearsal?.reason)}</span>}
                   </p>
                 </div>
                 <div className="frames" data-ui>

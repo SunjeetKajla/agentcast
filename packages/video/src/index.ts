@@ -25,8 +25,11 @@ export { ensureSfx, sfxDir, shapeOf, soundShape } from "./sound.ts";
 
 export { analyzeTrack, barStarts, entriesOf, regularGrid } from "./musicanalysis.ts";
 export { beatsOf, ledStyle, planMusic, premixMusic } from "./musicplan.ts";
-export { contentBox, pixelColumns, shotContent } from "./content.ts";
-export { filmSeconds, ledEdl, snapToGrid, type LedInput, type ShotContent } from "./template.ts";
+export { busiestRegion, contentBox, pixelColumns, shotContent } from "./content.ts";
+export { loadReferenceLibrary, referencesDir } from "./references.ts";
+export { extractLayers, inventoryOf, planLayers } from "./layers.ts";
+export { audioShape, beatSheetOf, describeBeatSheet, planLedFilm, type LedFilm } from "./ledfilm.ts";
+export { DEFAULT_SKELETON, chooseSkeleton, filmSeconds, ledEdl, ledPlan, productShape, snapToGrid, type LedInput, type LedPlan, type ShotContent } from "./template.ts";
 export { loadMusicLibrary, musicDir, musicStyle, pickTrack } from "./music.ts";
 export { ink, readableOn, contrastOf, luminanceOf, mixHex } from "./ink.ts";
 export { timeMap, boxMap, remapEdl, remapStoryboard, type Retake } from "./remap.ts";

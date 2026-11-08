@@ -78,6 +78,8 @@ export const JobConfig = z.object({
   voiceover: z.boolean().optional(),
   /** A re-run of job `of` (§9.8.1). */
   rerun: z.object({ of: z.string(), skipIfUnchanged: z.boolean() }).optional(),
+  /** Let the film show other companies' logos found on the site (integrations, customers). Off unless asked (§9.7.8). */
+  thirdPartyLogos: z.boolean().optional(),
 });
 export type JobConfig = z.infer<typeof JobConfig>;
 
@@ -155,8 +157,12 @@ export type ScriptDecision = z.infer<typeof ScriptDecision>;
 
 export const PreviewDecision = z.discriminatedUnion("action", [
   z.object({ action: z.literal("approve") }),
-  /** Sends direct and preview back with the request; the director resumes its session. */
-  z.object({ action: z.literal("revise"), revise: z.string().min(1), at: Seconds.optional() }),
+  /**
+   * Sends direct and preview back with the request; the director resumes its session. With `scene` (a
+   * segment id, "intro" or "outro"), or `at` (a second of the preview, read as the part playing then), only
+   * that part may change.
+   */
+  z.object({ action: z.literal("revise"), revise: z.string().min(1), at: Seconds.optional(), scene: z.string().min(1).optional() }),
 ]);
 export type PreviewDecision = z.infer<typeof PreviewDecision>;
 

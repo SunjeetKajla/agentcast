@@ -363,6 +363,27 @@ Why: our Remotion output measured 57–69% still frames, sentence headlines, the
 
 `docs/MOTION_SOUND_MUSIC_PLAN.md`, from the teardown in `docs/LAUNCH_FILM_TEARDOWN.md`. Replaces Remotion with HyperFrames alone. PRD §9.7.6.
 
+**11b: references, beat sheet, scene revisions** (PRD §9.7.7, `docs/REFERENCE_WORKFLOW.md`). Built: the reference library with four skeletons (`assets/references/`), skeleton-driven `ledPlan`, `planLedFilm` and the beat sheet written by the script stage, scene-scoped revisions in the director, and the copy lint. Next: show the beat sheet at script review and a "change this part" control at the preview in `apps/web`; a listening and viewing pass on the skeleton films; the film lint as director issues.
+
+**11c: brand kit, layers and art direction** (PRD §9.7.8, `docs/BRAND_MOTION_PLAN.md`).
+
+- **Built:**
+  - The brand kit: the logo's vector, cut-out, kind and parts, plus page captures.
+  - Layers cut from the recording.
+  - The inventory.
+  - Art direction: the director's turn, the rules table and the check.
+  - The template taking the direction.
+  - The end card's lockup and letter reveals, the hand cursor on proofs, and the ground's world.
+  - `bench --art`.
+- **Then built:** product-output capture in the recorder, the logo cloud (opt-in), logo motion in the opener, the moves
+  (wall of pages, glow pill, mockup, output, orbit), and art direction plus the beat sheet at script review.
+- **Then built (S18):** brand imagery (the brand's own objects and colours from its pages and recording, in the kit),
+  the imagery world, moves dressed in the recording's own words (pill button and language chips, output title and
+  orb disc, proof headlines), the director's shot calls checked against the site's text and the script, cookie
+  banners hidden in recordings and captures, and `bench --art --live-kit --director`.
+- **Next:** the mascot; a composer toggle for third-party logos; a site-headline beat and a ticker in the one-take
+  skeleton; a viewing and listening pass on real jobs.
+
 ## 3. Timeline (36 h reference schedule)
 
 | Hours | Track A (agent)                                           | Track B (recorder)                  | Track C (video)                                               | Track D (product)                                                         |

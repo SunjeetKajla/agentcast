@@ -44,6 +44,12 @@ describe("the job page model", () => {
     expect(lanes).toMatchObject({ understand: 0, auth: 1, discover: 0 });
   });
 
+  test("sign-in takes the field while it runs, though Understand runs beside it", async () => {
+    const job = await jobWith([["understand", "running", 0], ["auth", "running", 0]], "running", { auth: { mode: "sign-in-once" } });
+    expect(currentStage(job)).toBe("auth");
+    expect(finding(job)).toContain("Sign in through the Chrome window");
+  });
+
   test("a waiting gate turns the field yellow and says what to do", async () => {
     const job = await jobWith([["understand", "done", 0, 21], ["discover", "done", 21, 129], ["flow-runs", "done", 129, 201], ["gate-flows", "waiting", 201]], "waiting");
     expect(currentStage(job)).toBe("gate-flows");

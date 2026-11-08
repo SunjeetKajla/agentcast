@@ -16,6 +16,9 @@ type Composer = {
   setLink: (v: string) => void;
   prompt: string;
   setPrompt: (v: string) => void;
+  /** What the video should focus on (JobConfig.focusPrompt), optional. */
+  focus: string;
+  setFocus: (v: string) => void;
   /** Starts a job from text holding a link (and optionally words about the video), then opens it. */
   start: (text: string, extraPrompt?: string) => Promise<void>;
   busy: boolean;
@@ -29,6 +32,7 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
   const [choices, setChoices] = useState<ComposerChoices>({ ...DEFAULT_CHOICES });
   const [link, setLink] = useState("");
   const [prompt, setPrompt] = useState("");
+  const [focus, setFocus] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -44,19 +48,19 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
       setBusy(true);
       setError(undefined);
       try {
-        const job = await createJob(toJobConfig(url, [words, extraPrompt].filter(Boolean).join(". "), choices));
+        const job = await createJob(toJobConfig(url, [words, extraPrompt].filter(Boolean).join(". "), choices, focus));
         router.push(`/jobs/${job.id}`);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Couldn’t start the job. Try again.");
         setBusy(false);
       }
     },
-    [choices, router],
+    [choices, focus, router],
   );
 
   const value = useMemo(
-    () => ({ choices, set, link, setLink, prompt, setPrompt, start, busy, error }),
-    [choices, set, link, prompt, start, busy, error],
+    () => ({ choices, set, link, setLink, prompt, setPrompt, focus, setFocus, start, busy, error }),
+    [choices, set, link, prompt, focus, start, busy, error],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

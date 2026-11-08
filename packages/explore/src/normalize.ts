@@ -139,10 +139,10 @@ export function toFlow(
     if (act === "press" && !secret) step.value = raw.value ?? "Enter";
     else if (raw.value && !secret) step.value = raw.value;
     if (secret) step.secret = true;
-    if (secret)
-      issues.push(
-        "blocked: sign-in required; secret inputs cannot be replayed from a public report. Use sign-in-once.",
-      );
+    // Once per flow, however many secret steps it has.
+    const signIn =
+      "blocked: sign-in required; secret inputs cannot be replayed from a public report. Use sign-in-once.";
+    if (secret && !issues.includes(signIn)) issues.push(signIn);
     if (raw.result_visible_text) step.expected = raw.result_visible_text;
     if (raw.narration_hint) step.narrationHint = raw.narration_hint;
 

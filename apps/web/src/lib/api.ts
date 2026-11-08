@@ -21,7 +21,14 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(0, "Can't reach the AgentCast web server.");
   }
   const text = await res.text();
-  const body = text ? (JSON.parse(text) as unknown) : undefined;
+  let body: unknown;
+  try {
+    body = text ? (JSON.parse(text) as unknown) : undefined;
+  } catch {
+    // Not JSON: an error page from the web server itself, not an answer from the worker.
+    if (!res.ok) throw new ApiError(res.status, `The AgentCast web server hit an error (${res.status}). Check its terminal, then reload.`);
+    throw new ApiError(res.status, "The AgentCast web server sent something that isn’t JSON.");
+  }
   if (!res.ok) {
     const message = (body as { error?: string } | undefined)?.error ?? `Request failed (${res.status})`;
     throw new ApiError(res.status, message);

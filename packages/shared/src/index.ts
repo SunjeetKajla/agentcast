@@ -10,6 +10,8 @@ export * from "./voice.ts";
 export * from "./motion.ts";
 export * from "./edl.ts";
 export * from "./music.ts";
+export * from "./reference.ts";
+export * from "./art.ts";
 export * from "./changes.ts";
 export * from "./job.ts";
 export * from "./events.ts";

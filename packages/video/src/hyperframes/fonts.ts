@@ -73,3 +73,24 @@ export async function localFonts(
   }
   return { css, families: found };
 }
+
+/** Indic and other scripts a film's words may be in, and the Noto family that draws each. */
+const SCRIPTS: [RegExp, string][] = [
+  [/[\u0900-\u097f]/, "Noto Sans Devanagari"],
+  [/[\u0980-\u09ff]/, "Noto Sans Bengali"],
+  [/[\u0a00-\u0a7f]/, "Noto Sans Gurmukhi"],
+  [/[\u0a80-\u0aff]/, "Noto Sans Gujarati"],
+  [/[\u0b00-\u0b7f]/, "Noto Sans Oriya"],
+  [/[\u0b80-\u0bff]/, "Noto Sans Tamil"],
+  [/[\u0c00-\u0c7f]/, "Noto Sans Telugu"],
+  [/[\u0c80-\u0cff]/, "Noto Sans Kannada"],
+  [/[\u0d00-\u0d7f]/, "Noto Sans Malayalam"],
+  [/[\u0600-\u06ff]/, "Noto Sans Arabic"],
+  [/[\u3040-\u30ff\u4e00-\u9fff]/, "Noto Sans JP"],
+  [/[\uac00-\ud7af]/, "Noto Sans KR"],
+];
+
+/** The Noto families a text needs for the scripts in it (a Tamil value typed in an English film needs Tamil). */
+export function scriptFamilies(text: string): string[] {
+  return SCRIPTS.filter(([re]) => re.test(text)).map(([, family]) => family);
+}

@@ -5,6 +5,7 @@ import { Script, Storyboard, jobPaths, type GateDecision } from "@agentcast/shar
 import { readArtifact } from "@/lib/api";
 import { useArtifact } from "@/lib/useArtifact";
 import { EASE, MOTION_OK, STAGGER, gsap, useGSAP, settle } from "@/lib/motion";
+import FilmPlan from "./FilmPlan";
 
 // Gate 2 (PRD §5.1, FR-53): every beat with its on-screen text, motion note and narration in each
 // language, editable. A meter shows each line against its time budget.
@@ -116,6 +117,7 @@ export default function StoryboardReview({
 
   return (
     <section ref={root} className="sb" aria-label="The script">
+      <FilmPlan jobId={jobId} versions={versions} />
       <ol className="sb-list">
         {storyboard.data.beats.map((beat) => (
           <li key={beat.id} data-beat className="sb-beat">

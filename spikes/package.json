@@ -9,13 +9,20 @@
     "@agentcast/shared": "workspace:*",
     "@agentcast/video": "workspace:*",
     "@agentcast/director": "workspace:*",
-    "@agentcast/recorder": "workspace:*"
+    "@agentcast/recorder": "workspace:*",
+    "@agentcast/story": "workspace:*",
+    "@agentcast/explore": "workspace:*",
+    "@agentcast/llm": "workspace:*"
   },
   "scripts": {
     "bench": "tsx s9-bench/bench.ts",
     "checkpoint": "tsx s10-checkpoint/film.ts",
     "e2e": "tsx s11-e2e/run.ts",
     "hf": "tsx kaustav-hyperframes/render-job.ts",
-    "hf-director": "tsx kaustav-hyperframes/director-workspace.ts"
+    "hf-director": "tsx kaustav-hyperframes/director-workspace.ts",
+    "brand-capture": "tsx s14-brand/capture.ts",
+    "brand-checkpoint": "tsx s14-brand/film.ts",
+    "brand-capture-sarvam": "tsx s14-brand/capture-sarvam.ts",
+    "brand-sarvam": "tsx s14-brand/film-sarvam.ts"
   }
 }

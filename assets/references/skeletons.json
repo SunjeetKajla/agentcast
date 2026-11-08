@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "skeletons": [
+    {
+      "id": "modules",
+      "name": "Label, then proof",
+      "feel": "A short line, then the product proving it, once per feature. Steady and clear.",
+      "learnedFrom": [
+        { "film": "linear-for-agents", "took": "a dark lifted UI after each short line" },
+        { "film": "raycast-pro", "took": "the label card before each proof" }
+      ],
+      "suits": [],
+      "openerBeats": 8,
+      "module": { "labelBeats": 2, "proofBeats": 6, "proofsPerShot": 1, "maxModules": 5, "camera": "hold" },
+      "look": { "labelOpen": ["rise"], "grounds": ["base"], "tilts": ["soft", "strong"], "flipMiddle": true },
+      "ticker": true,
+      "endBeats": 8,
+      "target": { "changesPer10s": [2, 4], "stillPct": 10 }
+    },
+    {
+      "id": "rapid",
+      "name": "Rapid-fire",
+      "feel": "A cut on almost every other beat: a word, then two angles on the product. Hype.",
+      "learnedFrom": [
+        { "film": "raycast-pro", "took": "0.5 s labels and 1–1.5 s proofs, 7.7 scene changes per 10 s, no stills" },
+        { "film": "lovable-2", "took": "type and lifted UI alternating, the frame inverting between them" }
+      ],
+      "suits": ["board", "list", "panel", "page"],
+      "openerBeats": 6,
+      "module": { "labelBeats": 1, "proofBeats": 3, "proofsPerShot": 2, "maxModules": 6, "camera": "hold" },
+      "look": { "labelOpen": ["rise", "slit"], "grounds": ["base", "invert"], "tilts": ["strong", "none", "soft"], "flipMiddle": false },
+      "ticker": false,
+      "endBeats": 8,
+      "target": { "changesPer10s": [4, 8], "stillPct": 3 }
+    },
+    {
+      "id": "glide",
+      "name": "One take",
+      "feel": "No labels between proofs: the camera travels the product, diving into each region on the beat. Calm.",
+      "learnedFrom": [
+        { "film": "linear-agent", "took": "one tilted plane, the camera moving to the active part" },
+        { "film": "v0", "took": "zooms into regions of one continuous page" },
+        { "film": "raycast-2026", "took": "holding on one component while it works" }
+      ],
+      "suits": ["prompt", "list", "panel"],
+      "openerBeats": 8,
+      "module": { "labelBeats": 0, "proofBeats": 12, "proofsPerShot": 1, "maxModules": 3, "camera": "path" },
+      "look": { "labelOpen": ["rise"], "grounds": ["base"], "tilts": ["soft", "strong"], "flipMiddle": false },
+      "ticker": false,
+      "endBeats": 8,
+      "target": { "changesPer10s": [0.3, 1.5], "stillPct": 35 }
+    },
+    {
+      "id": "type-led",
+      "name": "Type-led",
+      "feel": "Big words carry the film on alternating grounds; the product answers each one. For thin or sparse pages.",
+      "learnedFrom": [
+        { "film": "attio-ask", "took": "a film that is mostly type, with a ticker of real terms" },
+        { "film": "lovable-2", "took": "huge words on colour fields between lifted UI" },
+        { "film": "arc-1", "took": "words on black, cut hard on the beat" }
+      ],
+      "suits": ["page", "prompt"],
+      "openerBeats": 12,
+      "module": { "labelBeats": 4, "proofBeats": 4, "proofsPerShot": 1, "maxModules": 4, "camera": "hold" },
+      "look": { "labelOpen": ["iris", "rise", "slit"], "grounds": ["invert", "base", "field"], "tilts": ["strong", "soft"], "flipMiddle": false },
+      "ticker": true,
+      "endBeats": 8,
+      "target": { "changesPer10s": [1, 3], "stillPct": 40 }
+    }
+  ]
+}

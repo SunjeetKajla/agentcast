@@ -32,6 +32,10 @@ export type BrowserAdapter = {
     radius?: number;
     hero?: string;
     gradient?: string[];
+    /** Viewport captures of the site's pages (brief/captures/NN.jpg). */
+    captures?: { file: string; url: string }[];
+    /** Other companies' logos the page shows in a row (brief/logos/NN.png). */
+    cloud?: { file: string; kind: "integrations" | "customers" | "unknown" }[];
   }>;
   rehearse(flow: Flow, options: BrowserOptions): Promise<RehearsalResult>;
   signIn?(options: {

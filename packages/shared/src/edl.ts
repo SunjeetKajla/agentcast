@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BrandMotion } from "./art.ts";
 import { FormFactor, HexColor, Rect, Seconds, TextByLang } from "./common.ts";
 import { MotionTokens } from "./motion.ts";
 
@@ -115,6 +116,36 @@ export const Primitive = z.discriminatedUnion("type", [
   }),
   /** The product's real terms riding a ruled line across the frame. */
   z.object({ type: z.literal("ticker"), terms: z.array(TextByLang).min(3).max(10) }),
+  /** v8: the site's own pages on a tilted plane, sliding, the camera diving into one (job-relative image paths). */
+  z.object({ type: z.literal("wall"), pages: z.array(z.string()).min(6).max(16), focus: z.number().int().min(0) }),
+  /** v8: the recorded typing rebuilt as a pill in a ring of the brand's light, typing the real value; the hand presses send if the recording did. */
+  z.object({
+    type: z.literal("pill"),
+    flowId: z.string(),
+    text: z.string().min(1).max(200),
+    at: Seconds,
+    press: z.boolean(),
+    /** The pressed button's own label from the recording ("Generate with Bulbul V4"); an arrow without it. */
+    button: z.string().min(1).max(40).optional(),
+    /** Choices the recording made, as chips beside the pill ("தமிழ் · Tamil"). */
+    chips: z.array(z.string().min(1).max(32)).max(3).optional(),
+  }),
+  /** v8: footage on a device we draw, turning into view, then the camera through its screen. */
+  z.object({ type: z.literal("mockup"), flowId: z.string(), in: Seconds, out: Seconds, frame: Rect, device: z.enum(["laptop"]) }),
+  /** v8: the product's own output, played: a waveform of the real audio lighting up as it plays (job-relative file). */
+  z.object({
+    type: z.literal("output"),
+    file: z.string(),
+    from: Seconds,
+    seconds: Seconds,
+    peaks: z.array(z.number().min(0).max(1)).min(8).max(96),
+    /** A headline over it, from the shot or the site. */
+    title: z.string().min(1).max(60).optional(),
+    /** One of the brand's own objects (job-relative image) as the disc that plays, instead of a drawn one. */
+    disc: z.string().optional(),
+  }),
+  /** v8: logos found on the site (job-relative images), orbiting the brand's logo, then lining up under it. Opt-in. */
+  z.object({ type: z.literal("orbit"), logos: z.array(z.string()).min(4).max(12) }),
   /** Footage lifted out of its page: a region as a tilted window, with a highlight hopping down rows. */
   z.object({
     type: z.literal("proof"),
@@ -126,6 +157,10 @@ export const Primitive = z.discriminatedUnion("type", [
     tilt: z.enum(["none", "soft", "strong"]),
     hops: z.array(Rect).max(8).optional(),
     ground: z.enum(["base", "field"]).optional(),
+    /** v8: where the camera travels, seconds into the part: it eases from `frame` to each stop's region in turn. */
+    path: z.array(z.object({ at: Seconds, frame: Rect })).max(6).optional(),
+    /** v8: a headline over the window, word for word from the site or the script (art direction's call). */
+    headline: z.string().min(1).max(60).optional(),
   }),
   /** The page at one moment, built piece by piece, with one piece lifted out to the middle. */
   z.object({
@@ -186,6 +221,8 @@ export const EdlStyle = z.object({
     accent: HexColor,
     surface: HexColor.optional(),
     accent2: HexColor.optional(),
+    /** v8: the brand's colours from its imagery, for glows, discs and bars when its CSS has none. */
+    colours: z.array(HexColor).max(4).optional(),
   }),
   /** The brand's fonts (Google Fonts families). */
   fonts: z.object({ display: z.string(), text: z.string() }),
@@ -215,12 +252,16 @@ export const EdlStyle = z.object({
   /** 16:9 shots: browser window, tilted window, or full bleed. */
   frame: z.enum(["window", "tilt", "none"]),
   motion: MotionTokens,
+  /** v8: the brand moves art direction chose (PRD §9.7.8): the logo's motion, the cursor, the ground. */
+  brand: BrandMotion.optional(),
+  /** v8: the brand's own objects (job-relative images, brand kit imagery) for the imagery ground. */
+  imagery: z.array(z.object({ file: z.string(), colour: HexColor, round: z.boolean() })).max(6).optional(),
 });
 export type EdlStyle = z.infer<typeof EdlStyle>;
 
 export const Edl = z.object({
-  /** Each version is additive, so older edits still read. A music-led edit is 7. */
-  schemaVersion: z.union([z.literal(5), z.literal(6), z.literal(7)]),
+  /** Each version is additive, so older edits still read. A music-led edit is 7, or 8 with a proof's camera path. */
+  schemaVersion: z.union([z.literal(5), z.literal(6), z.literal(7), z.literal(8)]),
   fps: z.literal(30),
   style: EdlStyle,
   intro: Card,

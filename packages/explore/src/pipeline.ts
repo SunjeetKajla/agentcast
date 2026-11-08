@@ -316,7 +316,7 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
             startedAt: startUrl,
           });
           if (normalized.issues.length) {
-            previous = normalized.issues.join("; ");
+            previous = [...new Set(normalized.issues)].join("; ");
             await remember({
               flow: {
                 ...normalized.flow,

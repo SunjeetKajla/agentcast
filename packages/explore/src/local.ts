@@ -24,6 +24,8 @@ import { DESTRUCTIVE, hasSecretTarget } from "./normalize";
 import type { BrowserAdapter, BrowserOptions } from "./runtime";
 import { signInLocally } from "./sign-in";
 import { captureLogo } from "./logo";
+import { capturePages } from "./captures";
+import { captureCloud } from "./cloud";
 import { evaluateInPage } from "./evaluate";
 
 type Page = RecorderBrowser["page"];
@@ -418,6 +420,8 @@ export function localBrowserAdapter(
         data.facts.url = productEntry(data.facts.url, options.authorizedUrl);
         let hero: string | undefined;
         let logo: Awaited<ReturnType<typeof captureLogo>>;
+        let captures: { file: string; url: string }[] = [];
+        let cloud: Awaited<ReturnType<typeof captureCloud>> = [];
         if (!options.storageState && options.captureAssets !== false) {
           await mkdir(join(options.dir, "brief"), { recursive: true });
           hero = "brief/hero.jpg";
@@ -433,8 +437,10 @@ export function localBrowserAdapter(
             hero = undefined;
           }
           logo = await captureLogo(page, options.dir);
+          cloud = await captureCloud(page, options.dir).catch(() => []);
+          captures = await capturePages(page, options.dir, { ...(options.signal ? { signal: options.signal } : {}) }).catch(() => []);
         }
-        return { ...data, hero, logo };
+        return { ...data, hero, logo, captures, cloud };
       }),
     rehearse: async (source, options) => {
       const flow = Flow.parse(source);

@@ -7,6 +7,7 @@ import type { Brand } from "@agentcast/shared";
 import type { RecorderBrowser } from "@agentcast/recorder";
 import { pickLogo } from "./brand";
 import { evaluateInPage } from "./evaluate";
+import { svgProblems } from "./logokit";
 
 /** Render the chosen mark as pixels, preserving computed SVG paints without saving active markup. */
 export async function captureLogo(
@@ -174,6 +175,15 @@ export async function captureLogo(
           animations: "disabled",
         }),
       );
+      // The vector as well, when the logo is one: cleaned in the page to shapes and gradients, with every
+      // paint resolved, then checked again here. Nothing else of the page's markup survives.
+      if (candidate.from === "inline-svg" || /\.svg(\?|$)/i.test(candidate.src)) {
+        const svg = await element
+          .evaluate((node) => node.setAttribute("data-agentcast-logo", "1"))
+          .then(() => evaluateInPage(page, cleanLogoSvg))
+          .catch(() => undefined);
+        if (svg && !svgProblems(svg).length) await writeFile(join(dir, "brief/logo.svg"), svg);
+      }
       return {
         file: "brief/logo.png",
         width: box.width,
@@ -207,4 +217,48 @@ async function sharpLogo(page: RecorderBrowser["page"], box: { x: number; y: num
   } finally {
     await session.detach().catch(() => {});
   }
+}
+
+/**
+ * In the page: the marked logo (an inline <svg>, or an <img> of an .svg file) rebuilt from an allowlist of
+ * shape and gradient elements and attributes, with fills and strokes resolved to the colours the page computed.
+ */
+async function cleanLogoSvg(): Promise<string | undefined> {
+  const marked = document.querySelector("[data-agentcast-logo]");
+  if (!marked) return undefined;
+  marked.removeAttribute("data-agentcast-logo");
+  const box = marked.getBoundingClientRect();
+  let svg: SVGSVGElement | undefined;
+  let detached: Element | undefined;
+  if (marked instanceof SVGSVGElement) svg = marked;
+  else if (marked instanceof HTMLImageElement) {
+    const text = await fetch(marked.currentSrc || marked.src).then((r) => r.text());
+    const parsed = new DOMParser().parseFromString(text, "image/svg+xml").documentElement;
+    if (!(parsed instanceof SVGSVGElement)) return undefined;
+    parsed.setAttribute("style", `position:fixed;left:-9999px;top:0;width:${box.width}px;height:${box.height}px`);
+    document.body.appendChild(parsed);
+    svg = parsed;
+    detached = parsed;
+  }
+  if (!svg) return undefined;
+  const SHAPES = new Set(["svg", "g", "path", "rect", "circle", "ellipse", "polygon", "polyline", "line", "defs", "lineargradient", "radialgradient", "stop"]);
+  const ATTRS = ["id", "d", "points", "x", "y", "width", "height", "cx", "cy", "r", "rx", "ry", "x1", "y1", "x2", "y2", "fx", "fy", "transform", "fill-rule", "clip-rule", "opacity", "offset", "stop-color", "stop-opacity", "gradientUnits", "gradientTransform"];
+  const clean = (node: Element): string => {
+    const tag = node.tagName.toLowerCase();
+    if (!SHAPES.has(tag)) return "";
+    const attrs = ATTRS.filter((a) => node.hasAttribute(a)).map((a) => `${a}="${node.getAttribute(a)!.replace(/[^\w\s.,#%()+-]/g, "")}"`);
+    if (!["svg", "g", "defs", "lineargradient", "radialgradient", "stop"].includes(tag)) {
+      const style = getComputedStyle(node);
+      // A gradient fill keeps its reference to a gradient inside the logo; anything else is resolved.
+      attrs.push(`fill="${/^url\(["']?#/.test(style.fill) ? style.fill.replace(/["']/g, "") : style.fill}"`);
+      if (style.stroke && style.stroke !== "none") attrs.push(`stroke="${style.stroke}"`, `stroke-width="${style.strokeWidth}"`);
+    }
+    const inner = [...node.children].map(clean).join("");
+    const name = tag === "lineargradient" ? "linearGradient" : tag === "radialgradient" ? "radialGradient" : tag;
+    return tag === "svg" ? inner : `<${name} ${attrs.join(" ")}>${inner}</${name}>`;
+  };
+  const viewBox = (svg.getAttribute("viewBox") ?? `0 0 ${box.width} ${box.height}`).replace(/[^\d\s.,-]/g, "");
+  const body = clean(svg);
+  detached?.remove();
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">${body}</svg>`;
 }

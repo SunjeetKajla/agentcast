@@ -27,9 +27,14 @@ import { musicStyle } from "./music.ts";
 import { entriesOf, regularGrid } from "./musicanalysis.ts";
 import { beatsOf, ledStyle, planMusic } from "./musicplan.ts";
 import { shapeOf } from "./sound.ts";
-import { contentBox, pixelColumns } from "./content.ts";
+import { busiestRegion, contentBox, pixelColumns } from "./content.ts";
+import { loadReferenceLibrary } from "./references.ts";
+import { beatSheetOf, describeBeatSheet } from "./ledfilm.ts";
+import { inventoryOf, planLayers } from "./layers.ts";
+import { pressesIn } from "./primitives/cursor.ts";
 import { cardCues, openerSlot, phrasesOf, primitiveCues } from "./primitives/index.ts";
-import { filmSeconds, ledEdl, snapToGrid } from "./template.ts";
+import { chipFor, chooseSkeleton, DEFAULT_SKELETON, filmSeconds, ledEdl, ledPlan, productShape, snapToGrid } from "./template.ts";
+import { buildStep, liftAt } from "./primitives/cues.ts";
 import { chooseLook, DEFAULT_LOOK } from "./look.ts";
 import { clockOf, speedAt } from "./retime.ts";
 import { assignNarration, beatParts, cursorAt, outputSize, planParts, VOICE_SPACING } from "./plan.ts";
@@ -606,6 +611,267 @@ describe("a music-led edit", () => {
     expect((snapped.segments[0] as PrimitiveSegment).seconds).toBe(1.5);
     expect(snapToGrid({ ...edl, segments: [{ ...label, seconds: 3.1 }] }).moved).toBe(0);
     expect(snapToGrid({ ...edl, segments: [{ ...label, seconds: 0.1 }] }).edl.segments[0]).toMatchObject({ seconds: 0.5 });
+  });
+});
+
+describe("the reference library", () => {
+  const view = { w: 1440, h: 900, dpr: 2 };
+  const timeline = (events: Partial<TimelineEvent>[], duration = 20): Timeline => ({
+    schemaVersion: 2,
+    recordingId: "r",
+    formFactor: "desktop",
+    viewport: view,
+    fps: 30,
+    duration,
+    flows: [{ flowId: "f", in: 0, out: duration }],
+    events: events.map((e) => ({ flowId: "f", stepId: "s", kind: "settled", label: "x", url: "https://x.example", t: 1, ...e }) as TimelineEvent),
+    dead: [],
+  });
+  const beat = (id: string, from: number, to: number, title?: string): Storyboard["beats"][number] => ({
+    id,
+    role: "core",
+    flowId: "f",
+    in: from,
+    out: to,
+    onScreen: title ? [{ kind: "title", text: title }] : [],
+    motion: { kind: "reveal", emotion: "calm" },
+    intent: "x",
+    maxSeconds: 3,
+  });
+  const storyboard = (beats: Storyboard["beats"]): Storyboard => ({ schemaVersion: 1, arc: "launch", edit: "trailer", beats });
+  const script = (beats: Storyboard["beats"]): Script => ({
+    schemaVersion: 2,
+    lang: "en",
+    hook: "Plan and ship",
+    titleCard: "Plan and ship",
+    cta: "Try it",
+    posting: { title: "t", description: "d", hashtags: [] },
+    segments: beats.map((b) => ({ beatId: b.id, text: "", onScreen: b.onScreen.map((o) => o.text), maxSeconds: 3 })),
+  });
+  const columns: Layout["groups"][number] = {
+    kind: "columns",
+    box: [100, 200, 1200, 600],
+    items: [0, 1, 2, 3].map((i) => [100 + i * 300, 200, 280, 600] as Rect),
+  };
+  const rows: Layout["groups"][number] = { kind: "rows", box: [800, 100, 500, 400], items: [0, 1, 2, 3, 4, 5].map((i) => [800, 100 + i * 60, 500, 52] as Rect) };
+  const plan = (skeletonId: string, beats: Storyboard["beats"], t: Timeline, over = {}) =>
+    loadReferenceLibrary().then((library) =>
+      ledPlan({
+        timeline: t,
+        storyboard: storyboard(beats),
+        scripts: { en: script(beats) },
+        personality: "energetic",
+        targetSeconds: 30,
+        skeleton: library!.skeletons.find((s) => s.id === skeletonId)!,
+        ...over,
+      }),
+    );
+  const moves = (edl: Edl) => edl.segments.map((s) => (s.kind === "primitive" ? s.primitive.type : s.kind));
+
+  it("is valid, and its label-then-proof entry is the template's default", async () => {
+    const library = await loadReferenceLibrary();
+    expect(library!.skeletons.map((s) => s.id)).toEqual(["modules", "rapid", "glide", "type-led"]);
+    expect(library!.skeletons.find((s) => s.id === "modules")).toEqual(DEFAULT_SKELETON);
+  });
+
+  it("picks a skeleton that suits the product, the same one for the same seed", async () => {
+    const library = (await loadReferenceLibrary())!;
+    for (const seed of ["linear.app", "ui.shadcn.com", "sarvam.ai", "a", "b"]) {
+      const picked = chooseSkeleton(library, "board", seed);
+      expect(picked.suits.length === 0 || picked.suits.includes("board")).toBe(true);
+      expect(chooseSkeleton(library, "board", seed)).toBe(picked);
+    }
+    const seen = new Set(["a", "b", "c", "d", "e", "f", "g", "h"].map((seed) => chooseSkeleton(library, "page", seed).id));
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("reads a product's shape from what was recorded", () => {
+    const beats = [beat("a", 0, 5)];
+    expect(productShape(storyboard(beats), timeline([{ t: 2, layout: { groups: [columns] } }]))).toBe("board");
+    expect(productShape(storyboard(beats), timeline([{ t: 1, kind: "type", value: "write a note", bbox: [1, 1, 300, 40] }]))).toBe("prompt");
+    expect(productShape(storyboard(beats), timeline([{ t: 2, layout: { groups: [rows] } }]))).toBe("list");
+    expect(productShape(storyboard(beats), timeline([]))).toBe("page");
+  });
+
+  it("cuts a rapid film to two angles a shot, on short beats", async () => {
+    const beats = [beat("a", 0, 10, "Plan it"), beat("b", 10, 20, "Ship it")];
+    const t = timeline([{ t: 2, layout: { panel: [780, 20, 640, 860], groups: [columns, rows] } }, { t: 12, layout: { panel: [700, 20, 700, 860], groups: [rows] } }]);
+    const { edl } = await plan("rapid", beats, t);
+    expect(moves(edl)).toEqual(["label", "build", "proof", "label", "proof", "proof"]);
+    const proofs = edl.segments.filter((s) => s.kind === "primitive" && s.primitive.type !== "label");
+    expect(proofs.every((s) => (s as PrimitiveSegment).seconds === 1.5)).toBe(true);
+  });
+
+  it("glides the camera across a shot's regions on the beat, with no labels", async () => {
+    const t = timeline([
+      { t: 1, layout: { panel: [0, 0, 700, 900], groups: [] } },
+      { t: 6, layout: { panel: [740, 0, 700, 900], groups: [] } },
+    ]);
+    const { edl } = await plan("glide", [beat("a", 0, 12, "Plan it")], t);
+    expect(edl.schemaVersion).toBe(8);
+    expect(moves(edl)).toEqual(["proof"]);
+    const p = (edl.segments[0] as PrimitiveSegment).primitive;
+    // The first panel settles a second in, so the window opens on the whole page, then moves to each panel.
+    expect(p.type === "proof" && p.frame).toEqual([0, 0, 1440, 900]);
+    expect(p.type === "proof" && p.path).toHaveLength(2);
+    const stop = p.type === "proof" ? p.path!.at(-1)! : undefined;
+    expect((stop!.at / 0.5) % 1).toBeCloseTo(0, 5);
+    expect(stop!.frame[0]).toBeGreaterThan(300);
+  });
+
+  it("says which shots it left out, and why", async () => {
+    const empty = { t: 2, box: [0, 0, 100, 100] as Rect, fill: 0.02 };
+    const beats = [beat("a", 0, 5, "Empty one"), beat("b", 5, 10, "Full one")];
+    const t = timeline([{ t: 7, layout: { panel: [800, 20, 600, 860], groups: [] } }]);
+    const { dropped } = await plan("modules", beats, t, { content: { a: empty } });
+    expect(dropped).toEqual([{ beatId: "a", title: "Empty one", reason: "too little on screen to show" }]);
+  });
+
+  it("frames the busiest part of a page that's full edge to edge, not the whole page", () => {
+    const beats = [beat("a", 0, 5)];
+    const full = { t: 2, box: [0, 60, 1440, 840] as Rect, fill: 0.5, focus: [720, 450, 720, 450] as Rect };
+    const edl = ledEdl({ timeline: timeline([]), storyboard: storyboard(beats), scripts: { en: script(beats) }, personality: "energetic", targetSeconds: 30, content: { a: full } });
+    const p = (edl.segments[0] as PrimitiveSegment).primitive;
+    expect(p.type === "proof" && p.frame[2]).toBeLessThan(1440);
+  });
+
+  it("never frames a nav bar as the component", () => {
+    const beats = [beat("a", 0, 5)];
+    const edl = ledEdl({ timeline: timeline([{ t: 2, layout: { component: [0, 0, 1440, 64], groups: [] } }]), storyboard: storyboard(beats), scripts: { en: script(beats) }, personality: "energetic", targetSeconds: 30 });
+    const p = (edl.segments[0] as PrimitiveSegment).primitive;
+    expect(p.type === "proof" && p.frame).not.toEqual([0, 0, 1440, 900]);
+  });
+
+  it("lifts the top of the middle column when a board has nothing smaller", () => {
+    const beats = [beat("a", 0, 5)];
+    const edl = ledEdl({ timeline: timeline([{ t: 2, layout: { groups: [columns] } }]), storyboard: storyboard(beats), scripts: { en: script(beats) }, personality: "energetic", targetSeconds: 30 });
+    const p = (edl.segments[0] as PrimitiveSegment).primitive;
+    expect(p.type === "build" && p.lift).toEqual([700, 200, 280, 196]);
+  });
+
+  it("lays the film out bar by bar in its beat sheet, with what it shows and what it left out", async () => {
+    const empty = { t: 2, box: [0, 0, 100, 100] as Rect, fill: 0.02 };
+    const beats = [beat("a", 0, 5, "Empty one"), beat("b", 5, 10, "Full one")];
+    const t = timeline([{ t: 7, layout: { panel: [800, 20, 600, 860], groups: [] } }]);
+    const { edl, dropped, skeleton } = await plan("modules", beats, t, { content: { a: empty } });
+    const sheet = beatSheetOf(edl, { skeletonId: skeleton.id, thesis: "Plan and ship", grid: { beat: 0.5, bar: 2 }, dropped });
+    expect(sheet.beats.map((b) => [b.id, b.at, b.bars, b.move])).toEqual([
+      ["intro", 0, [1, 2], "opener"],
+      ["b-label", 4, [3, 3], "label (base, slit)"],
+      ["b-proof", 5, [3, 4], "proof"],
+      ["outro", 8, [5, 6], "end card"],
+    ]);
+    expect(sheet.beats[1]!.copy).toBe("Full one");
+    expect(sheet.beats[2]!.source).toMatchObject({ flowId: "f", frame: [800, 20, 600, 860] });
+    expect(describeBeatSheet(sheet).at(-1)).toBe("left out: Empty one (too little on screen to show)");
+  });
+
+  it("tries art direction's moves first, and keeps out the ones it avoids", async () => {
+    const t = timeline([{ t: 2, layout: { panel: [780, 20, 640, 860], groups: [columns] } }]);
+    const beats = [beat("a", 0, 10, "Plan it")];
+    expect(moves((await plan("modules", beats, t)).edl)).toEqual(["label", "build"]);
+    expect(moves((await plan("modules", beats, t, { prefer: ["proof"] })).edl)).toEqual(["label", "proof"]);
+    expect(moves((await plan("modules", beats, t, { avoid: ["build"] })).edl)).toEqual(["label", "proof"]);
+    const motion = { logo: "lockup" as const, cursor: "hand" as const, world: "bloom" as const };
+    const { edl } = await plan("modules", beats, t, { motion });
+    expect(edl).toMatchObject({ schemaVersion: 8, style: { brand: motion } });
+  });
+
+  it("places the brand moves art direction asks for, when the job has their material", async () => {
+    const t = timeline([{ t: 1, kind: "type", value: "plan the launch", bbox: [300, 300, 500, 44] }, { t: 3, kind: "click", bbox: [800, 300, 80, 40] }, { t: 5, layout: { panel: [780, 20, 640, 860], groups: [] } }]);
+    const beats = [beat("a", 0, 8, "Plan it")];
+    const assets = {
+      captures: Array.from({ length: 7 }, (_, i) => `brief/captures/0${i + 1}.jpg`),
+      cloud: ["a", "b", "c", "d"].map((x) => `brief/logos/${x}.png`),
+      outputs: [{ file: "record/output/f-01.wav", flowId: "f", t: 3.5, seconds: 2.4, peaks: Array(16).fill(0.5) }],
+    };
+    const { edl } = await plan("modules", beats, t, { prefer: ["wall", "pill", "output", "orbit"], assets });
+    expect(moves(edl)).toEqual(["wall", "label", "pill", "output", "orbit"]);
+    const pill = edl.segments.find((x) => x.kind === "primitive" && x.primitive.type === "pill") as PrimitiveSegment;
+    expect(pill.primitive).toMatchObject({ text: "plan the launch", press: true });
+    // Without them asked for, or without the material, none of them.
+    expect(moves((await plan("modules", beats, t, { assets })).edl)).toEqual(["label", "prompt", "ticker"].slice(0, 2));
+    expect(moves((await plan("modules", beats, t, { prefer: ["wall", "orbit"], assets: { captures: assets.captures.slice(0, 3), cloud: [] } })).edl)).not.toContain("wall");
+  });
+
+  it("dresses the moves in the recording's own words, the brand's objects and the director's shot calls", async () => {
+    const t = timeline([
+      { t: 0.5, kind: "select", stepId: "s1", value: "ta-IN", bbox: [600, 400, 230, 33] },
+      { t: 1, kind: "type", stepId: "s2", value: "வணக்கம்! நான் உங்கள் உதவியாளர்.", bbox: [170, 340, 400, 180] },
+      { t: 3, kind: "click", stepId: "s3", bbox: [600, 620, 230, 33] },
+    ]);
+    const beats = [beat("a", 0, 8, "Speak it")];
+    const steps = { "f/s1": { action: "select", text: "Tamil", value: "ta-IN" }, "f/s3": { action: "click", text: "Generate with Bulbul V4" } };
+    const assets = {
+      outputs: [{ file: "record/output/f-01.mp3", flowId: "f", t: 3.5, seconds: 2.4, peaks: Array(16).fill(0.5) }],
+      imagery: [{ file: "brief/imagery/a.png", colour: "#b23573", round: true }, { file: "brief/imagery/b.png", colour: "#98c854", round: true }],
+      colours: ["#9a365c", "#9ac854", "#f48a77"],
+    };
+    const { edl } = await plan("modules", beats, t, { prefer: ["pill", "output"], assets, steps });
+    const pill = edl.segments.find((x) => x.kind === "primitive" && x.primitive.type === "pill") as PrimitiveSegment;
+    expect(pill.primitive).toMatchObject({ button: "Generate with Bulbul V4", chips: ["தமிழ் · Tamil"], press: true });
+    const out = edl.segments.find((x) => x.kind === "primitive" && x.primitive.type === "output") as PrimitiveSegment;
+    expect(out.primitive).toMatchObject({ title: "தமிழ் · Tamil", disc: "brief/imagery/a.png" });
+    expect(edl.style.palette.colours).toEqual(assets.colours);
+    expect(edl.style.imagery).toHaveLength(2);
+    // The director's call: just where things were done, with a headline from the site.
+    const called = await plan("modules", beats, t, { shots: { a: { crop: "acted", headline: "Hear it in Tamil" } } });
+    const proof = called.edl.segments.find((x) => x.kind === "primitive" && x.primitive.type === "proof") as PrimitiveSegment;
+    expect(proof.primitive).toMatchObject({ headline: "Hear it in Tamil" });
+    const frame = (proof.primitive.type === "proof" ? proof.primitive.frame : [0, 0, 0, 0]) as [number, number, number, number];
+    expect(frame[0]).toBeLessThanOrEqual(170);
+    expect(frame[0] + frame[2]).toBeGreaterThanOrEqual(830);
+    expect(frame[2]).toBeLessThan(1440);
+  });
+
+  it("names a recorded choice as a chip", () => {
+    expect(chipFor({ action: "select", value: "ta-IN" })).toBe("தமிழ் · Tamil");
+    expect(chipFor({ action: "select", value: "en" })).toBe("English");
+    expect(chipFor({ action: "select", text: "Shubh · Conversational", value: "shubh_enhi_companion" })).toBe("Shubh · Conversational");
+    expect(chipFor({ action: "select", value: "x1" })).toBeUndefined();
+  });
+
+  it("cuts out each settled piece once, at its latest settle", () => {
+    const t = timeline([
+      { t: 2, layout: { panel: [780, 20, 640, 860], groups: [rows] } },
+      { t: 5, layout: { panel: [781, 21, 640, 860], groups: [columns] } },
+      { t: 6, kind: "click", layout: { panel: [10, 10, 100, 100], groups: [] } },
+    ]);
+    const layers = planLayers(t);
+    expect(layers.filter((l) => l.kind === "panel")).toEqual([{ id: "panel-1", kind: "panel", flowId: "f", t: 5, box: [781, 21, 640, 860] }]);
+    expect(layers.filter((l) => l.kind === "row")).toHaveLength(6);
+    expect(layers.filter((l) => l.kind === "column")).toHaveLength(4);
+    const inv = inventoryOf({ timeline: t, layers: { schemaVersion: 1, layers: layers.map((l) => ({ ...l, file: "x.png", density: 2 })) }, theme: "dark", colourful: false, hero: false, density: 2 });
+    expect(inv).toMatchObject({ board: true, list: true, panel: true, typing: false, logo: "none", layers: { panel: 1, row: 6, column: 4 } });
+  });
+
+  it("puts the hand only on recorded clicks the move shows, in its own time", () => {
+    const clicks = [
+      { t: 2.0, box: [400, 300, 100, 40] as [number, number, number, number] },
+      { t: 2.3, box: [420, 320, 100, 40] as [number, number, number, number] },
+      { t: 4.0, box: [1300, 800, 50, 30] as [number, number, number, number] },
+      { t: 9.0, box: [400, 300, 100, 40] as [number, number, number, number] },
+    ];
+    const presses = pressesIn({ clicks, from: 1, to: 5, speed: 1, dur: 3, frame: [300, 200, 600, 400], scale: 2 });
+    // The second is too close after the first; the third is outside the region; the last is after the move.
+    expect(presses).toEqual([{ x: 300, y: 240, at: 1 }]);
+  });
+
+  it("finds the busiest half of a page", () => {
+    const gray = new Uint8Array(144 * 90).fill(10);
+    for (let y = 50; y < 90; y++) for (let x = 80; x < 144; x++) gray[y * 144 + x] = 200;
+    for (let y = 10; y < 20; y++) for (let x = 0; x < 30; x++) gray[y * 144 + x] = 200;
+    const [x, y, w, h] = busiestRegion(gray, 144, 90);
+    expect(x).toBeGreaterThan(0.4);
+    expect(y).toBeGreaterThan(0.4);
+    expect([w, h]).toEqual([0.5, 0.5]);
+  });
+
+  it("spreads a few pieces over the build instead of landing them at once", () => {
+    expect(buildStep(2, 0.5, 4)).toBe(0.5);
+    expect(buildStep(4, 0.5, 4)).toBe(0.5);
+    expect(buildStep(12, 0.5, 3)).toBeCloseTo(1 / 12, 5);
+    expect(liftAt(4, 4, 0.5)).toBe(2.5);
   });
 });
 

@@ -10,6 +10,7 @@ import ActivityLog from "@/components/job/ActivityLog";
 import FlowReview from "@/components/job/FlowReview";
 import Multiview from "@/components/job/Multiview";
 import Outputs from "@/components/job/Outputs";
+import PlanBlock from "@/components/job/PlanBlock";
 import PreviewReview from "@/components/job/PreviewReview";
 import StageWork from "@/components/job/StageWork";
 import StoryboardReview from "@/components/job/StoryboardReview";
@@ -181,6 +182,8 @@ export default function JobView({ id }: { id: string }) {
       </dl>
 
       <Field state={state} title={title} lead={lead} clock={clock} sub={sub}>{body}</Field>
+
+      <PlanBlock jobId={job.id} versions={view.artifacts} />
 
       <RunTimeline job={job} now={now} />
 

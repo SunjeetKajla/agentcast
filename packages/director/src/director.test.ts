@@ -21,7 +21,7 @@ import type { AgentTask } from "@agentcast/llm";
 import { baselineEdl } from "@agentcast/video";
 import { checkWorkspace, errorsOf } from "./check.ts";
 import { customScenes } from "./composition.ts";
-import { restoreScene, runDirector } from "./director.ts";
+import { restoreScene, runDirector, scopeIssues } from "./director.ts";
 import { CHECK_COMMAND, prepareWorkspace } from "./workspace.ts";
 
 const read = <S extends Parameters<typeof readArtifact>[1]>(rel: string, schema: S) =>
@@ -203,6 +203,33 @@ describe("runDirector", () => {
     expect(tasks[0]!.resume).toBe("session-0");
     expect(tasks[0]!.prompt).toContain('"Make it full screen"');
     expect(run.edl.style.frame).toBe("none");
+  });
+});
+
+describe("a revision of one part", () => {
+  it("lets that part change and nothing else", () => {
+    const [a, b] = baseline.segments.filter((s) => s.kind === "shot") as ShotSegment[];
+    const changed = (edit: (edl: Edl) => void) => {
+      const edl = structuredClone(baseline);
+      edit(edl);
+      return edl;
+    };
+    expect(scopeIssues(baseline, changed((e) => ((e.segments.find((s) => s.id === a!.id) as ShotSegment).out -= 0.2)), a!.id)).toEqual([]);
+    expect(scopeIssues(baseline, changed((e) => ((e.segments.find((s) => s.id === b!.id) as ShotSegment).out -= 0.2)), a!.id).map((i) => i.at)).toEqual(["segments"]);
+    expect(scopeIssues(baseline, changed((e) => (e.style.frame = "none")), a!.id).map((i) => i.at)).toEqual(["style"]);
+    expect(scopeIssues(baseline, changed((e) => (e.intro.seconds += 1)), "intro")).toEqual([]);
+  });
+
+  it("names the part in the prompt, and sends a change elsewhere back to be undone", async () => {
+    const [a, b] = baseline.segments.filter((s) => s.kind === "shot") as ShotSegment[];
+    const { llm, tasks } = fakeAgent([
+      () => edit((edl) => ((edl.segments.find((s) => s.id === b!.id) as ShotSegment).out = b!.out - 0.2)),
+      () => edit((edl) => (edl.segments = edl.segments.map((s) => (s.id === b!.id ? b! : s)))),
+    ]);
+    const run = await runDirector({ llm, dir, resume: "session-0", revise: "Shorter", scene: a!.id });
+    expect(tasks[0]!.prompt).toContain(`\`${a!.id}\``);
+    expect(tasks[1]!.prompt).toMatch(/only .* may change/);
+    expect(run).toMatchObject({ fellBack: false, repairRounds: 1 });
   });
 });
 
