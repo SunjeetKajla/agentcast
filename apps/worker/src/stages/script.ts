@@ -240,7 +240,7 @@ async function artDirection(
     thirdPartyLogos: ctx.config.thirdPartyLogos === true,
   });
   const library = await loadReferenceLibrary().catch(() => undefined);
-  const skeletons = (library?.skeletons ?? []).map((s) => ({ id: s.id, name: s.name, feel: s.feel, suits: s.suits }));
+  const skeletons = (library?.skeletons ?? []).map((s) => ({ id: s.id, name: s.name, feel: s.feel, suits: s.suits, ...(s.types ? { types: s.types } : {}) }));
   const shape = productShape(o.storyboard, o.timeline, content);
   const input = { inventory, skeletons, shape, seed: ctx.config.url };
   const scriptLines = scriptLinesOf(o.scripts ?? []);

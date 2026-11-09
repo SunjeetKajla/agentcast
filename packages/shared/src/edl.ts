@@ -159,8 +159,8 @@ export const Primitive = z.discriminatedUnion("type", [
     ground: z.enum(["base", "field"]).optional(),
     /** v8: where the camera travels, seconds into the part: it eases from `frame` to each stop's region in turn. */
     path: z.array(z.object({ at: Seconds, frame: Rect })).max(6).optional(),
-    /** v8: a headline over the window, word for word from the site or the script (art direction's call). */
-    headline: z.string().min(1).max(60).optional(),
+    /** v8: a headline over the window: art direction's call (word for word from the site or the script), or the shot's title by language in a headline skeleton. */
+    headline: z.union([z.string().min(1).max(60), TextByLang]).optional(),
   }),
   /** The page at one moment, built piece by piece, with one piece lifted out to the middle. */
   z.object({

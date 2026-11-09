@@ -43,12 +43,13 @@ export async function planLedFilm(o: {
   signal?: AbortSignal;
 }): Promise<LedFilm> {
   const [music, references] = await Promise.all([loadMusicLibrary().catch(() => undefined), loadReferenceLibrary().catch(() => undefined)]);
-  const track = pickTrack(music, { personality: o.creative.personality, edit: "trailer", seconds: o.creative.targetSeconds, seed: o.seed, led: true });
-  if (!track) throw new Error("A music-led video needs a local music file with a dependable beat grid. Add and analyze a licensed track with `pnpm agentcast music`, or set AGENTCAST_MUSIC_DIR to your prepared library.");
   const content = o.content ?? (await shotContent(o.recording, o.storyboard, o.timeline, o.signal));
   const wanted = o.direction?.skeletonId ?? o.skeletonId;
   const named = wanted ? references?.skeletons.find((s) => s.id === wanted) : undefined;
   const skeleton = named ?? (references ? chooseSkeleton(references, productShape(o.storyboard, o.timeline, content), o.site) : undefined);
+  // The structure first, then the music it wants: a calm one-take and a rapid-fire film don't share a track.
+  const track = pickTrack(music, { personality: o.creative.personality, edit: "trailer", seconds: o.creative.targetSeconds, seed: o.seed, led: true, ...(skeleton?.music ? { want: skeleton.music } : {}) });
+  if (!track) throw new Error("A music-led video needs a local music file with a dependable beat grid. Add and analyze a licensed track with `pnpm agentcast music`, or set AGENTCAST_MUSIC_DIR to your prepared library.");
   const grid = track ? beatsOf(track) : { beat: 0.5, bar: 2 };
   // Each output's length and waveform, read from the file itself.
   const outputs = [];

@@ -379,8 +379,10 @@ Why: our Remotion output measured 57–69% still frames, sentence headlines, the
   the imagery world, moves dressed in the recording's own words (pill button and language chips, output title and
   orb disc, proof headlines), the director's shot calls checked against the site's text and the script, cookie
   banners hidden in recordings and captures, and `bench --art --live-kit --director`.
-- **Next:** the mascot; a composer toggle for third-party logos; a site-headline beat and a ticker in the one-take
-  skeleton; a viewing and listening pass on real jobs.
+- **Then built (S19):** the music library at 14 tracks (12 CC0), music chosen by skeleton, and three skeletons from
+  the remaining automatable references (`showcase`, `canvas`, `listen` for voice products, with a beat of the
+  film's line before the output and a ticker).
+- **Next:** the mascot; a composer toggle for third-party logos; a viewing and listening pass on real jobs.
 
 ## 3. Timeline (36 h reference schedule)
 

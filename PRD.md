@@ -413,6 +413,8 @@ Exploration Chrome now uses the recorder's verified dGPU → iGPU → CPU launch
 
 Public tasks start signed out. Sign-in-once restores the sealed site-scoped local session before navigation; CLI authentication is independent of website authentication. Harness homes, runtimes, temporary Chrome profiles and MCP capabilities are isolated per task. Cleanup closes the task's resources on success, failure and cancellation. No personal Chrome attachment or cloud browser fallback is enabled.
 
+Local sign-in capture includes localStorage from up to 12 origins on the authorized product site, discovered from the owned Chrome profile's storage keys. This retains app-subdomain state when sign-in starts on a marketing domain; unrelated sites and other tenants on shared hosting remain excluded.
+
 Persisted tasks have stable attempt IDs and input hashes. Completed matching results may be reused. An interrupted or failed task requires fresh exploration in a new job, rather than blindly replaying mutations. Older artifact support is limited to lightweight read adapters; old remote tasks are not resumed.
 
 ## 9. Pipeline deep dive
@@ -851,8 +853,9 @@ Launch and sales films have no voice by default (`voiced()`, `musicLed()`): most
 
 One template made every music-led film the same shape (`docs/LAUNCH_FILM_TEARDOWN.md` §8). The structure now comes from a library of skeletons, the film is planned bar by bar before review, and a revision can be aimed at one part. The reasoning is in `docs/REFERENCE_WORKFLOW.md`.
 
-- **The reference library** (`assets/references/skeletons.json`, `ReferenceLibrary`): film skeletons learned from the measured reference films, written in our primitives, never footage. Each sets the opener, module and end-card lengths in beats; whether a module has a label, a second angle on the same shot, or a camera that travels the page (`camera: "path"`); cycles of label openings, grounds and tilts; the product shapes it suits; and the references' pacing targets. Four to start: `modules` (label, then proof), `rapid` (rapid-fire), `glide` (one take) and `type-led`.
-- **Choosing one.** `productShape` reads what the recording mostly is (`prompt`, `board`, `list`, `panel` or `page`) and `chooseSkeleton` picks a skeleton that suits it, seeded by the site, so a product keeps its look across jobs and two products differ. The site's seed also picks where the look cycles start.
+- **The reference library** (`assets/references/skeletons.json`, `ReferenceLibrary`): film skeletons learned from the measured reference films, written in our primitives, never footage. Each sets the opener, module and end-card lengths in beats; whether a module has a label, a second angle on the same shot, or a camera that travels the page (`camera: "path"`); cycles of label openings, grounds, tilts and build reveals (rise or accent wireframe); the product shapes it suits; and the references' pacing targets. Optional: the product types it's kept for (`types`), the music it wants (`music`: an energy range and moods), the shot's title as a headline over its window instead of a label card (`module.headline`), and a beat of the film's line before the product's output (`outputLead`). Seven skeletons, from 12 of the 17 reference films (the other five are live action, archival or abstract): `modules` (label, then proof), `rapid` (rapid-fire), `glide` (one take), `type-led`, `showcase` (headline and window: Superhuman, Notion Mail), `canvas` (drawn, then built: Framer, LangEase) and `listen` (type it, hear it: for voice products, kept to `voice-audio`).
+- **Choosing one.** Art direction chooses it (§9.7.8). Without it, `productShape` reads what the recording mostly is (`prompt`, `board`, `list`, `panel` or `page`) and `chooseSkeleton` picks a skeleton that suits it from those not kept for a product type, seeded by the site, so a product keeps its look across jobs and two products differ. The site's seed also picks where the look cycles start.
+- **Music by structure.** The skeleton is chosen before the track, and `pickTrack` weighs its `music` (its energy range rules, any of its moods counts) with the personality's moods. Every track within reach of the best fit is a fair pick and the job id chooses among them, so jobs that want the same kind of music don't all get one track. The music library (`assets/music/`, `LICENSES.md`) has 14 tracks: 12 CC0 from the Free Music Archive (Loyalty Freak Music, HoliznaCC0, Anonymous420; no credit needed) and the two CC BY Kevin MacLeod tracks; 13 have a grid a music-led film can use. The beat sheet names its track at script review.
 - **The beat sheet** (`script/beat-sheet.json`): the film's parts on the bar grid, each with its move, its words and what it shows of the recording, plus the shots left out and why. The script stage plans the film (`planLedFilm`: track, page content, skeleton, edit) as soon as the script is written, so a shot with too little on screen is reported before script review, not dropped after it. The direct stage plans it again on the approved script and rewrites the sheet for the final edit.
 - **Framing.** A proof whose page is full edge to edge frames its busiest half (`busiestRegion`) instead of the whole page, and a nav bar is never framed as a component. A build spreads its pieces over the first part of the move and always lifts a card, so it never lands and holds; on a tall canvas it pans across a wide board instead of cropping to two columns.
 - **Scene revisions.** At the preview a person can name one part (`scene`) or mark a moment (`at`, read as the part playing then). The director is told to change only that part, the worker's check rejects a change anywhere else (`scopeIssues`), and the turn has 4 minutes instead of 8. A full re-render is fast enough (about 22 s for an 18 s film at 1080p) that only the part's scope is limited, not the render.
@@ -1371,7 +1374,7 @@ type EDL = {
 //       | { type: "ticker"; terms: TextByLang[] }
 //       | { type: "proof"; flowId: string; in: number; out: number; frame: Rect; tilt: "none" | "soft" | "strong"; hops?: Rect[]; ground?: "base" | "field";
 //           path?: { at: number; frame: Rect }[]; // v8: the camera eases to each region at `at` seconds into the part (§9.7.7)
-//           headline?: string } // v8: art direction's headline over the window, word for word from the site or the script
+//           headline?: string | TextByLang } // v8: a headline over the window: art direction's (word for word from the site or the script), or the shot's title in a headline skeleton
 //       | { type: "wall"; pages: string[]; focus: number }                      // v8 brand moves (§9.7.8); paths are job-relative
 //       | { type: "pill"; flowId: string; text: string; at: number; press: boolean; button?: string; chips?: string[] } // button: the pressed button's own words; chips: choices made before typing ("தமிழ் · Tamil")
 //       | { type: "mockup"; flowId: string; in: number; out: number; frame: Rect; device: "laptop" }
@@ -1445,8 +1448,11 @@ type ReferenceLibrary = {
     learnedFrom: { film: string; took: string }[];
     suits: ("board" | "list" | "prompt" | "panel" | "page")[]; // empty: any
     openerBeats: number; endBeats: number;
-    module: { labelBeats: number; proofBeats: number; proofsPerShot: 1 | 2; maxModules: number; camera: "hold" | "path" };
-    look: { labelOpen: ("rise" | "slit" | "iris")[]; grounds: ("base" | "invert" | "field")[]; tilts: ("none" | "soft" | "strong")[]; flipMiddle: boolean };
+    types?: ProductType[]; // kept for these product types: only art direction picks it
+    music?: { energy: [number, number]; moods: string[] }; // the music it wants
+    module: { labelBeats: number; proofBeats: number; proofsPerShot: 1 | 2; maxModules: number; camera: "hold" | "path"; headline?: boolean };
+    outputLead?: boolean; // a beat of the film's line before the product's output
+    look: { labelOpen: ("rise" | "slit" | "iris")[]; grounds: ("base" | "invert" | "field")[]; tilts: ("none" | "soft" | "strong")[]; flipMiddle: boolean; reveal?: ("rise" | "wireframe")[] };
     ticker: boolean;
     target: { changesPer10s: [number, number]; stillPct: number };
   }[];

@@ -89,6 +89,8 @@ export function pickTrack(
     seed: string;
     /** A music-led edit needs a grid it can trust. */
     led?: boolean;
+    /** The film's structure wants this kind of music (its skeleton's `music`): weighed over the personality's. */
+    want?: { energy: [number, number]; moods: string[] };
   },
 ): MusicTrack | undefined {
   const tracks = (library?.tracks ?? []).filter(
@@ -97,19 +99,23 @@ export function pickTrack(
   if (!tracks.length) return undefined;
   const wanted = MOODS[o.personality];
   const energy = ENERGY[o.edit][o.personality];
+  const fitOf = (list: string[], moods: string[]) =>
+    list.reduce((s, m, i) => s + (moods.includes(m.toLowerCase()) ? (list.length - i) / list.length : 0), 0);
   const score = (t: MusicTrack) => {
     const moods = t.mood.map((m) => m.toLowerCase());
-    const fit = wanted.reduce(
-      (s, m, i) =>
-        s + (moods.includes(m) ? (wanted.length - i) / wanted.length : 0),
-      0,
-    );
+    // With a skeleton's wish, its energy range rules and its moods count most; the personality still counts.
+    const off = o.want ? Math.max(0, o.want.energy[0] - t.energy, t.energy - o.want.energy[1]) : Math.abs(t.energy - energy);
     return (
-      fit * 2 -
-      Math.abs(t.energy - energy) * 0.8 +
-      (t.seconds >= o.seconds ? 0.5 : 0) +
-      ((hash(o.seed + t.id) % 100) / 100) * 0.3
+      fitOf(wanted, moods) * (o.want ? 1 : 2) +
+      // The skeleton's moods weigh the same: any of them makes a track its kind of music.
+      (o.want ? Math.min(3, o.want.moods.filter((m) => moods.includes(m.toLowerCase())).length) : 0) -
+      off * (o.want ? 1.2 : 0.8) +
+      (t.seconds >= o.seconds ? 0.5 : 0)
     );
   };
-  return [...tracks].sort((a, b) => score(b) - score(a))[0];
+  // Every track close to the best fit is a fair pick; the job chooses among them, so jobs that want the same
+  // kind of music don't all get one track (and a job keeps its track when it's planned again).
+  const ranked = [...tracks].map((t) => ({ t, s: score(t) })).sort((a, b) => b.s - a.s || a.t.id.localeCompare(b.t.id));
+  const close = ranked.filter((r) => r.s >= ranked[0]!.s - 1.2);
+  return close[hash(`${o.seed ?? ""}`) % close.length]!.t;
 }

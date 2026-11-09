@@ -587,6 +587,15 @@ describe("art direction", () => {
     expect(one.changed.join()).toMatch(/one object isn't a world/);
   });
 
+  it("keeps a skeleton made for one kind of product to that kind", () => {
+    const withListen = [...skeletons, { id: "listen", name: "Type it, hear it", feel: "", suits: ["prompt"], types: ["voice-audio"] }];
+    const voice = rulesDirection({ productType: "voice-audio", inventory: inv({ typing: true }), skeletons: withListen, shape: "prompt", seed: "x" });
+    expect(voice.skeletonId).toBe("listen");
+    const prompt = checkDirection({ ...voice, productType: "ai-prompt" }, { inventory: inv({ typing: true }), skeletons: withListen, shape: "prompt", seed: "x" });
+    expect(prompt.skeletonId).not.toBe("listen");
+    expect(prompt.changed.join()).toMatch(/kept for voice-audio/);
+  });
+
   it("keeps a shot call's headline only when the site or the script says it", () => {
     const shots = [{ beatId: "a", title: "x", clicks: 2, typed: true, outputs: 1 }, { beatId: "b", title: "y", clicks: 0, typed: false, outputs: 0 }];
     const { shots: kept, changed } = checkShots(

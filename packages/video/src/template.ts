@@ -85,6 +85,7 @@ export const DEFAULT_SKELETON: FilmSkeleton = {
     { film: "raycast-pro", took: "the label card before each proof" },
   ],
   suits: [],
+  music: { energy: [3, 4], moods: ["corporate", "upbeat", "tech", "positive"] },
   openerBeats: 8,
   module: { labelBeats: 2, proofBeats: 6, proofsPerShot: 1, maxModules: 5, camera: "hold" },
   look: { labelOpen: ["rise"], grounds: ["base"], tilts: ["soft", "strong"], flipMiddle: true },
@@ -141,7 +142,7 @@ const worthFraming = (r: Rect, view: { w: number; h: number }) =>
 type Option = { kind: Primitive["type"]; make: (seconds: number) => Primitive };
 
 /** What this shot could be, best first. */
-function optionsFor(shot: Shot, timeline: Timeline, tilt: "soft" | "strong", beat: number, content?: ShotContent, cursor = false, prefer: Primitive["type"][] = [], extra: { steps?: Record<string, StepLabel>; call?: ShotCall } = {}): Option[] {
+function optionsFor(shot: Shot, timeline: Timeline, tilt: "soft" | "strong", beat: number, content?: ShotContent, cursor = false, prefer: Primitive["type"][] = [], extra: { steps?: Record<string, StepLabel>; call?: ShotCall; reveal?: "rise" | "wireframe" } = {}): Option[] {
   const view = timeline.viewport;
   const flow = timeline.flows.find((f) => f.flowId === shot.flowId);
   const options: Option[] = [];
@@ -204,7 +205,7 @@ function optionsFor(shot: Shot, timeline: Timeline, tilt: "soft" | "strong", bea
     const lift = pick && pick[3] > pick[2] * 1.2 ? topOf(pick) : pick;
     options.push({
       kind: "build",
-      make: () => ({ type: "build", flowId: shot.flowId, at: r2(moments(event)), items: grid.items.slice(0, 12), reveal: "rise", ...(lift ? { lift } : {}) }),
+      make: () => ({ type: "build", flowId: shot.flowId, at: r2(moments(event)), items: grid.items.slice(0, 12), reveal: extra.reveal ?? "rise", ...(lift ? { lift } : {}) }),
     });
     break;
   }
@@ -212,7 +213,7 @@ function optionsFor(shot: Shot, timeline: Timeline, tilt: "soft" | "strong", bea
   if (!options.length && content?.board) {
     const { t, columns, cards } = content.board;
     const lift = nearestMiddle(cards.filter((r) => area(r) >= screen * 0.012), view) ?? topOf(nearestMiddle(columns, view));
-    options.push({ kind: "build", make: () => ({ type: "build", flowId: shot.flowId, at: r2(t), items: columns, reveal: "rise", ...(lift ? { lift } : {}) }) });
+    options.push({ kind: "build", make: () => ({ type: "build", flowId: shot.flowId, at: r2(t), items: columns, reveal: extra.reveal ?? "rise", ...(lift ? { lift } : {}) }) });
   }
 
   // A list, with a highlight hopping down it, once the page has stopped moving.
@@ -350,8 +351,10 @@ const hash = (s: string) => [...s].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0
 
 /** The library's skeleton for this film: one that suits the product's shape, picked by the seed. */
 export function chooseSkeleton(library: ReferenceLibrary, shape: ProductShape, seed: string): FilmSkeleton {
-  const fits = library.skeletons.filter((s) => !s.suits.length || s.suits.includes(shape));
-  const pool = fits.length ? fits : library.skeletons;
+  // Skeletons kept for product types are art direction's to choose; the shape alone never picks them.
+  const open = library.skeletons.filter((s) => !s.types?.length);
+  const fits = open.filter((s) => !s.suits.length || s.suits.includes(shape));
+  const pool = fits.length ? fits : open.length ? open : library.skeletons;
   return pool[hash(seed) % pool.length]!;
 }
 
@@ -418,6 +421,8 @@ export function ledPlan(o: LedInput): LedPlan {
     const before = storyboard.beats[position - 1];
     const title = titleOf(shot) ?? (before && before.flowId === undefined && before.role !== "hook" ? titleOf(before) : undefined);
     const label = module.labelBeats ? title : undefined;
+    // A headline skeleton puts the shot's title over its window instead of on a card before it.
+    const titled = module.headline && !module.labelBeats ? title : undefined;
     const events = timeline.events.filter((e) => e.flowId === shot.flowId && e.t >= shot.in! && e.t <= shot.out! + 0.5);
     const tilt = cycle(look.tilts, index) === "strong" ? "strong" : "soft";
     const ofShot: Shot = { flowId: shot.flowId!, in: shot.in!, out: shot.out!, events };
@@ -425,7 +430,7 @@ export function ledPlan(o: LedInput): LedPlan {
     // A pill and a mockup are each a one-off: once one has played, later shots use the other moves.
     const prefer = (o.prefer ?? []).filter((k) => !((k === "pill" || k === "mockup") && once.has(k)));
     const call = o.shots?.[shot.id];
-    const options = ranked(optionsFor(ofShot, timeline, tilt, beat, o.content?.[shot.id], o.motion?.cursor === "hand", prefer, { ...(o.steps ? { steps: o.steps } : {}), ...(call ? { call } : {}) }), prefer, o.avoid);
+    const options = ranked(optionsFor(ofShot, timeline, tilt, beat, o.content?.[shot.id], o.motion?.cursor === "hand", prefer, { ...(o.steps ? { steps: o.steps } : {}), ...(call ? { call } : {}), ...(look.reveal ? { reveal: cycle(look.reveal, index) } : {}) }), prefer, o.avoid);
     // A one-take skeleton glides over each shot, unless art direction featured a designed move this shot can make.
     const designed = options[0] && prefer.includes(options[0].kind) && ["pill", "mockup", "build", "prompt"].includes(options[0].kind);
     const glide = module.camera === "path" && !designed ? glideFor(ofShot, timeline, tilt, beat, seconds, o.content?.[shot.id]) : undefined;
@@ -457,7 +462,8 @@ export function ledPlan(o: LedInput): LedPlan {
     }
     const made0 = glide ?? option!.make(seconds);
     // The director's headline rides the shot's first proof.
-    const first: Primitive = made0.type === "proof" && call?.headline ? { ...made0, headline: call.headline } : made0;
+    const headline = call?.headline ?? titled;
+    const first: Primitive = made0.type === "proof" && headline ? { ...made0, headline } : made0;
     last = first.type;
     if (first.type === "pill" || first.type === "mockup") once.add(first.type);
     // A pill lasts as long as its typing, the press and a beat of the answer coming: no long spinner.
@@ -486,8 +492,13 @@ export function ledPlan(o: LedInput): LedPlan {
       const out = outputs.splice(made, 1)[0]!;
       // Over it, the director's headline or the language it speaks; as its disc, one of the brand's own objects.
       const said = first.type === "pill" ? first.chips?.find((c) => c.includes(" · ")) : undefined;
-      const title = call?.headline ?? said ?? languageOfFlow(shot.flowId!);
-      segments.push({ kind: "primitive", id: slug(shot.id, "output"), beatId: shot.id, primitive: { type: "output", file: out.file, from: 0, seconds: r2(Math.min(out.seconds, OUT)), peaks: out.peaks, ...(title ? { title } : {}), ...(disc ? { disc } : {}) }, seconds: r2(outputBeats(out.seconds) * beat), transitionIn: "cut" });
+      // An output-led skeleton gives the film's line its own beat first ("Listen."); the output then wears its language.
+      const lead: Record<string, string> | undefined = skeleton.outputLead ? (call?.headline ? { en: call.headline } : title) : undefined;
+      if (lead)
+        segments.push({ kind: "primitive", id: slug(shot.id, "listen"), beatId: shot.id, primitive: { type: "label", text: lead, ground: "base", open: "rise" }, seconds: r2(Math.max(4, module.labelBeats) * beat), transitionIn: "cut" });
+      const named = said ?? languageOfFlow(shot.flowId!);
+      const heading = lead ? named : (call?.headline ?? named);
+      segments.push({ kind: "primitive", id: slug(shot.id, "output"), beatId: shot.id, primitive: { type: "output", file: out.file, from: 0, seconds: r2(Math.min(out.seconds, OUT)), peaks: out.peaks, ...(heading ? { title: heading } : {}), ...(disc ? { disc } : {}) }, seconds: r2(outputBeats(out.seconds) * beat), transitionIn: "cut" });
     }
     used++;
   });

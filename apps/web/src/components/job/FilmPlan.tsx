@@ -84,7 +84,7 @@ export default function FilmPlan({ jobId, versions }: { jobId: string; versions:
             <div className="sb-head">
               <b>Beat sheet</b>
               <span>
-                {s.seconds.toFixed(1)} s at {Math.round(s.bpm)} BPM
+                {s.seconds.toFixed(1)} s at {Math.round(s.bpm)} BPM{s.trackId ? ` · music: ${s.trackId}` : ""}
               </span>
             </div>
             <p className="sb-intent">{s.thesis}</p>

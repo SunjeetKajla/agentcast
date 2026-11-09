@@ -441,3 +441,37 @@ Fixed frame sampling and empty-frame rejection, consistent music-led story instr
 Repair job `job_mw7pm2zlsarvam` reused approved discovery, independently re-recorded both flows at DPR 2 without stall warnings, and captured three speech samples. Codex completed story/art direction, then hit its usage limit during direction. The replacement edit was corrected directly from footage: one genuine healthcare sample, Tamil textbook translation and the English/Kannada book-jacket comparison, without fabricated generation, extraction or Cowork results. Removed the page wall, repeated samples and repeating orb backdrop. Both finals are **34.5 seconds, H.264/AAC at 30 fps**, 1920×1080 and 1080×1920. Preview: **−14.3 LUFS, 8% still time** (target ≤10%). Full decoding and sampled-frame inspection passed; portrait document stacks were inspected separately. Exports, credits, diagnosis and scripts are in ignored `outputs/sarvam-repair-2026-11-08/`; the repair is separately available in the default worker's jobs. This is an inspected repair, not a claim of autonomous director success.
 
 Validation: **498 workspace regression tests passed**, 109 optional skipped; full workspace typecheck passed. Real Chrome separately verified excluding unplayed preloads and retaining audio after playback, before browser close. Dedicated source-cut/EOF, visual-review repair/retention, missing-music and portrait-comparison regressions passed. The existing ignored licensed audio was provisioned in the default music folder; no media or job data was committed.
+
+## S19: music by structure, and three more skeletons (2026-11-08)
+
+**Music.** The library had two tracks and only one with a usable grid, so every music-led film used "Enter the
+Party". Twenty-two instrumental candidates were shortlisted from CC0 artists on the Free Music Archive (each track's
+licence checked on its own page), transcribed for vocals (none) and measured (tempo grid, loudness, brightness,
+onset density, bass). Twelve with a medium-confidence grid went in, tagged from those measurements and their albums:
+energy 5 (High Technologic Beat Explosion, Can't Stop My Feet), 4 (Dance Robot ACTIVATE, Go to the Picnic, Make
+Funk), 3 (Sweet Sun, Cowork Party Time, Chillin with a drink at the club, Static Shoes) and 2 (Traveling in your
+mind, One Cool Minute, Roof Tops). Eight were left out for a low-confidence grid, one for an unreadable grid, one as
+too short. Across 40 job ids, each skeleton × personality now lands on 1–7 tracks from its own kind: rapid on the
+driving ones, glide and listen on the calm ones.
+
+**Skeletons.** From the four automatable references not used yet: `showcase` (Superhuman, Notion Mail: the
+shot's title as a headline over a big window, no cards), `canvas` (Framer, LangEase: accent wireframes, then the
+page) and `listen` (v0, Attio, Notion Mail moves, for voice products: the film's own line gets a beat before the
+output plays, and the product's terms ride a ticker before the end card). That makes 12 of the 17 films used; the other
+five are Raycast Windows (archival), Cursor 3 and Dia (live action), and the Linear concept and Releases films
+(abstract).
+
+**Run.** `bench --tag lib3 --jobs job_mw6o12r65ef81c,job_e2eled0001 --height 1080 --led --art --live-kit
+--director`. Sarvam: the director chose voice-audio and `listen`, music Static Shoes, 27 s: "Voices that sound
+Indian" over the TTS page, "Write Tamil. Hear Tamil.", the glow pill, "Type Tamil, hear Tamil", the output under
+"தமிழ் · Tamil", a ticker of Sarvam's products, the end card. Linear: `rapid`, Enter the Party, 20 s. On an earlier
+run the director called Sarvam an AI prompt product (and so chose `glide`); its prompt now defines voice-audio and
+gives it the rules' reading of the brief.
+
+**Fixed on the way.** Ticker terms shrank onto each other when the row was wider than the frame (flex items).
+
+## Referential architecture update merge — 2026-11-09
+
+Merged `origin/referential-architecture` (`e7e6074`) into `tinyfish-destruction`. Integrated the showcase, canvas and listen structures, music selection by structure, expanded track metadata/licence links, localized proof headlines, the beat-sheet track label and product-site storage-origin discovery for local sign-in. Conflict resolution retains Browser Harness and sealed local sessions, both branches' findings, filtering of absent audio files, and the music-led missing-track guard after the new skeleton-aware track selection. Existing source-frame bounds, readable labels, portrait stacking and director-review recovery remain in place.
+
+Validation: **502 workspace regression tests passed**, 109 optional skipped; all workspace typechecks and the production web build passed. No live LLM or voice-provider calls, audio downloads or generated media were needed. The pre-existing local `CLAUDE.md` edit remains outside the merge commit.

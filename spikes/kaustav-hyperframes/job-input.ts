@@ -89,7 +89,7 @@ async function artOf(
   const sat = Math.max(r!, g!, b!) ? (Math.max(r!, g!, b!) - Math.min(r!, g!, b!)) / Math.max(r!, g!, b!) : 0;
   const inventory = inventoryOf({ timeline: o.timeline, layers, kit, theme: brand?.theme ?? "dark", colourful: brand?.accentFrom !== "text" && sat > 0.3, hero: Boolean(brand?.hero), density: width / o.timeline.viewport.w, content: o.content, outputs: outputs?.outputs.length ?? 0 });
   const library = await loadReferenceLibrary();
-  const skeletons = (library?.skeletons ?? []).map((s) => ({ id: s.id, name: s.name, feel: s.feel, suits: s.suits }));
+  const skeletons = (library?.skeletons ?? []).map((s) => ({ id: s.id, name: s.name, feel: s.feel, suits: s.suits, ...(s.types ? { types: s.types } : {}) }));
   const shape = productShape(o.storyboard, o.timeline, o.content);
   const input = { inventory, skeletons, shape, seed: o.url };
   // The director's call (the user's Claude Code login, fast tier), as the script stage makes it; else the rules table.
@@ -124,7 +124,6 @@ export async function rebuiltEdl(root: string, seed: string, skeletonId = "auto"
     for (const [i, file] of takes.entries())
       await copyFile(file, join(root, "render", "audio", "sfx", `${kind}-${i + 1}${extname(file)}`));
   if (musicLed(config)) {
-    const track = pickTrack(library, { personality: creative.personality, edit: "trailer", seconds: creative.targetSeconds, seed, led: true });
     const content = await shotContent(join(root, jobPaths.recording("desktop")), storyboard, timeline);
     const made = art ? await artOf(root, { timeline, storyboard, creative, scripts, ...(product ? { product } : {}), ...(brand ? { brand } : {}), content, url: config.url, live: options.liveKit === true, director: options.director === true }) : undefined;
     const direction = made?.direction;
@@ -148,7 +147,7 @@ export async function rebuiltEdl(root: string, seed: string, skeletonId = "auto"
         ...(made.outputs ? { outputs: made.outputs } : {}),
       });
       const { edl, dropped } = film.plan;
-      console.log(`${seed}: skeleton ${film.plan.skeleton.id}, ${filmSeconds(edl).toFixed(1)} s${dropped.length ? `, left out ${dropped.map((d) => `${d.beatId} (${d.reason})`).join(", ")}` : ""}`);
+      console.log(`${seed}: skeleton ${film.plan.skeleton.id}, music ${film.track?.id ?? "none"}, ${filmSeconds(edl).toFixed(1)} s${dropped.length ? `, left out ${dropped.map((d) => `${d.beatId} (${d.reason})`).join(", ")}` : ""}`);
       if (film.track) await premixMusic(planMusic(film.track, filmSeconds(edl), edl.outro.seconds), join(musicDir(), film.track.file), join(root, MUSIC_FILE));
       return edl;
     }
@@ -159,6 +158,7 @@ export async function rebuiltEdl(root: string, seed: string, skeletonId = "auto"
         ? references && chooseSkeleton(references, productShape(storyboard, timeline, content), config.url)
         : references?.skeletons.find((s) => s.id === skeletonId);
     if (skeletonId !== "auto" && !skeleton) throw new Error(`No skeleton "${skeletonId}" in the reference library`);
+    const track = pickTrack(library, { personality: creative.personality, edit: "trailer", seconds: creative.targetSeconds, seed, led: true, ...(skeleton?.music ? { want: skeleton.music } : {}) });
     const { edl, dropped } = ledPlan({
       content,
       seed: config.url,
