@@ -1,7 +1,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { Edl, Script, Storyboard, type CameraKey, type PrimitiveSegment, type Rect, type ShotSegment, type Timeline } from "@agentcast/shared";
-import { calloutSeconds, cropFor, inView, moveSeconds, readSeconds } from "@agentcast/video";
+import { Edl, EvidenceFile, Script, Storyboard, type CameraKey, type PrimitiveSegment, type Rect, type ShotSegment, type Timeline } from "@agentcast/shared";
+import { temporalIssues, calloutSeconds, cropFor, inView, moveSeconds, readSeconds } from "@agentcast/video";
 import { checkRender, checkScenes, savedInput } from "./composition.ts";
 
 // Checks the director's work: edl.json, then (with a composition) the scene contract on the scene
@@ -54,7 +54,10 @@ export async function checkWorkspace(dir: string, o: CheckOptions = {}): Promise
     .filter((f) => /^script\.[\w-]+\.json$/.test(f))
     .map((f) => f.slice("script.".length, -".json".length));
   for (const lang of langs) Script.parse(await readJson(dir, `data/script.${lang}.json`));
+  const evidence = await readFile(join(dir, "data/evidence.json"), "utf8").then((t) => EvidenceFile.parse(JSON.parse(t)), (error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return undefined; throw error; });
+  const temporal = "flows" in timeline ? temporalIssues(edl, timeline as unknown as Timeline, evidence).map((i) => error(i.sceneId ?? "edl", i.message)) : [];
   const issues = [
+    ...temporal,
     ...restored.map((key) => warn(`style.${key}`, "is fixed by the brand, the brief or the music pick: put back as the baseline has it")),
     ...lint(edl, baseline, storyboard, timeline, langs),
   ];

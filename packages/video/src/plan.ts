@@ -155,6 +155,9 @@ export function planParts(edl: Edl, narration: Narration[] = []) {
   const parts: Part[] = [];
   const clips: PlacedClip[] = [];
   const { lead, gap, tail } = VOICE_SPACING;
+  // A music-led film's parts start on their beats: a transition starts on the beat and the part before
+  // holds through it, instead of the next part arriving early and pulling the rest of the film off the grid.
+  const onGrid = edl.style.timing === "music";
   let end = 0;
   for (const item of items) {
     const prev = parts.at(-1);
@@ -163,7 +166,13 @@ export function planParts(edl: Edl, narration: Narration[] = []) {
         ? Math.max(0, Math.min(transition, Math.floor(prev.frames / 3), Math.floor(item.base / 3)))
         : 0;
     const enter: Transition = { kind: item.enter, frames: overlap };
-    if (prev) prev.exit = enter;
+    if (prev) {
+      prev.exit = enter;
+      if (onGrid) {
+        prev.frames += overlap;
+        end += overlap;
+      }
+    }
     const lines = narration.filter((n) => n.part === item.id);
     const first = Math.max(lead, overlap / fps + 0.1);
     const spoken = lines.reduce((sum, n) => sum + n.seconds, 0) + gap * Math.max(0, lines.length - 1);

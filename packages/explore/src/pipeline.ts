@@ -1,4 +1,5 @@
 import {
+  FilmPlan,
   FlowsFile,
   ReplayPlan,
   jobPaths,
@@ -26,6 +27,7 @@ import { ExplorationPlan, RehearsalFile } from "./artifacts";
 import { offSite, productEntry } from "./access";
 import { toFlow, DESTRUCTIVE } from "./normalize";
 import { judgeFlows, selectFlows, type JudgeScores } from "./score";
+import { acquireCandidates } from "./acquire";
 import { tourFlows } from "./tour";
 import { requestHash, runTask } from "./task";
 import type {
@@ -45,6 +47,7 @@ export type ExploreOptions = {
   llm: Llm;
   browser: BrowserAdapter;
   product: ProductBrief;
+  filmPlan?: FilmPlan;
   creative: CreativeBrief;
   signal?: AbortSignal;
   browserOptions?: Omit<BrowserOptions, "signal" | "authorizedUrl" | "dir">;
@@ -130,7 +133,7 @@ export async function discoverProduct(
             url: o.url,
             domain: new URL(o.url).hostname,
             product: o.product.name,
-            focus: o.creative.mustShow.join("; "),
+            focus: [...o.creative.mustShow, ...(o.filmPlan?.moments.map((m) => `${m.action}; payoff: ${m.payoff}; verify: ${m.verification}`) ?? [])].join("; "),
             signedIn: !o.publicMode,
             ...(attempt
               ? {
@@ -302,7 +305,7 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
             candidate.title,
             {
               url: startUrl,
-              goal: flowGoal(candidate, new URL(o.url).hostname, previous),
+              goal: flowGoal(candidate, new URL(o.url).hostname, previous) + "\nFinish with an actual product result. Report any output produced and the action that produced it. Navigation or a tab switch alone is not proof of a completed workflow. If the site itself is the product, demonstrate its real interactive content.",
               output_schema: FLOW_RUN_SCHEMA,
               agent_config: { max_duration_seconds: 120 },
             },
@@ -348,6 +351,13 @@ export async function executeFlows(o: ExploreOptions): Promise<Flow[]> {
   await Promise.all(
     Array.from({ length: Math.min(2, plan.candidates.length) }, perform),
   );
+  // Material acquisition is decided before gate 1: newly found flows are reviewed normally.
+  if (o.filmPlan) {
+    const requests = await acquireCandidates(o, [...results.values()]);
+    o.log?.(`Material planning: ${requests.reason}`);
+    plan.candidates.push(...requests.candidates);
+    await perform();
+  }
   if ([...results.values()].filter((flow) => flow.rehearsal?.ok).length < 2) {
     const tours = tourFlows(page.facts, o.product.name).slice(0, 4);
     for (const source of tours) {

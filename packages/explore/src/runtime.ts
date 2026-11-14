@@ -4,8 +4,11 @@ import type { FetchResult } from "@agentcast/tinyfish";
 import type { PageColors, LogoCandidate, ColorSample } from "./brand";
 import type { PageFacts } from "./tour";
 import type { SessionState } from "./artifacts";
+import type { Llm, OnEvent } from "@agentcast/llm";
 
 export type BrowserOptions = {
+  /** A bounded local locator repair; credentials never enter the model's context. */
+  healing?: { llm: Pick<Llm, "json">; onEvent?: OnEvent };
   /** Overall local operation deadline, including page evaluation and cleanup. Default 60 s. */
   timeoutMs?: number;
   /** Discovery needs page facts, not another hero/logo capture. */

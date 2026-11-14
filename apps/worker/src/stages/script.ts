@@ -18,6 +18,8 @@ import {
   jobPaths, musicLed } from "@agentcast/shared";
 import {
   candidateSpans,
+  auditStoryboard,
+  groundedFallback,
   checkDirection,
   directArt,
   plainStoryboard,
@@ -32,6 +34,7 @@ import {
 } from "@agentcast/story";
 import { fixtureStages, withRecordingImagery } from "@agentcast/explore";
 import { beatSheetOf, describeBeatSheet, extractLayers, inventoryOf, loadReferenceLibrary, planLedFilm, productShape, shotContent } from "@agentcast/video";
+import { collectEvidence } from "../material.ts";
 import type { StageFn } from "./types.ts";
 import { fixtureLangs, stub } from "./stub.ts";
 const exec = promisify(execFile);
@@ -64,8 +67,9 @@ export const script: StageFn = async (ctx) => {
       `Omitting ${missing.length} approved flow(s) that did not record; narration will describe only completed footage.`,
       "warn",
     );
+  const evidence = await collectEvidence(ctx);
   const spans = candidateSpans(
-    approved.map((flow) => ({ flowId: flow.id, title: flow.title, timeline })),
+    approved.map((flow) => ({ flowId: flow.id, title: flow.title, timeline, source: flow.source })),
   );
   if (!spans.length)
     throw new Error(
@@ -115,6 +119,7 @@ export const script: StageFn = async (ctx) => {
     creative,
     product,
     spans,
+    evidence,
     frames,
     cardSeconds: { intro: card, outro: card },
   };
@@ -129,6 +134,11 @@ export const script: StageFn = async (ctx) => {
       "warn",
     );
     board = plainStoryboard(input);
+  }
+  const grounding = await auditStoryboard(llm, board, evidence, ctx.signal);
+  if (grounding.length) {
+    ctx.log(`Evidence review: ${grounding.join("; ").slice(0, 800)}. Using factual presentation copy.`, "warn");
+    board = groundedFallback(board, evidence);
   }
   await ctx.write(jobPaths.storyboard, Storyboard, board);
   for (const [index, beat] of board.beats.entries()) {
@@ -149,7 +159,7 @@ export const script: StageFn = async (ctx) => {
   for (const [index, lang] of ctx.config.variants.langs.entries()) {
     const result = await writeScript(
       llm,
-      { lang, storyboard: board, creative, product, led },
+      { lang, storyboard: board, creative, product, led, evidence },
       ctx.signal,
     );
     await ctx.write(jobPaths.script(lang), Script, result);
@@ -159,6 +169,21 @@ export const script: StageFn = async (ctx) => {
       `${lang.toUpperCase()} script ready`,
     );
   }
+  let copyIssues = await auditStoryboard(llm, board, evidence, ctx.signal, scripts);
+  if (copyIssues.length && !copyIssues.every((issue) => issue.includes("review was unavailable"))) {
+    ctx.log("Rewriting unsupported copy from the recorded actions before script review.", "warn");
+    board = groundedFallback(board, evidence);
+    await ctx.write(jobPaths.storyboard, Storyboard, board);
+    scripts.length = 0;
+    for (const lang of ctx.config.variants.langs) {
+      const result = await writeScript(llm, { lang, storyboard: board, creative, product, led, evidence }, ctx.signal);
+      await ctx.write(jobPaths.script(lang), Script, result);
+      scripts.push(result);
+    }
+    copyIssues = await auditStoryboard(llm, board, evidence, ctx.signal, scripts);
+    if (copyIssues.length && !copyIssues.every((issue) => issue.includes("review was unavailable"))) throw new Error(`The generated copy is not supported by the captured evidence after repair: ${copyIssues.join("; ")}`);
+  }
+  if (copyIssues.length) ctx.log("The final copy review was unavailable; review the script against the recorded moments before approving.", "warn");
   // A music-led film's beat sheet (PRD §9.7.7), before review: the bars, the moves, and any shot that
   // can't be shown, so nobody approves a line that disappears later.
   if (led) {

@@ -520,17 +520,57 @@ describe("a music-led edit", () => {
   it("opens, plays a label then a proof per shot, and closes, each a whole number of beats", () => {
     const beats = [beat("a", 0, 5, "Plan it"), beat("b", 5, 10, "Ship it")];
     const edl = led(beats, timeline([{ t: 2, layout: { groups: [columns] } }, { t: 7, layout: { panel: [800, 20, 600, 860], groups: [] } }]));
-    expect(edl.schemaVersion).toBe(7);
+    // The held proof pushes in, so the edit needs the camera path's schema.
+    expect(edl.schemaVersion).toBe(8);
     expect(edl.style.timing).toBe("music");
     expect(edl.intro.component).toBe("Opener");
     expect(edl.outro.component).toBe("EndCard");
     expect(moves(edl)).toEqual(["label", "build", "label", "proof"]);
-    for (const seconds of [edl.intro.seconds, edl.outro.seconds, ...edl.segments.map((s) => ("seconds" in s ? s.seconds : 0))])
-      expect((seconds / 0.5) % 1).toBeCloseTo(0, 5);
+    const lengths = [edl.intro.seconds, ...edl.segments.map((s) => ("seconds" in s ? s.seconds : 0)), edl.outro.seconds];
+    for (const seconds of lengths) expect((seconds / 0.5) % 1).toBeCloseTo(0, 5);
+    // Out of the opener and within a shot it cuts; the second shot opens a phrase (bar 5) with the big move.
+    expect(edl.segments.map((s) => s.transitionIn)).toEqual(["cut", "cut", "blur-zoom", "cut"]);
     const { parts } = planParts(edl, []);
-    // Nothing overlaps: every part starts as the last one ends, on the grid.
-    parts.slice(1).forEach((p, i) => expect(p.from).toBe(parts[i]!.from + parts[i]!.frames));
-    expect(parts.every((p) => p.enter.frames === 0)).toBe(true);
+    // Every part still starts on the grid: a transition starts on its beat while the part before holds through it.
+    parts.forEach((p, i) => expect(p.from).toBe(Math.round(lengths.slice(0, i).reduce((a, b) => a + b, 0) * 30)));
+    parts.slice(1).forEach((p, i) => expect(p.from).toBe(parts[i]!.from + parts[i]!.frames - p.enter.frames));
+    expect(parts[3]!.enter.frames).toBeGreaterThan(0);
+    // The panel is already as close as the footage stays sharp: the proof opens wider and pushes in to it on a beat.
+    const proof = edl.segments[3]!;
+    if (proof.kind !== "primitive" || proof.primitive.type !== "proof") throw new Error("expected a proof");
+    const [stop] = proof.primitive.path!;
+    expect(proof.primitive.frame[2]).toBeGreaterThan(600);
+    expect(stop!.frame[2]).toBeLessThan(proof.primitive.frame[2] / 1.3);
+    expect((stop!.at / 0.5) % 1).toBeCloseTo(0, 5);
+  });
+
+  it("waits for the hand's last press before the camera pushes in", () => {
+    const beats = [beat("a", 0, 8, "Ship it")];
+    const t = timeline([
+      { t: 1, kind: "click", bbox: [300, 300, 120, 40], stepId: "s1" },
+      { t: 3.2, kind: "click", bbox: [500, 400, 120, 40], stepId: "s2" },
+    ]);
+    const skeleton = { ...DEFAULT_SKELETON, module: { ...DEFAULT_SKELETON.module, proofBeats: 12 } };
+    const edl = led(beats, t, { skeleton, motion: { logo: "fade", cursor: "hand", world: "plain", opener: "line" } });
+    const proof = edl.segments.find((s) => s.kind === "primitive" && s.primitive.type === "proof");
+    if (!proof || proof.kind !== "primitive" || proof.primitive.type !== "proof") throw new Error("expected a proof");
+    const speed = Math.max(0.6, Math.min(3, (proof.primitive.out - proof.primitive.in) / proof.seconds));
+    const lastPress = (3.2 - proof.primitive.in) / speed;
+    const [stop] = proof.primitive.path!;
+    expect(stop!.at).toBeGreaterThanOrEqual(lastPress + 0.85);
+    expect((stop!.at / 0.5) % 1).toBeCloseTo(0, 5);
+    // The push heads for what was clicked last.
+    expect(stop!.frame[0]).toBeLessThanOrEqual(500);
+    expect(stop!.frame[0] + stop!.frame[2]).toBeGreaterThanOrEqual(620);
+  });
+
+  it("gives up the push on a proof too short to fit it after the hand's clicks", () => {
+    const beats = [beat("a", 0, 8, "Ship it")];
+    const t = timeline([{ t: 1, kind: "click", bbox: [300, 300, 120, 40], stepId: "s1" }]);
+    const edl = led(beats, t, { motion: { logo: "fade", cursor: "hand", world: "plain", opener: "line" } });
+    const proof = edl.segments.find((s) => s.kind === "primitive" && s.primitive.type === "proof");
+    if (!proof || proof.kind !== "primitive" || proof.primitive.type !== "proof") throw new Error("expected a proof");
+    expect(proof.primitive.path).toBeUndefined();
   });
 
   it("builds a page from its columns, lifting a piece from the middle", () => {
@@ -758,11 +798,14 @@ describe("the reference library", () => {
     expect(sheet.beats.map((b) => [b.id, b.at, b.bars, b.move])).toEqual([
       ["intro", 0, [1, 2], "opener"],
       ["b-label", 4, [3, 3], "label (base, slit)"],
-      ["b-proof", 5, [3, 4], "proof"],
+      ["b-proof", 5, [3, 4], "proof (push in)"],
       ["outro", 8, [5, 6], "end card"],
     ]);
     expect(sheet.beats[1]!.copy).toBe("Full one");
-    expect(sheet.beats[2]!.source).toMatchObject({ flowId: "f", frame: [800, 20, 600, 860] });
+    // It opens wider than the panel, then pushes in to it.
+    expect(sheet.beats[2]!.source).toMatchObject({ flowId: "f" });
+    const [x, y, w, h] = sheet.beats[2]!.source!.frame!;
+    expect(x <= 800 && y <= 20 && x + w >= 1400 && y + h >= 880).toBe(true);
     expect(describeBeatSheet(sheet).at(-1)).toBe("left out: Empty one (too little on screen to show)");
   });
 

@@ -4,19 +4,17 @@
 //   pnpm --filter @agentcast/spikes bench --tag <name> [--jobs <id,id>] [--height 540] [--led] [--skeleton <id|auto>] [--art [--live-kit] [--director]] [--rerecord] [--aspect 16x9|9x16]
 // --led cuts the film to its music, with no voice. --rerecord films the job's approved flows again in a
 // local browser, for a recording with its page structure (the sites are public; no provider quota).
-import { execFile } from "node:child_process";
 import { copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { promisify } from "node:util";
 import { FlowsFile, jobPaths, Timeline, type Aspect } from "@agentcast/shared";
 import { recordFlow } from "@agentcast/recorder";
-import { measureVideo, renderVideo } from "@agentcast/video";
+import { renderVideo } from "@agentcast/video";
 import { jobInput, rebuiltEdl } from "../kaustav-hyperframes/job-input.ts";
+import { measureFilm } from "./measure.ts";
 
-const exec = promisify(execFile);
 const here = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = [
   "job_mvmno3l73a2772",
@@ -47,7 +45,6 @@ const { values } = parseArgs({
 if (!values.tag) throw new Error("--tag <name> is required");
 const jobs = values.jobs?.split(",") ?? FIXTURES;
 const out = join(here, "..", "output", "bench", values.tag);
-const teardown = join(here, "..", "s8-teardown");
 
 /** Films the job's first approved flow again; its recording replaces the saved one, the story's spans move with it. */
 async function rerecord(root: string, job: string) {
@@ -106,50 +103,10 @@ for (const job of jobs) {
   await renderVideo({ input, root, out: file });
   const seconds = (Date.now() - started) / 1000;
 
-  const measured = await measureVideo(file);
-  const metrics = join(root, "metrics");
-  await mkdir(metrics, { recursive: true });
-  await exec(
-    "python3",
-    ["-P", join(teardown, "analyze.py"), file, metrics, metrics],
-    { maxBuffer: 1 << 26 },
-  );
-  const analysed = JSON.parse(
-    await readFile(join(metrics, `${job}.json`), "utf8"),
-  ) as Record<string, number>;
-  const { stdout } = await exec(
-    "python3",
-    ["-P", join(teardown, "av.py"), file],
-    { maxBuffer: 1 << 26 },
-  );
-  const av = JSON.parse(stdout) as {
-    vis_on_audio_onset: number;
-    chance: number;
-    arc_db_per_2s: number[];
-  };
-  // The largest fall between neighbouring 2 s windows, before the last 4 s (the ending may fall away).
-  // Falls are what pump: a rise is the music building, or a voice coming in.
-  const arc = av.arc_db_per_2s.slice(0, -2);
-  const fall = arc
-    .slice(1)
-    .reduce((most, db, i) => Math.max(most, arc[i]! - db), 0);
+  const measured = await measureFilm(file, root, `${aspect}-en-${values.height}`);
   rows.push({
     job: job.slice(-6),
-    seconds: measured.seconds,
-    lufs: measured.lufs ?? "none",
-    truePeak: measured.truePeak ?? "none",
-    fallDb: fall,
-    sync: av.vis_on_audio_onset,
-    chance: av.chance,
-    "changes/10s": analysed.scene_changes_per_10s!,
-    "still%": analysed.still_pct!,
-    cues:
-      (
-        await readFile(
-          join(root, "build", `${aspect}-en-` + values.height, "index.html"),
-          "utf8",
-        ).catch(() => "")
-      ).match(/id="sfx-/g)?.length ?? 0,
+    ...measured,
     renderS: Math.round(seconds),
   });
 }

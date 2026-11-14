@@ -54,7 +54,7 @@ export const STALL = {
  * never frozen. Below it the flow is dropped.
  */
 export const WATCHABLE = { minFps: 20, p95GapMs: 125, maxGapMs: 700 } as const;
-export const watchable = (s: StallReport) =>
+export const watchable = (s: Pick<StallReport, "status" | "effectiveFps" | "p95GapMs" | "maxGapMs">) =>
   s.status !== "failed" ||
   (s.effectiveFps >= WATCHABLE.minFps &&
     s.p95GapMs <= WATCHABLE.p95GapMs &&

@@ -5,6 +5,8 @@ export type CandidateSpan = {
   id: string;
   flowId: string;
   flowTitle: string;
+  source?: "agent" | "tour" | "user";
+  evidenceIds?: string[];
   /** Source seconds. */
   in: number;
   out: number;
@@ -47,10 +49,10 @@ const route = (u: string) => {
  * and a flow keeps at most three (the shortest neighbours merge first). Pure, so it's unit-tested.
  */
 export function candidateSpans(
-  flows: Array<{ flowId: string; title: string; timeline: Timeline }>,
+  flows: Array<{ flowId: string; title: string; timeline: Timeline; source?: "agent" | "tour" | "user" }>,
 ): CandidateSpan[] {
   const out: CandidateSpan[] = [];
-  for (const { flowId, title, timeline } of flows) {
+  for (const { flowId, title, timeline, source } of flows) {
     const recorded = timeline.flows.find((flow) => flow.flowId === flowId);
     const acts = timeline.events.filter(
       (e) => e.kind !== "settled" && e.flowId === flowId,
@@ -129,6 +131,8 @@ export function candidateSpans(
         id: `${flowId}.${String.fromCharCode(97 + i)}`,
         flowId,
         flowTitle: title,
+        ...(source ? { source } : {}),
+        evidenceIds: g.map((e) => `${flowId}/${e.stepId}`),
         in: round(a),
         out: round(b),
         seconds: round(b - a),

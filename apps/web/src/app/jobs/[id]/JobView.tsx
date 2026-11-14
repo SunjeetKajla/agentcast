@@ -127,7 +127,7 @@ export default function JobView({ id }: { id: string }) {
       ) : gate === "gate-script" ? (
         <StoryboardReview jobId={job.id} langs={job.config.variants.langs} versions={view.artifacts} onApprove={(d) => decide("gate-script", d)} />
       ) : (
-        <PreviewReview job={job} version={view.artifacts[jobPaths.preview]} onDecide={(d) => decide("gate-preview", d)} />
+        <PreviewReview job={job} version={view.artifacts[jobPaths.preview]} qualityVersion={view.artifacts[jobPaths.quality]} onDecide={(d) => decide("gate-preview", d)} />
       );
   } else if (job.status === "queued" || !stage) {
     title = "Starting";

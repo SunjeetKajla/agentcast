@@ -1,4 +1,4 @@
-import { CreativeBrief, ProductBrief, jobPaths } from "@agentcast/shared";
+import { FilmPlan, CreativeBrief, ProductBrief, jobPaths } from "@agentcast/shared";
 import {
   discoverProduct,
   recorderAdapter,
@@ -27,7 +27,11 @@ export async function explorationOptions(
     throw new Error(
       "The authenticated session is missing. Sign in before exploring.",
     );
+  let filmPlan: FilmPlan | undefined;
+  try { filmPlan = await ctx.read(jobPaths.filmPlan, FilmPlan); }
+  catch (error) { if ((error as { cause?: NodeJS.ErrnoException }).cause?.code !== "ENOENT") throw error; }
   return {
+    ...(filmPlan ? { filmPlan } : {}),
     url: ctx.config.url,
     dir: ctx.dir,
     io: ctx,
@@ -38,7 +42,7 @@ export async function explorationOptions(
     creative,
     auth,
     publicMode: ctx.config.auth.mode === "public",
-    browserOptions: { storageState: state },
+    browserOptions: { storageState: state, healing: { llm: ctx.llm, onEvent: ctx.llmProgress } },
     signal: ctx.signal,
     log: (message) => ctx.log(message),
     progress: (value, message) => ctx.progress(value, message),

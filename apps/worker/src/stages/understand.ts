@@ -4,6 +4,7 @@ import {
   BrandKit,
   ProductBrief,
   CreativeBrief,
+  FilmPlan,
   jobPaths,
 } from "@agentcast/shared";
 import {
@@ -17,7 +18,7 @@ import {
   fixtureStages,
   type BrowserAdapter,
 } from "@agentcast/explore";
-import { creativeBrief } from "@agentcast/story";
+import { creativeBrief, proposeFilm } from "@agentcast/story";
 import { TinyFish } from "@agentcast/tinyfish";
 import type { StageFn } from "./types.ts";
 import { stub } from "./stub.ts";
@@ -75,6 +76,7 @@ export function makeUnderstand(
     );
     await ctx.write(jobPaths.creativeBrief, CreativeBrief, creative.brief);
     ctx.log(creative.brief.summary);
+    await ctx.write(jobPaths.filmPlan, FilmPlan, await proposeFilm(llm, product.value.brief, creative.brief, ctx.signal));
     const look =
       inspection.status === "fulfilled" ? inspection.value : undefined;
     if (!look)

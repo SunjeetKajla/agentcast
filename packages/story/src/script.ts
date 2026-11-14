@@ -7,6 +7,7 @@ import { wordBudget } from "./prompt";
 import { copyIssues } from "./copy";
 import {
   Script,
+  type EvidenceFile,
   type CreativeBrief,
   type ProductBrief,
   type Storyboard,
@@ -93,6 +94,7 @@ export async function writeScript(
     storyboard: Storyboard;
     creative: CreativeBrief;
     product?: ProductBrief;
+    evidence?: EvidenceFile;
     /** No voice: on-screen copy only. */
     led?: boolean;
   },
@@ -117,6 +119,10 @@ export async function writeScript(
       JSON.stringify(input.creative, null, 2),
     );
     const files = ["beats.json", "creative-brief.json"];
+    if (input.evidence) {
+      await writeFile(join(dir, "evidence.json"), JSON.stringify(input.evidence));
+      files.push("evidence.json");
+    }
     if (input.product) {
       await writeFile(
         join(dir, "product-brief.json"),
@@ -135,6 +141,7 @@ export async function writeScript(
     }
     const language = LANG_NAME[lang] ?? lang;
     const prompt = [
+      "Use evidence.json when provided. Describe only the demonstrated action as observed. Website benefits may inspire editorial copy, but must not be presented as demonstrated results unless evidence supports them. Guided tours show presentation/navigation, not completed workflows. Do not claim generated speech is heard unless an audible output is captured.",
       input.led
         ? `Write the ${language} on-screen copy for a ${storyboard.arc} film. It has no voice: music and big type carry it. Read every file first.`
         : `Write the ${language} voiceover script for a ${storyboard.arc} video. Read every file first.`,

@@ -17,6 +17,8 @@ import { z } from "zod";
 import { EventBus } from "./bus.ts";
 import { createContext, decisionPath } from "./context.ts";
 import { WorkerError } from "./errors.ts";
+import { rm } from "node:fs/promises";
+import { PipelineRepair } from "./recovery.ts";
 import type { GateAction, GateFn, StageRegistry } from "./stages/index.ts";
 import type { JobStore } from "./store.ts";
 
@@ -318,6 +320,24 @@ export class Orchestrator {
       });
     } catch (err) {
       if (live.abort.signal.aborted) return;
+      if (err instanceof PipelineRepair) {
+        // Dependency closure: upstream approvals remain valid; changed scripts and preview reopen.
+        const affected = new Set<StageName>([err.target]);
+        for (const stage of STAGES) if (stage.after.some((dep) => affected.has(dep))) affected.add(stage.name);
+        if (affected.has("script")) {
+          await rm(join(this.store.dir(live.job.id), jobPaths.qualityRevision), { force: true });
+          // A previous director session contains obsolete source spans and approved copy.
+          await rm(join(this.store.dir(live.job.id), "render/DIRECTOR.md"), { force: true });
+        }
+        for (const stage of affected) {
+          if (isGate(stage)) await rm(join(this.store.dir(live.job.id), decisionPath(stage)), { force: true });
+          this.setStage(live, stage, { status: "pending", progress: undefined, finishedAt: undefined, error: undefined, message: err.message });
+        }
+        await live.saving;
+        live.bus.emit({ type: "log", stage: name, level: "info", message: err.message });
+        this.advance(live);
+        return;
+      }
       this.log.error({ err, jobId: live.job.id, stage: name }, "stage failed");
       this.setStage(live, name, {
         status: "failed",

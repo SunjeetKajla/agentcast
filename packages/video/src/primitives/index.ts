@@ -2,7 +2,7 @@ import type { PrimitiveSegment, Rect } from "@agentcast/shared";
 import type { Size } from "../camera.ts";
 import { sceneFile, type Vars } from "../hyperframes/scenes.ts";
 import { PATH_MOVE, buildStep, hopTimes, liftAt, pullBackAt, swapTimes } from "./cues.ts";
-import { CURSOR_CSS, CURSOR_HTML, cursorScript, pressesIn } from "./cursor.ts";
+import { CURSOR_CSS, CURSOR_HTML, HAND_GONE, cursorScript, pressesIn } from "./cursor.ts";
 import { mockup, orbit, output, pill, wall } from "./brand.ts";
 
 export { cardCues, openerSlot, phrasesOf, primitiveCues, primitiveMoments } from "./cues.ts";
@@ -72,7 +72,7 @@ function windowFor(frame: Rect, c: SceneContext) {
 }
 
 const TILTS = {
-  none: { from: [10, -4, 0.6, 0.94], mid: [0, 0, 0, 1], to: [0, 0, 0, 1.04] },
+  none: { from: [0, 0, 0, 1], mid: [0, 0, 0, 1], to: [0, 0, 0, 1] },
   soft: { from: [24, -14, 3, 0.86], mid: [7, -5, 0.6, 1], to: [1, 2, 0, 1.05] },
   strong: { from: [26, -26, 5, 0.82], mid: [13, -15, 2.5, 1], to: [7, -8, 1, 1.08] },
 };
@@ -173,8 +173,9 @@ function proof(c: SceneContext, given: Extract<PrimitiveSegment["primitive"], { 
     }),
   );
   vars.move = PATH_MOVE;
-  // The hand, to each recorded click this proof shows (not on a camera path: the page moves under it).
-  const presses = c.cursor === "hand" && !p.path?.length ? pressesIn({ clicks: c.clicks ?? [], from: p.in, to: p.out, speed, dur: c.dur, frame: p.frame, scale: win.scale }) : [];
+  // The hand, to each recorded click this proof shows, gone before the camera first moves (the page moves under it).
+  const still = p.path?.[0]?.at ?? Infinity;
+  const presses = c.cursor === "hand" ? pressesIn({ clicks: c.clicks ?? [], from: p.in, to: p.out, speed, dur: c.dur, frame: p.frame, scale: win.scale }).filter((x) => x.at + HAND_GONE <= still) : [];
   const rate = speed !== 1 ? ` data-playback-rate="${r3(speed)}"` : "";
   return scene(
     c,

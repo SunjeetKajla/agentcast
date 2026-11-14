@@ -11,6 +11,7 @@ import { ArtDirection, BrandKit, LayerList, ProductOutputs } from "./art.ts";
 import { Script, Storyboard } from "./story.ts";
 import { Timeline } from "./timeline.ts";
 import { Voiceover } from "./voice.ts";
+import { FilmPlan, EvidenceFile, QualityReport, RecoveryJournal, CaptureReport, CaptureOverrides, QualityRevision, CapturePlan, StoredOutputIndex } from "./evidence.ts";
 
 // Where everything lives inside a job dir ($AGENTCAST_HOME/jobs/<id>/). Use these, don't hand-write paths.
 
@@ -24,6 +25,14 @@ export const jobPaths = {
   artDirection: "brief/art-direction.json",
   hero: "brief/hero.jpg",
   flows: "explore/flows.json",
+  filmPlan: "brief/film-plan.json",
+  evidence: "record/evidence.json",
+  quality: "quality/report.json",
+  recovery: "recovery/attempts.json",
+  captureReport: "record/capture-report.json",
+  captureOverrides: "record/overrides.json",
+  capturePlan: "record/plan.json",
+  qualityRevision: "quality/revision.json",
   recording: (ff: FormFactor) => `record/${ff}/recording.mp4`,
   timeline: (ff: FormFactor) => `record/${ff}/timeline.json`,
   replayPlan: "record/replay-plan.json",
@@ -43,6 +52,14 @@ export const jobPaths = {
 
 /** Every schema-validated artifact, by job-relative path. */
 export const ARTIFACTS: { pattern: RegExp; schema: z.ZodType }[] = [
+  { pattern: /^brief\/film-plan\.json$/, schema: FilmPlan },
+  { pattern: /^record\/evidence\.json$/, schema: EvidenceFile },
+  { pattern: /^quality\/report\.json$/, schema: QualityReport },
+  { pattern: /^recovery\/attempts\.json$/, schema: RecoveryJournal },
+  { pattern: /^record\/capture-report\.json$/, schema: CaptureReport },
+  { pattern: /^record\/overrides\.json$/, schema: CaptureOverrides },
+  { pattern: /^record\/plan\.json$/, schema: CapturePlan },
+  { pattern: /^quality\/revision\.json$/, schema: QualityRevision },
   { pattern: /^state\.json$/, schema: Job },
   { pattern: /^brief\/product-brief\.json$/, schema: ProductBrief },
   { pattern: /^brief\/creative\.json$/, schema: CreativeBrief },
@@ -53,6 +70,7 @@ export const ARTIFACTS: { pattern: RegExp; schema: z.ZodType }[] = [
   { pattern: /^record\/(desktop|mobile)\/timeline\.json$/, schema: Timeline },
   { pattern: /^record\/replay-plan\.json$/, schema: ReplayPlan },
   { pattern: /^record\/outputs\.json$/, schema: ProductOutputs },
+  { pattern: /^record\/output\/[a-zA-Z0-9_.-]+\.json$/, schema: StoredOutputIndex },
   { pattern: /^record\/changes\.json$/, schema: ChangeReport },
   { pattern: /^script\/storyboard\.json$/, schema: Storyboard },
   { pattern: /^script\/script\.[a-z-]+\.json$/, schema: Script },

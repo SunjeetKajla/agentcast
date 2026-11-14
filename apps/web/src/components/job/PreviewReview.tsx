@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { jobPaths, variantMatrix, type GateDecision, type Job } from "@agentcast/shared";
+import { QualityReport, jobPaths, variantMatrix, type GateDecision, type Job } from "@agentcast/shared";
+import { useArtifact } from "@/lib/useArtifact";
 import VideoPlayer from "@/components/VideoPlayer";
 import { fileUrl } from "@/lib/api";
 import { EASE, MOTION_OK, gsap, useGSAP, settle } from "@/lib/motion";
@@ -14,10 +15,12 @@ const EXAMPLES = ["Make the intro shorter", "Zoom harder on the main result", "S
 export default function PreviewReview({
   job,
   version,
+  qualityVersion,
   onDecide,
 }: {
   job: Job;
   version: number | undefined;
+  qualityVersion?: number;
   onDecide: (decision: GateDecision<"gate-preview">) => Promise<unknown>;
 }) {
   const [revise, setRevise] = useState("");
@@ -26,6 +29,7 @@ export default function PreviewReview({
   const root = useRef<HTMLElement>(null);
   const first = variantMatrix(job.config.variants)[0];
   const rounds = job.stages.direct.attempts;
+  const quality = useArtifact(job.id, jobPaths.quality, QualityReport, qualityVersion);
 
   useGSAP(
     () => {
@@ -63,6 +67,10 @@ export default function PreviewReview({
           A quick 540p cut{first ? ` of the ${first.aspect === "16x9" ? "16:9" : "9:16"} ${first.lang === "hi" ? "Hindi" : "English"} version` : ""}.
           {rounds > 1 ? ` Revision ${rounds - 1}.` : ""}
         </p>
+        {quality.data && <div className="pvw-what" aria-label="Preview checks">
+          <p>{quality.data.passed ? "Preview checks passed." : "Preview checks need attention."}</p>
+          {quality.data.issues.length > 0 && <ul>{quality.data.issues.map((issue, i) => <li key={`${issue.code}-${i}`}>{issue.message}</li>)}</ul>}
+        </div>}
         <label htmlFor="revise" className="pvw-label">Want something changed?</label>
         <textarea
           id="revise"
@@ -80,7 +88,7 @@ export default function PreviewReview({
           <button type="button" className="ab ab-f2" onClick={() => send({ action: "revise", revise: revise.trim() })} disabled={Boolean(sending) || !revise.trim()}>
             {sending === "revise" ? "Sending…" : "Send to the director"}
           </button>
-          <button type="button" className="ab ab-f" onClick={() => send({ action: "approve" })} disabled={Boolean(sending)}>
+          <button type="button" className="ab ab-f" onClick={() => send({ action: "approve" })} disabled={Boolean(sending) || quality.data?.passed === false}>
             {sending === "approve" ? "Approving…" : "Approve and render"} <span className="arr" aria-hidden="true">→</span>
           </button>
         </div>

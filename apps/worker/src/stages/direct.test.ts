@@ -12,6 +12,9 @@ import type { DirectorOptions, DirectorRun } from "@agentcast/director";
 import type { StageContext } from "../context";
 import { makeDirect } from "./direct";
 
+// Each run builds the whole baseline edit (1–2 s); tests that run the stage several times need room.
+vi.setConfig({ testTimeout: 30_000 });
+
 let dir: string;
 let decision: GateDecision<"gate-preview"> | undefined;
 let ctx: StageContext;
@@ -156,4 +159,16 @@ describe("direct stage", () => {
       "There is no voiceover",
     );
   });
+});
+
+it("does not reuse a past revision approval after building a new baseline", async () => {
+  await makeDirect({ runDirector: fakeDirector(() => {}), renderStills: async () => [] })(ctx);
+  decision = { action: "revise", revise: "No window frame" };
+  await makeDirect({ runDirector: fakeDirector((edl) => { edl.style.frame = "none"; }) })(ctx);
+  decision = undefined;
+  await makeDirect({ runDirector: fakeDirector(() => {}), renderStills: async () => [] })(ctx);
+  decision = { action: "revise", revise: "No window frame" };
+  const revision = fakeDirector((edl) => { edl.style.frame = "none"; });
+  await makeDirect({ runDirector: revision })(ctx);
+  expect(revision).toHaveBeenCalledTimes(1);
 });

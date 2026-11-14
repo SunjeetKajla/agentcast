@@ -25,10 +25,14 @@ import {
 import type { GpuInfo } from "./gpu.ts";
 
 export interface LiveControls extends RecorderBrowser {
+  /** State-sequence capture only: commit the page after verified settling. */
+  captureState?(): Promise<void>;
   attempt: number;
   signal: AbortSignal;
   /** Scene time in milliseconds, matching the source video. */
   now(): number;
+  /** Studio only: wait `ms` of scene time (the page's clock), not wall time. */
+  sleep?(ms: number): Promise<void>;
   /** Mark scrolling/animation phases; exclude static holds, resolution and loading waits. */
   motion<T>(run: () => Promise<T>): Promise<T>;
   /** Register measured animation windows without including their static settle tail. */
@@ -58,7 +62,7 @@ export interface LiveOptions {
 }
 
 export interface LiveRecording extends EncodedVideo {
-  mode: "live";
+  mode: "live" | "studio" | "states";
   sourceDurationMs: number;
   sourceFrameCount: number;
   stall: StallReport;

@@ -1,5 +1,6 @@
 import type { z } from "zod";
-import { FlowsFile, Script, jobPaths, type GateName } from "@agentcast/shared";
+import { FlowsFile, QualityReport, Script, jobPaths, type GateName } from "@agentcast/shared";
+import { readOptional } from "../material.ts";
 import type { StageContext } from "../context.ts";
 import { AddFlow, StepEdit, addFlow, editStep } from "./flow-runs.ts";
 import type { GateFn } from "./types.ts";
@@ -52,6 +53,11 @@ const script: GateFn<"gate-script"> = async (ctx, decision) => {
 export const gates: { [G in GateName]?: GateFn<G> } = {
   "gate-flows": flows,
   "gate-script": script,
+  "gate-preview": async (ctx, decision) => {
+    if (decision.action !== "approve") return;
+    const quality = await readOptional(ctx, jobPaths.quality, QualityReport);
+    if (quality && !quality.passed) throw new Error("The preview has unresolved quality errors. Request a revision before approving.");
+  },
 };
 
 /**

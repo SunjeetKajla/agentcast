@@ -84,6 +84,9 @@ describe("the job page model", () => {
     expect(f["Video"]).toBe("Launch video, music-led");
     expect(f["Review gates"]).toBe("Off: runs on autopilot");
     expect(f["Your prompt"]).toBe("None");
+    expect(f["Recording"]).toBe("Live, in real time");
+    const studio = Object.fromEntries(facts(await jobWith([], "queued", { recordMode: "studio" })));
+    expect(studio["Recording"]).toBe("Studio: frame by frame on the page’s clock");
   });
 
   test("replaying the fixture's events ends on a coherent finished page", async () => {

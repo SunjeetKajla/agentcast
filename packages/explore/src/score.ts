@@ -175,6 +175,7 @@ export async function judgeFlows(
         "- valueAlignment: how directly it proves one of the value propositions. Cite that proposition in valuePropCited.",
         "- visiblePayoff: how large and legible the on-screen change is from start to end (empty → populated scores high; a settings toggle scores low). Judge from the screenshots when present.",
         "- focusMatch: how well it matches the focus request.",
+        "Guided tours (source=tour) establish presentation/navigation only. Never credit an agent narrative as a locally demonstrated payoff. An input leading to a real output scores above scrolling or tab switching. For docs, component libraries and content products, a real search/example/configuration result is a valid payoff. Cite what the supplied frames actually show; do not invent unseen completed work.",
         "Give each a storyRole (setup: sign-in or onboarding; core: the main thing the product does; payoff: the result or insight; share: exporting or sharing) and a one-sentence rationale a user will read.",
       ].join("\n"),
     });

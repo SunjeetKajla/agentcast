@@ -26,6 +26,8 @@ export type ComposerChoices = {
   auth: "public" | "sign-in-once";
   autopilot: boolean;
   voiceover: boolean;
+  /** Film on the page's own clock, frame by frame (PRD §9.3.3): for slow or always-animating sites. */
+  studio: boolean;
 };
 
 export const DEFAULT_CHOICES: ComposerChoices = {
@@ -35,6 +37,7 @@ export const DEFAULT_CHOICES: ComposerChoices = {
   auth: "public",
   autopilot: false,
   voiceover: false,
+  studio: false,
 };
 
 export function toJobConfig(url: string, prompt: string, c: ComposerChoices, focus = ""): JobConfigInput {
@@ -47,6 +50,7 @@ export function toJobConfig(url: string, prompt: string, c: ComposerChoices, foc
     variants: { aspects: c.aspects, langs: c.langs, formFactors: ["desktop"] },
     autopilot: c.autopilot,
     voiceover: c.voiceover,
+    ...(c.studio ? { recordMode: "studio" as const } : {}),
   };
 }
 
@@ -65,5 +69,6 @@ export function readBack(c: ComposerChoices, prompt: string): string {
   const length = seconds ? `about ${seconds} s, ` : "";
   const review = c.autopilot ? "straight through on autopilot" : "with your review of flows, script and preview";
   const voice = c.voiceover === (c.mode === "tutorial") ? "" : c.voiceover ? " with a voiceover" : " without voiceover";
-  return `A ${MODE_WORDS[c.mode]}, ${length}${formats} in ${langs}${voice}, ${review}.`;
+  const studio = c.studio ? ", filmed in Studio" : "";
+  return `A ${MODE_WORDS[c.mode]}, ${length}${formats} in ${langs}${voice}${studio}, ${review}.`;
 }

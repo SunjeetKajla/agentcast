@@ -1,0 +1,846 @@
+- generic [active] [ref=f2e1]:
+  - banner [ref=f2e3]:
+    - generic [ref=f2e9]:
+      - link [ref=f2e10] [cursor=pointer]:
+        - /url: /
+        - img "Sarvam AI" [ref=f2e12]
+      - generic [ref=f2e14]:
+        - button "Log In" [ref=f2e16] [cursor=pointer]
+        - button "Toggle menu" [ref=f2e18]
+  - main [ref=f2e22]:
+    - generic [ref=f2e23]:
+      - generic [ref=f2e24]:
+        - generic [ref=f2e26]:
+          - paragraph [ref=f2e29]: India's Sovereign AI Platform
+          - heading "AI for all from India" [level=1] [ref=f2e31]
+          - paragraph [ref=f2e32]: Built on sovereign compute. Powered by frontier-class models. Delivering population-scale impact.
+          - generic [ref=f2e33]:
+            - link "Sign up for Sarvam" [ref=f2e34] [cursor=pointer]:
+              - /url: https://indus.sarvam.ai/
+              - button "Sign up" [ref=f2e36]
+            - link "Contact Sarvam" [ref=f2e38] [cursor=pointer]:
+              - /url: /contact-us
+              - button "Contact Us" [ref=f2e40]
+        - generic [ref=f2e42]:
+          - paragraph [ref=f2e43]: India builds with Sarvam
+          - region "Partner logos carousel" [ref=f2e45]:
+            - generic [ref=f2e47]:
+              - generic [ref=f2e49]:
+                - img "Partner logo 1"
+              - generic [ref=f2e51]:
+                - img "Partner logo 2"
+              - generic [ref=f2e53]:
+                - img "Partner logo 3"
+              - generic [ref=f2e55]:
+                - img "Partner logo 4"
+              - generic [ref=f2e57]:
+                - img "Partner logo 5"
+              - generic [ref=f2e59]:
+                - img "Partner logo 6"
+              - generic [ref=f2e61]:
+                - img "Partner logo 7"
+              - generic [ref=f2e63]:
+                - img "Partner logo 8"
+              - generic [ref=f2e65]:
+                - img "Partner logo 9"
+              - generic [ref=f2e67]:
+                - img "Partner logo 10"
+              - generic [ref=f2e69]:
+                - img "Partner logo 11"
+              - generic [ref=f2e71]:
+                - img "Partner logo 12"
+              - generic [ref=f2e73]:
+                - img "Partner logo 13"
+              - generic [ref=f2e75]:
+                - img "Partner logo 14"
+              - generic [ref=f2e77]:
+                - img "Partner logo 15"
+              - generic [ref=f2e79]:
+                - img "Partner logo 1"
+              - generic [ref=f2e81]:
+                - img "Partner logo 2"
+              - generic [ref=f2e83]:
+                - img "Partner logo 3"
+              - generic [ref=f2e85]:
+                - img "Partner logo 4"
+              - generic [ref=f2e87]:
+                - img "Partner logo 5"
+              - generic [ref=f2e89]:
+                - img "Partner logo 6"
+              - generic [ref=f2e91]:
+                - img "Partner logo 7"
+              - generic [ref=f2e93]:
+                - img "Partner logo 8"
+              - generic [ref=f2e95]:
+                - img "Partner logo 9"
+              - generic [ref=f2e97]:
+                - img "Partner logo 10"
+              - generic [ref=f2e99]:
+                - img "Partner logo 11"
+              - generic [ref=f2e101]:
+                - img "Partner logo 12"
+              - generic [ref=f2e103]:
+                - img "Partner logo 13"
+              - generic [ref=f2e105]:
+                - img "Partner logo 14"
+              - generic [ref=f2e107]:
+                - img "Partner logo 15"
+      - generic [ref=f2e109]:
+        - heading "The AI Platform India Builds On" [level=2] [ref=f2e114]: The AI PlatformIndia Builds On
+        - generic [ref=f2e117]:
+          - tablist "Product demos" [ref=f2e118]:
+            - tab "Indus Cowork" [selected] [ref=f2e119] [cursor=pointer]
+            - tab "Voice Agents" [ref=f2e124] [cursor=pointer]
+            - tab "Text to Speech" [ref=f2e129] [cursor=pointer]
+            - tab "Speech to Text" [ref=f2e133] [cursor=pointer]
+            - tab "Parse" [ref=f2e138] [cursor=pointer]
+          - generic [ref=f2e146]:
+            - generic [ref=f2e147]:
+              - group "Try a task" [ref=f2e148]:
+                - button "Research" [pressed] [ref=f2e149] [cursor=pointer]
+                - button "Data analysis" [ref=f2e150] [cursor=pointer]
+                - button "Presentations" [ref=f2e151] [cursor=pointer]
+                - button "Workflow automations" [ref=f2e152] [cursor=pointer]
+                - button "Integrations" [ref=f2e153] [cursor=pointer]
+              - generic [ref=f2e154]:
+                - generic [ref=f2e155]:
+                  - paragraph [ref=f2e156]: Give Indus Cowork a task
+                  - generic [ref=f2e160]:
+                    - generic [ref=f2e161]: Using
+                    - generic [ref=f2e162]: Web
+                    - generic [ref=f2e166]: Google Drive
+                - generic:
+                  - generic:
+                    - list [ref=f2e178]:
+                      - listitem [ref=f2e179]:
+                        - generic [ref=f2e185]: Web
+                        - generic [ref=f2e189]: Searching official notices and circulars
+                      - listitem [ref=f2e190]:
+                        - generic [ref=f2e196]: Google Drive
+                        - generic [ref=f2e204]: Reading your folder Tax 2026
+                      - listitem [ref=f2e205]:
+                        - generic [ref=f2e211]: Drafting a two-page brief
+                        - generic [ref=f2e212]: "Skill: policy-brief"
+                    - generic [ref=f2e220]:
+                      - generic [ref=f2e221]: GST e-invoicing brief
+                      - generic [ref=f2e222]: Ready for your review
+            - link "Explore Indus Cowork" [ref=f2e223] [cursor=pointer]:
+              - /url: /indus-cowork
+      - region [ref=f2e226]:
+        - generic [ref=f2e227]:
+          - generic [ref=f2e228]:
+            - paragraph [ref=f2e229]: Indus Cowork
+            - heading "Intelligence, built around you." [level=2] [ref=f2e230]
+            - paragraph [ref=f2e231]: Indus Cowork connects your business context, tools, and teams so people can create, decide, and get work done faster.
+          - link "Explore Indus Cowork" [ref=f2e233] [cursor=pointer]:
+            - /url: /indus-cowork
+        - generic [ref=f2e235]:
+          - article [ref=f2e236]:
+            - generic [aria-hidden] [ref=f2e237]:
+              - generic [ref=f2e238]: "01"
+              - generic [ref=f2e239]: Research
+            - generic [ref=f2e241]:
+              - paragraph [aria-hidden] [ref=f2e242]: "01"
+              - heading "Research" [level=3] [ref=f2e243]
+              - paragraph [ref=f2e244]: Searches the web and your connected apps as it works, and re-plans when it learns something new.
+            - generic [ref=f2e246]:
+              - generic [ref=f2e247]:
+                - generic [ref=f2e248]: Endangered Indian Languages
+                - generic [ref=f2e250]:
+                  - generic [ref=f2e251]:
+                    - generic [ref=f2e252]: Questions
+                    - generic [ref=f2e253]:
+                      - generic [ref=f2e254]: "1"
+                      - generic [ref=f2e255]: "2"
+                      - generic [ref=f2e256]: "3"
+                      - generic [ref=f2e257]: "4"
+                  - paragraph [ref=f2e258]: What should the research document cover?
+                  - list [ref=f2e259]:
+                    - listitem [ref=f2e260]:
+                      - generic [ref=f2e261]: "1."
+                      - generic [ref=f2e262]: "Everything: one consolidated master report pulling the threads together"
+                    - listitem [ref=f2e263]:
+                      - generic [ref=f2e264]: "2."
+                      - generic [ref=f2e265]: Status and documentation of the languages (expand the first report)
+                    - listitem [ref=f2e266]:
+                      - generic [ref=f2e267]: "3."
+                      - generic [ref=f2e268]: The year-on-year change and current activity
+                    - listitem [ref=f2e269]:
+                      - generic [ref=f2e270]: "4."
+                      - generic [ref=f2e271]: The global and cross-border dimension
+                    - listitem [ref=f2e272]:
+                      - generic [ref=f2e273]: "5."
+                      - generic [ref=f2e274]: Type what you have in mind
+                  - generic [ref=f2e275]:
+                    - generic [ref=f2e276]: Skip
+                    - generic [ref=f2e277]: Next
+              - generic [ref=f2e278]:
+                - generic [ref=f2e279]:
+                  - generic [ref=f2e280]: Progress
+                  - generic [ref=f2e281]: 17/17
+                - generic [ref=f2e282]:
+                  - generic [ref=f2e283]: Artifacts
+                  - generic [ref=f2e284]: "4"
+                - list [ref=f2e285]:
+                  - listitem [ref=f2e286]:
+                    - generic [ref=f2e288]:
+                      - generic [ref=f2e289]: Endangered-Languages-Outside-India.docx
+                      - generic [ref=f2e290]: 14 kB
+                  - listitem [ref=f2e291]:
+                    - generic [ref=f2e293]:
+                      - generic [ref=f2e294]: Endangered-Languages-Deck.html
+                      - generic [ref=f2e295]: 355.6 kB
+                  - listitem [ref=f2e296]:
+                    - generic [ref=f2e298]:
+                      - generic [ref=f2e299]: Endangered-Languages-Year-on-Year.docx
+                      - generic [ref=f2e300]: 17.8 kB
+                  - listitem [ref=f2e301]:
+                    - generic [ref=f2e303]:
+                      - generic [ref=f2e304]: Endangered-Languages-of-India.docx
+                      - generic [ref=f2e305]: 20.7 kB
+          - article [ref=f2e306] [cursor=pointer]:
+            - generic [aria-hidden] [ref=f2e307]:
+              - generic [ref=f2e308]: "02"
+              - generic [ref=f2e309]: Data analysis
+            - generic [ref=f2e311]:
+              - paragraph [aria-hidden] [ref=f2e312]: "02"
+              - heading "Data analysis" [level=3] [ref=f2e313]
+              - paragraph [ref=f2e314]: Pulls the numbers from your data tools and writes the readout with the reason behind the change.
+            - generic [ref=f2e316]:
+              - generic [ref=f2e317]:
+                - generic [ref=f2e318]: Product Funnel Table
+                - generic [ref=f2e320]:
+                  - paragraph [ref=f2e321]: I'll build this as a spreadsheet so the colour highlighting renders properly. Let me load the right skill.
+                  - paragraph [ref=f2e322]: Ran code · Managed files · Used skill
+                  - paragraph [ref=f2e323]:
+                    - text: Done. I've put it in
+                    - strong [ref=f2e324]: weekly-funnel.xlsx
+                    - text: .
+                  - table [ref=f2e329]:
+                    - rowgroup [ref=f2e330]:
+                      - row [ref=f2e331]:
+                        - columnheader [ref=f2e332]: Stage
+                        - columnheader [ref=f2e333]: This week
+                        - columnheader [ref=f2e334]: Last week
+                        - columnheader [ref=f2e335]: Change
+                    - rowgroup [ref=f2e336]:
+                      - row [ref=f2e337]:
+                        - cell [ref=f2e338]: Visits
+                        - cell [ref=f2e339]: 54,300
+                        - cell [ref=f2e340]: 51,200
+                        - cell [ref=f2e341]: +6.1%
+                      - row [ref=f2e342]:
+                        - cell [ref=f2e343]: Sign-ups
+                        - cell [ref=f2e344]: 2,180
+                        - cell [ref=f2e345]: 3,410
+                        - cell [ref=f2e346]: "-36.1%"
+                      - row [ref=f2e347]:
+                        - cell [ref=f2e348]: Activated
+                        - cell [ref=f2e349]: 1,690
+                        - cell [ref=f2e350]: 2,010
+                        - cell [ref=f2e351]: "-15.9%"
+                      - row [ref=f2e352]:
+                        - cell [ref=f2e353]: Paid
+                        - cell [ref=f2e354]: "402"
+                        - cell [ref=f2e355]: "468"
+                        - cell [ref=f2e356]: "-14.1%"
+              - generic [ref=f2e357]:
+                - generic [ref=f2e358]: weekly-funnel.xlsx
+                - generic [ref=f2e360]:
+                  - generic [ref=f2e361]:
+                    - generic [ref=f2e363]: A
+                    - generic [ref=f2e364]: B
+                    - generic [ref=f2e365]: C
+                    - generic [ref=f2e366]: D
+                    - generic [ref=f2e367]: E
+                    - generic [ref=f2e368]: F
+                    - generic [ref=f2e369]: G
+                    - generic [ref=f2e370]: H
+                    - generic [ref=f2e371]: I
+                    - generic [ref=f2e372]: J
+                    - generic [ref=f2e373]: K
+                    - generic [ref=f2e374]: L
+                    - generic [ref=f2e375]: M
+                  - generic [ref=f2e376]:
+                    - generic [ref=f2e377]: "1"
+                    - generic [ref=f2e378]: Weekly Product Funnel, week of 6 Oct 2026
+                  - generic [ref=f2e389]:
+                    - generic [ref=f2e390]: "2"
+                    - generic [ref=f2e391]: Acme Fintech (dummy data) · weekly view · India
+                  - generic [ref=f2e402]: "3"
+                  - generic [ref=f2e417]:
+                    - generic [ref=f2e418]: "4"
+                    - generic [ref=f2e419]: Stage
+                    - generic [ref=f2e421]: This week
+                    - generic [ref=f2e423]: Last week
+                    - generic [ref=f2e425]: Change
+                  - generic [ref=f2e436]:
+                    - generic [ref=f2e437]: "5"
+                    - generic [ref=f2e438]: Visits
+                    - generic [ref=f2e440]: 54,300
+                    - generic [ref=f2e442]: 51,200
+                    - generic [ref=f2e444]: +6.1%
+                  - generic [ref=f2e455]:
+                    - generic [ref=f2e456]: "6"
+                    - generic [ref=f2e457]: Sign-ups
+                    - generic [ref=f2e459]: 2,180
+                    - generic [ref=f2e461]: 3,410
+                    - generic [ref=f2e463]: "-36.1%"
+                  - generic [ref=f2e474]:
+                    - generic [ref=f2e475]: "7"
+                    - generic [ref=f2e476]: Activated
+                    - generic [ref=f2e478]: 1,690
+                    - generic [ref=f2e480]: 2,010
+                    - generic [ref=f2e482]: "-15.9%"
+                  - generic [ref=f2e493]:
+                    - generic [ref=f2e494]: "8"
+                    - generic [ref=f2e495]: Paid
+                    - generic [ref=f2e497]: "402"
+                    - generic [ref=f2e499]: "468"
+                    - generic [ref=f2e501]: "-14.1%"
+                  - generic [ref=f2e512]: "9"
+                  - generic [ref=f2e527]:
+                    - generic [ref=f2e528]: "10"
+                    - generic [ref=f2e529]: "Insight: Sign-ups fell 36% week-on-week because the Google Ads campaign hit its daily budget cap on Wednesday."
+                  - generic [ref=f2e540]: "11"
+                  - generic [ref=f2e555]: "12"
+                  - generic [ref=f2e570]: "13"
+                  - generic [ref=f2e585]: "14"
+                  - generic [ref=f2e600]: "15"
+                  - generic [ref=f2e615]: "16"
+                  - generic [ref=f2e630]: "17"
+                  - generic [ref=f2e645]: "18"
+                  - generic [ref=f2e660]: "19"
+                  - generic [ref=f2e675]: "20"
+          - article [ref=f2e690] [cursor=pointer]:
+            - generic [aria-hidden] [ref=f2e691]:
+              - generic [ref=f2e692]: "03"
+              - generic [ref=f2e693]: Presentations
+            - generic [ref=f2e695]:
+              - paragraph [aria-hidden] [ref=f2e696]: "03"
+              - heading "Presentations" [level=3] [ref=f2e697]
+              - paragraph [ref=f2e698]: Drafts decks from live figures, such as a quarterly review built from your dashboard.
+            - generic [aria-hidden]:
+              - generic:
+                - generic: Presentation Agent
+                - generic:
+                  - paragraph: Create a presentation from the endangered languages research. Keep it to 10 slides, with stats.
+          - article [ref=f2e699] [cursor=pointer]:
+            - generic [aria-hidden] [ref=f2e700]:
+              - generic [ref=f2e701]: "04"
+              - generic [ref=f2e702]: Workflow automations
+            - generic [ref=f2e704]:
+              - paragraph [aria-hidden] [ref=f2e705]: "04"
+              - heading "Workflow automations" [level=3] [ref=f2e706]
+              - paragraph [ref=f2e707]: Runs daily reports and weekly summaries on a schedule, so the output is ready before you log on.
+            - table [ref=f2e710]:
+              - rowgroup [ref=f2e711]:
+                - row [ref=f2e712]:
+                  - columnheader [ref=f2e713]: Name
+                  - columnheader [ref=f2e714]: Schedule
+                  - columnheader [ref=f2e715]: Status
+                  - columnheader [ref=f2e716]: Agent
+                  - columnheader [ref=f2e717]: Target channel
+                  - columnheader [ref=f2e718]: Next run
+                  - columnheader [ref=f2e719]
+              - rowgroup [ref=f2e720]:
+                - row [ref=f2e721]:
+                  - cell [ref=f2e722]:
+                    - generic [ref=f2e723]: Timesheet submission
+                  - cell [ref=f2e725]:
+                    - generic [ref=f2e726]: Daily at 09:00
+                  - cell [ref=f2e727]:
+                    - generic [ref=f2e728]: Active
+                  - cell [ref=f2e729]: Time manager
+                  - cell [ref=f2e730]:
+                    - generic [ref=f2e731]: Web
+                  - cell [ref=f2e732]: Today at 09:00
+                  - cell [ref=f2e733]
+                - row [ref=f2e734]:
+                  - cell [ref=f2e735]:
+                    - generic [ref=f2e736]: Morning daily checklist
+                  - cell [ref=f2e738]:
+                    - generic [ref=f2e739]: Daily at 10:00
+                  - cell [ref=f2e740]:
+                    - generic [ref=f2e741]: Active
+                  - cell [ref=f2e742]: Time manager
+                  - cell [ref=f2e743]:
+                    - generic [ref=f2e744]: Web
+                  - cell [ref=f2e745]: Today at 10:00
+                  - cell [ref=f2e746]
+                - row [ref=f2e747]:
+                  - cell [ref=f2e748]:
+                    - generic [ref=f2e749]: Afternoon sync
+                  - cell [ref=f2e751]:
+                    - generic [ref=f2e752]: Daily at 14:00
+                  - cell [ref=f2e753]:
+                    - generic [ref=f2e754]: Active
+                  - cell [ref=f2e755]: Ops lead
+                  - cell [ref=f2e756]:
+                    - generic [ref=f2e757]: Slack
+                  - cell [ref=f2e758]: Today at 14:00
+                  - cell [ref=f2e759]
+                - row [ref=f2e760]:
+                  - cell [ref=f2e761]:
+                    - generic [ref=f2e762]: Weekly report
+                  - cell [ref=f2e764]:
+                    - generic [ref=f2e765]: Weekly on Fri
+                  - cell [ref=f2e766]:
+                    - generic [ref=f2e767]: Active
+                  - cell [ref=f2e768]: Finance team
+                  - cell [ref=f2e769]:
+                    - generic [ref=f2e770]: Email
+                  - cell [ref=f2e771]: Fri at 16:30
+                  - cell [ref=f2e772]
+                - row [ref=f2e773]:
+                  - cell [ref=f2e774]:
+                    - generic [ref=f2e775]: Monthly close
+                  - cell [ref=f2e777]:
+                    - generic [ref=f2e778]: Monthly on 1st
+                  - cell [ref=f2e779]:
+                    - generic [ref=f2e780]: Active
+                  - cell [ref=f2e781]: Controller
+                  - cell [ref=f2e782]:
+                    - generic [ref=f2e783]: Portal
+                  - cell [ref=f2e784]: 1st at 08:00
+                  - cell [ref=f2e785]
+          - article [ref=f2e786] [cursor=pointer]:
+            - generic [aria-hidden] [ref=f2e787]:
+              - generic [ref=f2e788]: "05"
+              - generic [ref=f2e789]: Integrations
+            - generic [ref=f2e791]:
+              - paragraph [aria-hidden] [ref=f2e792]: "05"
+              - heading "Integrations" [level=3] [ref=f2e793]
+              - paragraph [ref=f2e794]: Works inside more than 100 connected apps, from Slack and Gmail to Snowflake and GitHub.
+            - generic [aria-hidden]:
+              - generic:
+                - generic:
+                  - generic: Airtable
+                  - generic: Salesforce
+                  - generic: Asana
+                  - generic: Gmail
+                  - generic: Slack
+                  - generic: Github
+                  - generic: Airtable
+                  - generic: Salesforce
+                  - generic: Asana
+                  - generic: Gmail
+                  - generic: Slack
+                  - generic: Github
+              - generic:
+                - generic:
+                  - generic: Zoom
+                  - generic: Notion
+                  - generic: Figma
+                  - generic: Google Sheets
+                  - generic: Google Drive
+                  - generic: Airtable
+                  - generic: Zoom
+                  - generic: Notion
+                  - generic: Figma
+                  - generic: Google Sheets
+                  - generic: Google Drive
+                  - generic: Airtable
+              - generic:
+                - generic:
+                  - generic: Zoom
+                  - generic: Confluence
+                  - generic: Miro
+                  - generic: Zoho Books
+                  - generic: Outlook
+                  - generic: Stripe
+                  - generic: Discord
+                  - generic: Zoom
+                  - generic: Confluence
+                  - generic: Miro
+                  - generic: Zoho Books
+                  - generic: Outlook
+                  - generic: Stripe
+                  - generic: Discord
+              - generic:
+                - generic:
+                  - generic: Ashby
+                  - generic: Moz
+                  - generic: Reddit
+                  - generic: Linkedin
+                  - generic: Meta ads
+                  - generic: Mailchimp
+                  - generic: Discord
+                  - generic: Ashby
+                  - generic: Moz
+                  - generic: Reddit
+                  - generic: Linkedin
+                  - generic: Meta ads
+                  - generic: Mailchimp
+                  - generic: Discord
+      - generic [ref=f2e797]:
+        - generic [ref=f2e800]:
+          - heading "Build anything with Sarvam APIs" [level=2] [ref=f2e801]
+          - paragraph [ref=f2e802]: Everything you need to add Indic AI to your product.
+        - generic [ref=f2e804]:
+          - generic [ref=f2e805]:
+            - link "Text to Speech Natural voices across 11 Indic languages" [ref=f2e807] [cursor=pointer]:
+              - /url: https://indus.sarvam.ai/text-to-speech
+              - generic [ref=f2e811]:
+                - generic [ref=f2e812]: Text to Speech
+                - generic [ref=f2e813]: Natural voices across 11 Indic languages
+            - link "Speech to Text High-accuracy ASR across 12 Indic languages" [ref=f2e815] [cursor=pointer]:
+              - /url: https://indus.sarvam.ai/speech-to-text
+              - generic [ref=f2e820]:
+                - generic [ref=f2e821]: Speech to Text
+                - generic [ref=f2e822]: High-accuracy ASR across 12 Indic languages
+            - link "Translation State-of-the-art translation across 23 languages" [ref=f2e824] [cursor=pointer]:
+              - /url: https://indus.sarvam.ai/translate
+              - generic [ref=f2e827]:
+                - generic [ref=f2e828]: Translation
+                - generic [ref=f2e829]: State-of-the-art translation across 23 languages
+            - link "Parse Turn PDFs and images into structured formats" [ref=f2e831] [cursor=pointer]:
+              - /url: https://indus.sarvam.ai/vision
+              - generic [ref=f2e835]:
+                - generic [ref=f2e836]: Parse
+                - generic [ref=f2e837]: Turn PDFs and images into structured formats
+          - generic [ref=f2e838]:
+            - generic [ref=f2e839]:
+              - generic [ref=f2e840]: REST API
+              - paragraph [ref=f2e841]: Clean, well-documented endpoints
+            - generic [ref=f2e842]:
+              - generic [ref=f2e843]: Python SDK
+              - paragraph [ref=f2e844]:
+                - text: One line to install
+                - code [ref=f2e845] [cursor=pointer]: pip install sarvamai
+            - generic [ref=f2e846]:
+              - generic [ref=f2e847]: Playground
+              - paragraph [ref=f2e848]: Test in browser, no setup
+      - generic [ref=f2e852]:
+        - generic [ref=f2e853]:
+          - generic [ref=f2e854]:
+            - heading "India Can" [level=2] [ref=f2e855]
+            - paragraph [ref=f2e856]: From government services reaching 800 million citizens to enterprises transforming customer experience, AI that speaks India's languages is changing what's possible.
+          - link [ref=f2e857] [cursor=pointer]:
+            - /url: /products/voice-agents
+            - button "Explore Sarvam" [ref=f2e858]
+        - generic [ref=f2e861]:
+          - generic "India Can" [ref=f2e862] [cursor=pointer]
+          - button "Play video" [ref=f2e863] [cursor=pointer]
+      - generic [ref=f2e869]:
+        - heading "Powering India's AI-first future" [level=2] [ref=f2e874]
+        - generic [ref=f2e875]:
+          - img "Sarvam AI Platform" [ref=f2e877]
+          - generic [ref=f2e879]:
+            - generic [ref=f2e880]:
+              - generic [ref=f2e885]:
+                - heading "Sovereign by design" [level=3] [ref=f2e886]
+                - paragraph [ref=f2e887]: build, deploy, and run AI with full control, developed and operated entirely in India
+              - generic [ref=f2e892]:
+                - heading "State of the art models" [level=3] [ref=f2e893]
+                - paragraph [ref=f2e894]: built for India's languages, culture, and context
+              - generic [ref=f2e899]:
+                - heading "Human at the core" [level=3] [ref=f2e900]
+                - paragraph [ref=f2e901]: forward deployed engineers work alongside your teams to deliver production-ready agents
+            - link [ref=f2e903] [cursor=pointer]:
+              - /url: https://indus.sarvam.ai
+              - button "Get Started" [ref=f2e904]
+      - generic [ref=f2e908]:
+        - heading "India's Full-Stack Sovereign AI Platform" [level=2] [ref=f2e912]
+        - generic [ref=f2e913]:
+          - generic [ref=f2e914]:
+            - generic [ref=f2e916]:
+              - heading "Population-scale Applications" [level=3] [ref=f2e917]
+              - paragraph [ref=f2e918]: Building products India can use. Conversational agents fluent in India's languages. Platforms that run enterprise workflows from start to finish.
+            - generic [ref=f2e919]:
+              - link "Voice Agents" [ref=f2e920] [cursor=pointer]:
+                - /url: /products/voice-agents
+              - link "Content Studio" [ref=f2e929] [cursor=pointer]:
+                - /url: /products/content-agents
+              - link "Document AI" [ref=f2e936] [cursor=pointer]:
+                - /url: /products/doc-agents
+              - link "Work Agents" [ref=f2e945] [cursor=pointer]:
+                - /url: /products/work-agents
+          - generic [ref=f2e956]:
+            - generic [ref=f2e958]:
+              - heading "State-of-the-Art Models" [level=3] [ref=f2e959]
+              - paragraph [ref=f2e960]: State-of-the-art models trained on sovereign data, delivering strong performance across Indian languages.
+            - generic [ref=f2e961]:
+              - link "Natural Voices" [ref=f2e962] [cursor=pointer]:
+                - /url: /apis/text-to-speech
+              - link "Accurate Transcription" [ref=f2e970] [cursor=pointer]:
+                - /url: /apis/speech-to-text
+              - link "Multilingual Translation" [ref=f2e979] [cursor=pointer]:
+                - /url: /apis/translation
+              - link "Document Intelligence" [ref=f2e987] [cursor=pointer]:
+                - /url: /apis/document-digitisation
+          - generic [ref=f2e996]:
+            - generic [ref=f2e998]:
+              - heading "Infrastructure to Serve Models Efficiently" [level=3] [ref=f2e999]
+              - paragraph [ref=f2e1000]: A token factory built to handle complexity of model serving so teams can focus on building products, not managing infrastructure.
+            - generic [ref=f2e1001]:
+              - link "tokens served 10B+" [ref=f2e1002] [cursor=pointer]:
+                - /url: /trust-center
+                - generic [ref=f2e1003]: tokens served
+                - generic [ref=f2e1004]: 10B+
+              - link "median latency <100ms" [ref=f2e1005] [cursor=pointer]:
+                - /url: /trust-center
+                - generic [ref=f2e1006]: median latency
+                - generic [ref=f2e1007]: <100ms
+              - link "uptime SLA 99.9%" [ref=f2e1008] [cursor=pointer]:
+                - /url: /trust-center
+                - generic [ref=f2e1009]: uptime SLA
+                - generic [ref=f2e1010]: 99.9%
+        - link [ref=f2e1012] [cursor=pointer]:
+          - /url: https://indus.sarvam.ai/
+          - button "Start building with Sarvam" [ref=f2e1013]
+      - generic [ref=f2e1015]:
+        - generic [ref=f2e1019]:
+          - heading "Enterprise-grade. Out of the box" [level=2] [ref=f2e1020]
+          - paragraph [ref=f2e1021]: Compliance, control, and confidence. Not bolted on. Built in from day one.
+        - generic [ref=f2e1023]:
+          - generic [ref=f2e1024]:
+            - generic [ref=f2e1025]:
+              - heading "Forward deployed" [level=3] [ref=f2e1026]
+              - paragraph [ref=f2e1027]: Our engineers work alongside yours, designing agents, integrating systems, and staying until you're live. Not a handoff. A partnership.
+              - list [ref=f2e1028]:
+                - listitem [ref=f2e1029]:
+                  - generic [ref=f2e1032]: Dedicated engineer from day one
+                - listitem [ref=f2e1033]:
+                  - generic [ref=f2e1036]: Joint workflow design and build
+                - listitem [ref=f2e1037]:
+                  - generic [ref=f2e1040]: Ongoing accuracy and cost optimisation
+                - listitem [ref=f2e1041]:
+                  - generic [ref=f2e1044]: SLA-backed production support
+            - generic [ref=f2e1045]:
+              - heading "Deployment flexibility" [level=3] [ref=f2e1046]
+              - paragraph [ref=f2e1047]: Work Agents deploy where your data already lives. Private cloud, on-premise, hybrid, or fully air-gapped environments. Your agents run on your terms.
+              - list [ref=f2e1048]:
+                - listitem [ref=f2e1049]:
+                  - generic [ref=f2e1052]: Private cloud, on-premise, or hybrid
+                - listitem [ref=f2e1053]:
+                  - generic [ref=f2e1056]: Bring your own model or use ours
+                - listitem [ref=f2e1057]:
+                  - generic [ref=f2e1060]: Swap vendors without rewriting workflows
+                - listitem [ref=f2e1061]:
+                  - generic [ref=f2e1064]: Air-gapped deployment available
+          - generic [ref=f2e1066]:
+            - generic [ref=f2e1067]:
+              - heading "Security and governance" [level=3] [ref=f2e1068]
+              - paragraph [ref=f2e1069]: Every agent action is logged and traceable. Role-based access, audit trails, and data residency controls built into the core, not retrofitted. Work Agents meet you where your risk team is.
+            - generic [ref=f2e1070]:
+              - generic [ref=f2e1071]:
+                - generic [ref=f2e1072]: SOC 2 Type I
+                - generic [ref=f2e1076]: ISO 27001
+                - generic [ref=f2e1079]: DPDP compliant
+              - generic [ref=f2e1084]:
+                - generic [ref=f2e1085]: Role-based access
+                - generic [ref=f2e1092]: Full audit trail
+                - generic [ref=f2e1096]: Data residency controls
+        - link [ref=f2e1100] [cursor=pointer]:
+          - /url: /contact-us
+          - button "Contact Us" [ref=f2e1102]
+      - generic [ref=f2e1106]:
+        - heading "Built to run anywhere your business runs" [level=2] [ref=f2e1110]: Built to runanywhere your business runs
+        - generic [ref=f2e1111]:
+          - generic [ref=f2e1112]:
+            - img "Sarvam Cloud" [ref=f2e1114]
+            - generic [ref=f2e1115]:
+              - heading "Sarvam Cloud" [level=3] [ref=f2e1116]
+              - paragraph [ref=f2e1117]: Fully managed, automatic scaling, fastest time-to-value
+          - generic [ref=f2e1118]:
+            - img "Private Cloud (VPC)" [ref=f2e1120]
+            - generic [ref=f2e1121]:
+              - heading "Private Cloud (VPC)" [level=3] [ref=f2e1122]
+              - paragraph [ref=f2e1123]: Your security perimeter, our management
+          - generic [ref=f2e1124]:
+            - img "On-Premises" [ref=f2e1126]
+            - generic [ref=f2e1127]:
+              - heading "On-Premises" [level=3] [ref=f2e1128]
+              - paragraph [ref=f2e1129]: Full control, air-gapped for regulated industries
+      - generic [ref=f2e1132]:
+        - heading "What our customers say" [level=2] [ref=f2e1136]
+        - generic [ref=f2e1138]:
+          - generic [ref=f2e1139]:
+            - img "Company logo" [ref=f2e1140]
+            - paragraph [ref=f2e1141]: Our partnership with Sarvam has enabled us to scale highly personalized, product and segment-specific conversations across the customer lifecycle. By embedding multilingual interactions across our consumer loan products, we are reaching more customers with greater relevance, breaking access barriers, and deepening engagement in a cost-effective manner.
+          - generic [ref=f2e1142]:
+            - generic [ref=f2e1143]:
+              - img "Shallu Kaushik" [ref=f2e1144]
+              - generic [ref=f2e1145]:
+                - paragraph [ref=f2e1146]: Shallu Kaushik
+                - paragraph [ref=f2e1147]: Chief Digital Officer, Tata Capital
+            - link "Read full story" [ref=f2e1148] [cursor=pointer]:
+              - /url: /stories/tata-capital-ai-voice-transformation
+      - generic [ref=f2e1150]:
+        - heading "Research & Updates" [level=2] [ref=f2e1155]
+        - generic [ref=f2e1156]:
+          - link "Introducing Sarvam Prism Nov 3, 2026 Research Introducing Sarvam Prism" [ref=f2e1157] [cursor=pointer]:
+            - /url: /blogs/sarvam-prism
+            - img "Introducing Sarvam Prism" [ref=f2e1159]
+            - generic [ref=f2e1160]:
+              - generic [ref=f2e1161]:
+                - generic [ref=f2e1162]: Nov 3, 2026
+                - generic [aria-hidden] [ref=f2e1163]: ·
+                - generic [ref=f2e1164]: Research
+              - heading "Introducing Sarvam Prism" [level=3] [ref=f2e1165]
+          - link "Sarvam and HQ IDS establish joint framework for AI adoption across the Army, Navy and Air Force Oct 27, 2026 Announcement Sarvam and HQ IDS establish joint framework for AI adoption across the Army, Navy and Air Force" [ref=f2e1166] [cursor=pointer]:
+            - /url: /blogs/sarvam-hq-ids-mou
+            - img "Sarvam and HQ IDS establish joint framework for AI adoption across the Army, Navy and Air Force" [ref=f2e1168]
+            - generic [ref=f2e1169]:
+              - generic [ref=f2e1170]:
+                - generic [ref=f2e1171]: Oct 27, 2026
+                - generic [aria-hidden] [ref=f2e1172]: ·
+                - generic [ref=f2e1173]: Announcement
+              - heading "Sarvam and HQ IDS establish joint framework for AI adoption across the Army, Navy and Air Force" [level=3] [ref=f2e1174]
+          - link "How we built the knowledge fabric for enterprise agents Oct 26, 2026 Research How we built the knowledge fabric for enterprise agents" [ref=f2e1175] [cursor=pointer]:
+            - /url: /blogs/knowledge-fabric-enterprise-agents
+            - img "How we built the knowledge fabric for enterprise agents" [ref=f2e1177]
+            - generic [ref=f2e1178]:
+              - generic [ref=f2e1179]:
+                - generic [ref=f2e1180]: Oct 26, 2026
+                - generic [aria-hidden] [ref=f2e1181]: ·
+                - generic [ref=f2e1182]: Research
+              - heading "How we built the knowledge fabric for enterprise agents" [level=3] [ref=f2e1183]
+        - link [ref=f2e1184] [cursor=pointer]:
+          - /url: /blogs
+          - button "View All Updates" [ref=f2e1186]
+      - generic [ref=f2e1191]:
+        - generic [ref=f2e1192]:
+          - paragraph [ref=f2e1193]: Build the Future of India's AI
+          - paragraph [ref=f2e1194]: with Sarvam
+        - link "Sign Up" [ref=f2e1202] [cursor=pointer]:
+          - /url: https://indus.sarvam.ai
+  - contentinfo [ref=f2e1206]:
+    - generic [ref=f2e1208]:
+      - generic [ref=f2e1209]:
+        - generic [ref=f2e1210]:
+          - link [ref=f2e1211] [cursor=pointer]:
+            - /url: /
+            - img "Sarvam AI" [ref=f2e1212]
+          - paragraph [ref=f2e1213]: AI for all from India
+          - generic [ref=f2e1214]:
+            - img "ISO Certified" [ref=f2e1216]
+            - img "SOC 2 Type I" [ref=f2e1218]
+        - generic [ref=f2e1219]:
+          - paragraph [ref=f2e1220]: Find us at
+          - generic [ref=f2e1221]:
+            - link "LinkedIn" [ref=f2e1222] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/sarvam-ai
+            - link "X" [ref=f2e1225] [cursor=pointer]:
+              - /url: https://x.com/SarvamAI
+            - link "YouTube" [ref=f2e1228] [cursor=pointer]:
+              - /url: https://youtube.com/@sarvamai
+            - link "GitHub" [ref=f2e1231] [cursor=pointer]:
+              - /url: https://github.com/sarvamai
+            - link "Discord" [ref=f2e1234] [cursor=pointer]:
+              - /url: https://discord.com/invite/5rAsykttcs
+            - link "Instagram" [ref=f2e1237] [cursor=pointer]:
+              - /url: https://www.instagram.com/sarvam.ai_official
+        - generic [ref=f2e1241]:
+          - paragraph [ref=f2e1242]: © 2026 Axonwise Private Limited. All rights reserved.
+          - paragraph [ref=f2e1243]: 732, Chinmaya Mission Hospital Road, Indiranagar Stage 1, Bengaluru, Karnataka 560038
+      - generic [ref=f2e1245]:
+        - generic [ref=f2e1246]:
+          - heading "Products" [level=3] [ref=f2e1247]
+          - list [ref=f2e1248]:
+            - listitem [ref=f2e1249]:
+              - link "Content Studio" [ref=f2e1250] [cursor=pointer]:
+                - /url: /products/content-studio
+            - listitem [ref=f2e1251]:
+              - link "Token Factory" [ref=f2e1252] [cursor=pointer]:
+                - /url: /token-factory
+            - listitem [ref=f2e1253]:
+              - link "Document AI" [ref=f2e1254] [cursor=pointer]:
+                - /url: /products/doc-agents
+            - listitem [ref=f2e1255]:
+              - link "Work Agents" [ref=f2e1256] [cursor=pointer]:
+                - /url: /products/work-agents
+            - listitem [ref=f2e1257]:
+              - link "Coding Agents" [ref=f2e1258] [cursor=pointer]:
+                - /url: /products/coding-agents
+            - listitem [ref=f2e1259]:
+              - link "Sarvam Edge" [ref=f2e1260] [cursor=pointer]:
+                - /url: /products/edge
+            - listitem [ref=f2e1261]:
+              - link "Model Training" [ref=f2e1262] [cursor=pointer]:
+                - /url: /products/model-training
+        - generic [ref=f2e1263]:
+          - heading "APIs" [level=3] [ref=f2e1264]
+          - list [ref=f2e1265]:
+            - listitem [ref=f2e1266]:
+              - link "Text to Speech" [ref=f2e1267] [cursor=pointer]:
+                - /url: /apis/text-to-speech
+            - listitem [ref=f2e1268]:
+              - link "Speech to Text" [ref=f2e1269] [cursor=pointer]:
+                - /url: /apis/speech-to-text
+            - listitem [ref=f2e1270]:
+              - link "Doc Digitisation" [ref=f2e1271] [cursor=pointer]:
+                - /url: /apis/document-digitisation
+            - listitem [ref=f2e1272]:
+              - link "Translation" [ref=f2e1273] [cursor=pointer]:
+                - /url: /apis/translation
+            - listitem [ref=f2e1274]:
+              - link "Models" [ref=f2e1275] [cursor=pointer]:
+                - /url: /models
+        - generic [ref=f2e1276]:
+          - heading "Resources" [level=3] [ref=f2e1277]
+          - list [ref=f2e1278]:
+            - listitem [ref=f2e1279]:
+              - link "Blogs" [ref=f2e1280] [cursor=pointer]:
+                - /url: /blogs
+            - listitem [ref=f2e1281]:
+              - link "Building AI Agents" [ref=f2e1282] [cursor=pointer]:
+                - /url: /blogs/building-ai-agents
+            - listitem [ref=f2e1283]:
+              - link "Events" [ref=f2e1284] [cursor=pointer]:
+                - /url: /events
+            - listitem [ref=f2e1285]:
+              - link "Customer Stories" [ref=f2e1286] [cursor=pointer]:
+                - /url: /stories
+            - listitem [ref=f2e1287]:
+              - link "Documentation" [ref=f2e1288] [cursor=pointer]:
+                - /url: https://docs.sarvam.ai/sarvam-api-docs
+            - listitem [ref=f2e1289]:
+              - link "API Pricing" [ref=f2e1290] [cursor=pointer]:
+                - /url: /api-pricing
+            - listitem [ref=f2e1291]:
+              - link "Integrations" [ref=f2e1292] [cursor=pointer]:
+                - /url: /integrations
+            - listitem [ref=f2e1293]:
+              - link "Startup Program" [ref=f2e1294] [cursor=pointer]:
+                - /url: /startup-program
+            - listitem [ref=f2e1295]:
+              - link "Sarvam Champions" [ref=f2e1296] [cursor=pointer]:
+                - /url: /sarvam-champions
+        - generic [ref=f2e1297]:
+          - heading "Company" [level=3] [ref=f2e1298]
+          - list [ref=f2e1299]:
+            - listitem [ref=f2e1300]:
+              - link "About Us" [ref=f2e1301] [cursor=pointer]:
+                - /url: /about-us
+            - listitem [ref=f2e1302]:
+              - link "Careers" [ref=f2e1303] [cursor=pointer]:
+                - /url: /careers
+            - listitem [ref=f2e1304]:
+              - link "Contact Us" [ref=f2e1305] [cursor=pointer]:
+                - /url: /contact-us
+            - listitem [ref=f2e1306]:
+              - link "Brand" [ref=f2e1307] [cursor=pointer]:
+                - /url: /brand
+            - listitem [ref=f2e1308]:
+              - link "Brand Guidelines" [ref=f2e1309] [cursor=pointer]:
+                - /url: /brand-guidelines
+            - listitem [ref=f2e1310]:
+              - link "Partnerships" [ref=f2e1311] [cursor=pointer]:
+                - /url: /partnerships
+        - generic [ref=f2e1312]:
+          - heading "Legal" [level=3] [ref=f2e1313]
+          - list [ref=f2e1314]:
+            - listitem [ref=f2e1315]:
+              - link "Trust Center" [ref=f2e1316] [cursor=pointer]:
+                - /url: /trust-center
+            - listitem [ref=f2e1317]:
+              - link "Terms of Service" [ref=f2e1318] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=f2e1319]:
+              - link "Privacy Policy" [ref=f2e1320] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=f2e1321]:
+              - link "EULA" [ref=f2e1322] [cursor=pointer]:
+                - /url: /eula

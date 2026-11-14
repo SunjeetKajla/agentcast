@@ -95,7 +95,7 @@ export const MOVES_BUILT: readonly Move[] = ["prompt", "build", "cards", "panel"
 
 /** record/outputs.json: what the product made while it was recorded (a voice product's speech), kept from the recording session. */
 export const ProductOutputs = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.union([z.literal(1), z.literal(2)]),
   outputs: z.array(
     z.object({
       /** record/output/NN.<ext>. */
@@ -104,6 +104,8 @@ export const ProductOutputs = z.object({
       /** The MIME type it arrived with. */
       type: z.string(),
       flowId: z.string(),
+      /** v2: the action which initiated the request, even if its response arrived later. */
+      stepId: z.string().optional(),
       /** Recording second it arrived at. */
       t: Seconds,
     }),

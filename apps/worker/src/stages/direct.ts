@@ -8,6 +8,10 @@ import {
   Brand,
   CreativeBrief,
   Edl,
+  EvidenceFile,
+  FilmPlan,
+  QualityReport,
+  QualityRevision,
   MusicLibrary,
   MusicPlan,
   ProductBrief,
@@ -38,9 +42,13 @@ import {
   planParts,
   premixMusic,
   renderStills,
+  repairTemporalEdl,
+  temporalIssues,
   snapToGrid,
   stillMoments,
 } from "@agentcast/video";
+import { artifactHash, recover } from "../recovery.ts";
+import { readOptional } from "../material.ts";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
 import { optional, videoInput } from "./preview.ts";
@@ -69,7 +77,8 @@ export function makeDirect(
   const direct = deps.runDirector ?? runDirector;
   return async (ctx) => {
     const decision = await ctx.decision("gate-preview");
-    const revise = decision?.action === "revise" ? decision.revise : undefined;
+    const automatic = await readOptional(ctx, jobPaths.qualityRevision, QualityRevision);
+    const revise = decision?.action === "revise" ? decision.revise : automatic?.prompt;
     // A revision of one part: named, or the part the preview was playing at the second the person marked.
     const scene = decision?.action === "revise" ? (decision.scene ?? (decision.at !== undefined ? await partAt(ctx, decision.at) : undefined)) : undefined;
     if (fixtureStages()) {
@@ -108,7 +117,11 @@ export function makeDirect(
     // anything else starts again from the baseline.
     const revised = Boolean(revise && ready && state.applied.includes(revise));
     const revising = Boolean(revise && ready && !revised);
-    if (!revising && !revised) await prepareWorkspace(await workspaceFor(ctx));
+    if (!revising && !revised) {
+      state.applied = [];
+      state.sessionId = undefined;
+      await prepareWorkspace(await workspaceFor(ctx));
+    }
 
     let edl = await ctx.read(jobPaths.edl, Edl);
     let note = "baseline edit";
@@ -175,6 +188,26 @@ export function makeDirect(
         edl = await ctx.read(jobPaths.edl, Edl);
       }
     }
+    const timeline = await ctx.read(jobPaths.timeline("desktop"), Timeline);
+    const evidence = await readOptional(ctx, jobPaths.evidence, EvidenceFile);
+    const safety = repairTemporalEdl(edl, timeline, evidence);
+    if (safety.issues.length) {
+      await recover(ctx, { kind: "reframe", reason: "Repairing camera moves and source timing against the recorded motion." }, { edl, timeline }, async () => {
+        await ctx.write(jobPaths.edl, Edl, safety.edl);
+        return `Repaired ${safety.issues.length} temporal issue(s)`;
+      });
+      edl = safety.edl;
+    }
+    // Preserve verified product playback: the director can move it, but cannot silently omit the payoff.
+    const baseline = await ctx.read("render/edl.baseline.json", Edl);
+    for (const segment of baseline.segments) {
+      if (segment.kind !== "primitive" || segment.primitive.type !== "output") continue;
+      const file = segment.primitive.file;
+      if (!edl.segments.some((s) => s.kind === "primitive" && s.primitive.type === "output" && s.primitive.file === file)) edl.segments.push(segment);
+    }
+    const unresolved = temporalIssues(edl, timeline, evidence);
+    await ctx.write(jobPaths.quality, QualityReport, { schemaVersion: 1, inputHash: artifactHash(edl), passed: !unresolved.some((i) => i.severity === "error"), issues: unresolved, checks: ["source-flow bounds", "moving-page framing", "camera stops", "source duration", "product audio evidence"] });
+    if (unresolved.some((i) => i.severity === "error")) throw new Error(`The edit still has unsupported framing or audio: ${unresolved.map((i) => i.message).join("; ")}`);
     if (musicLed(ctx.config) && edl.style.music.bpm) {
       // The director may have changed lengths: back onto the grid, then the music to match the film.
       const snapped = snapToGrid(edl);
@@ -343,7 +376,11 @@ async function workspaceFor(ctx: StageContext) {
     )
       frames[beat.id] = file;
   }
+  const evidence = await readOptional(ctx, jobPaths.evidence, EvidenceFile);
+  const filmPlan = await readOptional(ctx, jobPaths.filmPlan, FilmPlan);
   return {
+    ...(evidence ? { evidence } : {}),
+    ...(filmPlan ? { filmPlan } : {}),
     dir: ctx.path("render"),
     creative,
     ...(product ? { product } : {}),

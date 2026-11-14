@@ -13,6 +13,7 @@ import { healLocator, redactor, type RepairContext } from "./heal.ts";
 import { cachedLocator, replayKey, saveLocator } from "./replay.ts";
 import {
   isAriaRole,
+  type AriaRole,
   parseLocator,
   serializeLocator,
   toLocator,
@@ -112,13 +113,19 @@ function chain(step: Step): SemanticLocator[] {
       ? [{ kind: "role", role: target.role, name: "" }]
       : [];
   const result: SemanticLocator[] = [];
-  if (target.role && isAriaRole(target.role))
-    result.push({ kind: "role", role: target.role, name });
+  // Agents mix up clickable roles (Sarvam's demo tabs are `role="tab"`, reported as buttons).
+  const kin: Record<string, AriaRole[]> = { button: ["tab", "menuitem"], tab: ["button"], menuitem: ["button", "tab"] };
+  const roles = target.role && isAriaRole(target.role) ? [target.role, ...(kin[target.role] ?? [])] : [];
+  for (const role of roles) result.push({ kind: "role", role, name });
   result.push(
     { kind: "label", name: target.label || name },
     { kind: "placeholder", name: target.placeholder || name },
     { kind: "text", name },
   );
+  // Agents sometimes report an id as the text (`playground-tab-tts`) and the visible name as the
+  // label ("Text to Speech"): last, the role under the label's name.
+  if (target.label && target.label !== name)
+    for (const role of roles) result.push({ kind: "role", role, name: target.label });
   return result;
 }
 

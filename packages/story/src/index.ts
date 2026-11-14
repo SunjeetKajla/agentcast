@@ -19,3 +19,5 @@ export {
   type PromptReading,
 } from "./prompt";
 export { available, checkDirection, checkShots, directArt, productTypeOf, rulesDirection, scriptLinesOf, shotBriefsOf, siteTextOf, TENDENCIES, type ShotBrief, type SkeletonChoice } from "./art";
+export { proposeFilm, evidenceOf } from "./evidence";
+export { auditStoryboard, groundedFallback } from "./grounding";

@@ -85,8 +85,11 @@ export function trackSettle(page: Page, defaults: SettleOptions = {}) {
                   hash = Math.imul(hash ^ text.charCodeAt(i), 16777619);
                 const moving = document.getAnimations().some((animation) => {
                   const timing = animation.effect?.getComputedTiming();
+                  // Studio pins running animations to its clock: paused, flagged, still moving.
                   return (
-                    animation.playState === "running" &&
+                    (animation.playState === "running" ||
+                      (animation as unknown as Record<string, unknown>)
+                        .__agentcastRunning === true) &&
                     timing &&
                     Number.isFinite(timing.endTime)
                   );

@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { BeatSheet, FlowsFile, type ArtDirection, type Brand, type BrandKit, type Move, type Primitive, type ProductOutputs, type CreativeBrief, type Edl, type MusicTrack, type ProductBrief, type Script, type Storyboard, type Timeline } from "@agentcast/shared";
+import { repairTemporalEdl } from "./quality.ts";
 import { shotContent } from "./content.ts";
 import { loadMusicLibrary, pickTrack } from "./music.ts";
 import { beatsOf, ledStyle } from "./musicplan.ts";
@@ -54,7 +55,7 @@ export async function planLedFilm(o: {
   const outputs = [];
   for (const out of o.outputs?.outputs ?? []) {
     const shape = o.root ? await audioShape(join(o.root, out.file), o.signal).catch(() => undefined) : undefined;
-    if (shape && shape.seconds >= 0.5) outputs.push({ file: out.file, flowId: out.flowId, t: out.t, ...shape });
+    if (shape && shape.audible && shape.seconds >= 0.5) outputs.push({ file: out.file, flowId: out.flowId, t: out.t, ...shape });
   }
   // What each step acted on, from the job's flows: the pill wears the real button's words.
   const steps: Record<string, StepLabel> = {};
@@ -91,6 +92,7 @@ export async function planLedFilm(o: {
     ...(o.direction && Object.keys(o.direction.shots).length ? { shots: o.direction.shots } : {}),
     ...(o.brand ? { brand: o.brand } : {}),
   });
+  plan.edl = repairTemporalEdl(plan.edl, o.timeline).edl;
   return { plan, ...(track ? { track } : {}), content, grid };
 }
 
@@ -103,7 +105,7 @@ function kindsOf(moves: Move[]): Primitive["type"][] {
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 /** An audio file's length and a 48-bar waveform (RMS per slice, scaled to the loudest, with a floor). */
-export function audioShape(file: string, signal?: AbortSignal): Promise<{ seconds: number; peaks: number[] }> {
+export function audioShape(file: string, signal?: AbortSignal): Promise<{ seconds: number; peaks: number[]; audible: boolean }> {
   const rate = 8000;
   return new Promise((done, fail) => {
     const child = spawn("ffmpeg", ["-v", "error", "-i", file, "-ac", "1", "-ar", String(rate), "-f", "f32le", "-"], { stdio: ["ignore", "pipe", "ignore"], ...(signal ? { signal } : {}) });
@@ -120,10 +122,15 @@ export function audioShape(file: string, signal?: AbortSignal): Promise<{ second
       const size = Math.max(1, Math.floor(shown / bars));
       const rms = Array.from({ length: bars }, (_, i) => Math.sqrt(samples.subarray(i * size, (i + 1) * size).reduce((s, v) => s + v * v, 0) / size));
       const loudest = Math.max(...rms, 1e-6);
-      done({ seconds: r2(samples.length / rate), peaks: rms.map((v) => Math.round((0.1 + 0.9 * Math.sqrt(v / loudest)) * 1000) / 1000) });
+      done({ seconds: r2(samples.length / rate), audible: samples.length >= rate * 0.5 && Math.max(...rms) > 0.001, peaks: rms.map((v) => Math.round((0.1 + 0.9 * Math.sqrt(v / loudest)) * 1000) / 1000) });
     });
   });
 }
+/** A held proof's one push into a region of its own frame (`template.ts` pushFor), not a glide across the page. */
+const pushesIn = (p: Extract<Primitive, { type: "proof" }>) => {
+  const stop = p.path?.length === 1 ? p.path[0]!.frame : undefined;
+  return Boolean(stop && stop[2] < p.frame[2] && stop[0] >= p.frame[0] && stop[1] >= p.frame[1] && stop[0] + stop[2] <= p.frame[0] + p.frame[2] && stop[1] + stop[3] <= p.frame[1] + p.frame[3]);
+};
 const first = (text: Record<string, string> | undefined) => (text ? (text.en ?? Object.values(text)[0]) : undefined);
 
 /** A film's beat sheet: each part on the bar grid, what it shows and says, and the shots left out. */
@@ -153,7 +160,7 @@ export function beatSheetOf(edl: Edl, o: { skeletonId: string; thesis: string; g
       case "build":
         return { ...base, move: `build (${p.items.length} pieces${p.lift ? ", one lifted" : ""})`, source: { flowId: p.flowId, from: p.at, to: p.at } };
       case "proof":
-        return { ...base, move: p.path?.length ? `one take (${p.path.length + 1} regions)` : `proof${p.hops?.length ? ` (${p.hops.length} hops)` : ""}`, source: { flowId: p.flowId, from: p.in, to: p.out, frame: p.frame } };
+        return { ...base, move: pushesIn(p) ? "proof (push in)" : p.path?.length ? `one take (${p.path.length + 1} regions)` : `proof${p.hops?.length ? ` (${p.hops.length} hops)` : ""}`, source: { flowId: p.flowId, from: p.in, to: p.out, frame: p.frame } };
       case "prompt":
         return { ...base, move: "typing close-up", source: { flowId: p.flowId, from: p.in, to: p.out, frame: p.frame } };
       case "wall":

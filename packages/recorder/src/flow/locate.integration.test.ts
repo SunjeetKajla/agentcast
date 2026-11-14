@@ -35,7 +35,8 @@ let browser: Browser;
 let context: BrowserContext;
 let page: Page;
 let directory: string;
-const opts = { settle: false, timeoutMs: 100, pollIntervalMs: 10 };
+// A real browser: each candidate is checked for visibility, overlap and modality, so allow a second.
+const opts = { settle: false, timeoutMs: 1000, pollIntervalMs: 10 };
 const click = (target: Step["target"]): Step => ({
   id: "s1",
   action: "click",
@@ -105,6 +106,18 @@ describe.skipIf(!available)("locator chain in Chromium", () => {
     expect(result.method).toBe("label");
     await result.locator.fill("Q4 Launch");
     expect(await page.locator("#field").inputValue()).toBe("Q4 Launch");
+  });
+
+  it("finds a tab reported as a button, by the label when the text is an id, not the same-named link", async () => {
+    await page.setContent(
+      '<div role="tablist"><button role="tab" id="playground-tab-tts">Text to Speech</button></div><footer><a href="#tts">Text to Speech</a></footer>',
+    );
+    const result = await resolveTarget(
+      page,
+      click({ role: "button", text: "playground-tab-tts", label: "Text to Speech" }),
+      opts,
+    );
+    expect(await result.locator.getAttribute("id")).toBe("playground-tab-tts");
   });
 
   it("uses placeholder before exact text and refuses to type into a button", async () => {

@@ -80,6 +80,11 @@ export const JobConfig = z.object({
   rerun: z.object({ of: z.string(), skipIfUnchanged: z.boolean() }).optional(),
   /** Let the film show other companies' logos found on the site (integrations, customers). Off unless asked (§9.7.8). */
   thirdPartyLogos: z.boolean().optional(),
+  /**
+   * How flows are filmed (§9.3.3). Live (default) screencasts in real time. Studio steps the page's own
+   * clock frame by frame, so slow-painting or always-animating sites still come out at an even 30 fps.
+   */
+  recordMode: z.enum(["live", "studio"]).optional(),
 });
 export type JobConfig = z.infer<typeof JobConfig>;
 

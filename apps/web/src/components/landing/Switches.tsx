@@ -36,6 +36,12 @@ const BANDS: Band[] = [
     toggle: (c) => ({ voiceover: !c.voiceover }),
   },
   {
+    id: "studio", sentence: "Film it frame by frame.", consequence: "An even 30 fps on slow or busy sites. Slower to record.",
+    color: "var(--yellow)", ink: "var(--black)",
+    on: (c) => c.studio,
+    toggle: (c) => ({ studio: !c.studio }),
+  },
+  {
     id: "gates", sentence: "Let me approve each gate.", consequence: "3 gates: the flows, the script, the preview. Off runs on autopilot.",
     color: "var(--white)", ink: "var(--black)",
     on: (c) => !c.autopilot,

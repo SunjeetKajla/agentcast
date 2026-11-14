@@ -178,8 +178,20 @@ still validated separately.
 that own their browser and temporary directory. Always stop capture in `finally`
 and retain its JPEGs until encoding finishes. Same-target navigations continue
 recording; opening a new page during `recordLive()` fails explicitly. Automatic
-popup retargeting and worker/CLI wiring remain separate tasks. Studio mode is
-not implemented here. `recordFlow()` below adds compilation and timeline artifacts.
+popup retargeting and worker/CLI wiring remain separate tasks. `recordFlow()` below
+adds compilation and timeline artifacts.
+
+`recordStudio()` (`src/studio.ts`, `recordFlow(..., { captureMode: "studio" })`) films
+on the page's own clock instead of the wall clock (PRD §9.3.3). Its init script runs
+in real time until the take starts. From then on each frame advances timers,
+`requestAnimationFrame`, `performance.now`/`Date.now` and CSS/web animations by exactly
+1/30 s, then takes a CDP screenshot, so a site that paints slowly still encodes at an
+even 30 fps. The clock never stops (Playwright's waits still finish) and never runs
+ahead of real time. `controls.sleep(ms)` waits on scene time; the actuator uses it for
+cursor, typing and scroll pacing. `startStudioClock(page, { signal })` without a
+directory only ticks the clock. Iframes run on the clock too, and playing `<video>`
+is seeked to scene time every frame. Limits: one browser, live network (no HAR),
+`<audio>` keeps real time.
 
 Run all recorder checks, including strict hardware checks on this NVIDIA/Intel
 machine, with the GPU suites serialized because they share physical devices:

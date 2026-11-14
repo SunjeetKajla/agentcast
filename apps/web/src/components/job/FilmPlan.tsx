@@ -1,6 +1,6 @@
 "use client";
 
-import { ArtDirection, BeatSheet, jobPaths } from "@agentcast/shared";
+import { ArtDirection, BeatSheet, EvidenceFile, FilmPlan as FilmIntent, jobPaths } from "@agentcast/shared";
 import { useArtifact } from "@/lib/useArtifact";
 
 // The film's plan at script review (PRD §9.7.7–9.7.8): the design art direction chose, with its reasons, and the
@@ -40,12 +40,22 @@ const WORLD: Record<string, string> = { plain: "plain", bloom: "a bloom of the b
 export default function FilmPlan({ jobId, versions }: { jobId: string; versions: Record<string, number> }) {
   const art = useArtifact(jobId, jobPaths.artDirection, ArtDirection, versions[jobPaths.artDirection]);
   const sheet = useArtifact(jobId, jobPaths.beatSheet, BeatSheet, versions[jobPaths.beatSheet]);
-  if (!art.data && !sheet.data) return null;
+  const intent = useArtifact(jobId, jobPaths.filmPlan, FilmIntent, versions[jobPaths.filmPlan]);
+  const evidence = useArtifact(jobId, jobPaths.evidence, EvidenceFile, versions[jobPaths.evidence]);
+  if (!art.data && !sheet.data && !intent.data && !evidence.data) return null;
   const a = art.data;
   const s = sheet.data;
   return (
     <section className="sb" aria-label="The film's plan">
       <ol className="sb-list">
+        {(intent.data || evidence.data) && (
+          <li className="sb-beat">
+            <div className="sb-head"><b>The film</b><span>{(evidence.data?.approach ?? intent.data?.approach) === "showcase" ? "Product showcase" : "Product demonstration"}</span></div>
+            {intent.data && <p className="sb-intent">{intent.data.premise}</p>}
+            {evidence.data && <p className="sb-intent">{evidence.data.moments.length} recorded moments · {evidence.data.outputs.filter((o) => o.audible).length} playable product outputs</p>}
+            {!!evidence.data?.limitations.length && <ul className="sb-intent">{evidence.data.limitations.map((line) => <li key={line}>{line}</li>)}</ul>}
+          </li>
+        )}
         {a && (
           <li className="sb-beat">
             <div className="sb-head">

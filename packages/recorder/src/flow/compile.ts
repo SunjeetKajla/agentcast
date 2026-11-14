@@ -16,6 +16,8 @@ import {
   type LiveRecording,
 } from "../live.ts";
 import { watchable } from "../timing.ts";
+import { recordStateSequence } from "../states.ts";
+import { recordStudio } from "../studio.ts";
 import { createActuator, type CursorSample } from "./act.ts";
 import { abortable } from "./control.ts";
 import { redactor, type RepairContext } from "./heal.ts";
@@ -42,6 +44,7 @@ import { trackSettle, waitForSettle } from "./settle.ts";
 import { selectMatch } from "./select.ts";
 
 export interface FlowOptions extends LiveOptions {
+  captureMode?: "live" | "studio" | "states";
   /** Defaults to timeline.json/replay-plan.json beside outputPath. */
   timelinePath?: string;
   replayPlanPath?: string;
@@ -98,6 +101,9 @@ class StepFailure extends Error {
     super(repair.reason);
   }
 }
+
+/** A wait only pauses; agents sometimes attach a vague target to it (`{ role: "button" }`), which can't be resolved and isn't used. */
+const targeted = (step: Flow["steps"][number]) => !!step.target && step.action !== "wait";
 
 async function unused(path: string) {
   await access(path).then(
@@ -178,7 +184,7 @@ export async function recordFlow(
         viewport = { w: 1, h: 1, dpr: 1 };
       let preparedTarget: ResolvedTarget | undefined;
       try {
-        const recording = await recordLive(
+        const recording = await (options.captureMode === "states" ? recordStateSequence : options.captureMode === "studio" ? recordStudio : recordLive)(
           {
             ...options,
             outputPath: stagedVideo,
@@ -209,7 +215,7 @@ export async function recordFlow(
               // Hydration/initial locator healing belongs before the source-video clock.
               // Keep learning staged; the same semantic locator is revalidated during capture.
               const first = flow.steps[0]!;
-              if (first.target) {
+              if (targeted(first)) {
                 try {
                   preparedTarget = await resolveTarget(session.page, first, {
                     ...options.locate,
@@ -247,7 +253,7 @@ export async function recordFlow(
           },
           async (controls) => {
             const { page, signal, now } = controls;
-            if (options.outputs) await watchOutputs(page, { ...options.outputs, flowId: flow.id, now });
+            const outputs = options.outputs ? await watchOutputs(page, { ...options.outputs, flowId: flow.id, now }) : undefined;
             // The page as an action finds it: what the action does next may cover this up.
             let found: Layout | undefined;
             const actuator = createActuator(page, {
@@ -259,9 +265,11 @@ export async function recordFlow(
               signal,
               now,
               motion: controls.motion,
+              ...(controls.sleep ? { sleep: controls.sleep } : {}),
               random: options.random,
             });
             cursorSamples = actuator.samples;
+            try {
             for (const step of flow.steps) {
               signal.throwIfAborted();
               let before: OutcomeState | undefined,
@@ -287,7 +295,7 @@ export async function recordFlow(
                   if (verified.match)
                     target = { ...preparedTarget, ...verified.match };
                 }
-                if (step.target && !target)
+                if (targeted(step) && !target)
                   target = await resolveTarget(page, step, {
                     ...options.locate,
                     signal,
@@ -315,6 +323,7 @@ export async function recordFlow(
                   beforeImage = await maskedScreenshot(page, secrets, signal);
                 const url = redact(page.url());
                 found = undefined;
+                outputs?.beginAction(step.id);
                 const action = await actuator.run(step, target);
                 const waitStart = now();
                 const immediate = await abortable(
@@ -385,6 +394,7 @@ export async function recordFlow(
                         ? { redacted: true }
                         : step.value,
                 });
+                await controls.captureState?.();
                 const settledAt = now() / 1000;
                 const layout = await abortable(
                   pageLayout(page, action.bbox),
@@ -402,7 +412,7 @@ export async function recordFlow(
                 });
                 const entry =
                   target?.entry ??
-                  (!step.target
+                  (!targeted(step)
                     ? {
                         strategy: "text" as const,
                         locator: "",
@@ -439,7 +449,19 @@ export async function recordFlow(
                   afterImage,
                 });
               } finally {
+                outputs?.endAction();
                 tracker.dispose();
+              }
+            }
+            } finally {
+              await outputs?.stop();
+              const last = events.findLast((event) => event.kind === "settled");
+              // A result can arrive during output drain. Commit that final state, not the loading state.
+              if (outputs && last && now() / 1000 - last.t > 0.3 && !signal.aborted) {
+                await controls.captureState?.();
+                last.t = now() / 1000;
+                last.url = redact(page.url());
+                last.layout = await abortable(pageLayout(page, last.bbox), signal);
               }
             }
           },

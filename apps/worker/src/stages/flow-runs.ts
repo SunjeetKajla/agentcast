@@ -18,6 +18,7 @@ import { type TinyFish } from "@agentcast/tinyfish";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
 import { copyFixture, pretend } from "./stub.ts";
+import { acquireBrand } from "./material-brand.ts";
 import { explorationOptions } from "./discover.ts";
 
 export function makeFlowRuns(
@@ -40,7 +41,9 @@ export function makeFlowRuns(
       }
       return;
     }
-    const flows = await executeFlows(await explorationOptions(ctx, deps));
+    const options = await explorationOptions(ctx, deps);
+    const flows = await executeFlows(options);
+    await acquireBrand(ctx, options, flows);
     ctx.log(
       `Selected ${flows.filter((flow) => flow.selected).length} independently rehearsed flow(s).`,
     );

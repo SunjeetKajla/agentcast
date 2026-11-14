@@ -85,6 +85,7 @@ describe("recorded footage to bilingual scripts", () => {
         schema: z.ZodType;
       }) => {
         calls++;
+        if (task.prompt.includes("Audit the storyboard")) return task.schema.parse({ issues: [] });
         if (task.prompt.includes("You are planning the storyboard")) {
           imageCount = task.images?.length ?? 0;
           expect(imageCount).toBeGreaterThan(0);
@@ -122,7 +123,7 @@ describe("recorded footage to bilingual scripts", () => {
     await script(ctx);
     const board = await ctx.read(jobPaths.storyboard, Storyboard);
     expect(board.beats[1]?.flowId).toBe(flow.id);
-    expect(calls).toBe(3);
+    expect(calls).toBe(5);
     expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining("1 approved flow(s) that did not record"),"warn");
     for (const lang of ["en", "hi"]) {
       const written = await ctx.read(jobPaths.script(lang), Script);

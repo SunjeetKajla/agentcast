@@ -1,6 +1,8 @@
 import { Edl, MOTION_PRESETS, type Brand, type BrandMotion, type ShotCall, type FilmSkeleton, type Personality, type Primitive, type ProductShape, type Rect, type ReferenceLibrary, type Script, type Segment, type Storyboard, type Timeline, type TimelineEvent } from "@agentcast/shared";
 import { brandStyle } from "./baseline.ts";
 import { planParts } from "./plan.ts";
+import { PATH_MOVE } from "./primitives/cues.ts";
+import { HAND_GONE } from "./primitives/cursor.ts";
 
 // The music-led edit without an LLM (PRD §9.7.6): an opener, then one module per storyboard shot, then the
 // end card, every part a whole number of the track's beats. A skeleton from the reference library
@@ -327,6 +329,105 @@ function glideFor(shot: Shot, timeline: Timeline, tilt: "soft" | "strong", beat:
   return { type: "proof", flowId: shot.flowId, in: r2(from), out: r2(to), frame: start, tilt, path };
 }
 
+type Proof = Extract<Primitive, { type: "proof" }>;
+
+/** The most a held proof pushes in: enough to read as a move, not so much the page loses its context. */
+const PUSH = 1.45;
+
+/**
+ * How far a 16:9 1080p window can push into a proof's footage before it goes soft: the proof widens a
+ * small frame, sizes its window, and never scales past the footage's density (primitives' `maxScale`).
+ */
+function pushRoom(frame: Rect, view: Timeline["viewport"]): { room: number; shown: number } {
+  const limit = view.dpr * 1.25;
+  const wide = 1920 * 0.78;
+  const shown = Math.max(frame[2], Math.min(view.w, wide / limit));
+  return { room: limit / Math.min(wide / shown, limit), shown };
+}
+
+/** A region grown about its centre by `k`, kept on the page. */
+function grown(r: Rect, k: number, view: { w: number; h: number }): Rect {
+  const w = Math.min(view.w, r[2] * k);
+  const h = Math.min(view.h, r[3] * k);
+  const x = Math.max(0, Math.min(view.w - w, r[0] + r[2] / 2 - w / 2));
+  const y = Math.max(0, Math.min(view.h - h, r[1] + r[3] / 2 - h / 2));
+  return [Math.round(x), Math.round(y), Math.round(w), Math.round(h)];
+}
+
+/**
+ * A held proof's camera: one push in, on a beat, toward what the shot is about (the last thing acted on,
+ * else the page's busiest part, else the middle), once the hand has finished its clicks and with a beat to
+ * spare before the end. A frame already as close as the footage stays sharp opens wider instead, so the
+ * push lands on it. Undefined when the page has no room either way or there's no beat left for the move.
+ */
+function pushFor(p: Proof, timeline: Timeline, beat: number, seconds: number, hand: boolean, content?: ShotContent): { frame: Rect; path: NonNullable<Proof["path"]> } | undefined {
+  const view = timeline.viewport;
+  // The proof shows at least `shown` of the page (it widens a small frame), so the wider opening is grown from that.
+  const { room: near, shown: least } = pushRoom(p.frame, view);
+  const frame = near >= PUSH ? p.frame : grown(p.frame, (least * PUSH) / Math.max(1, near) / p.frame[2], view);
+  const { room, shown } = pushRoom(frame, view);
+  const zoom = Math.min(PUSH, room);
+  if (zoom < 1.15) return undefined;
+  const speed = Math.max(0.6, Math.min(3, (p.out - p.in) / seconds));
+  const centre = (r: Rect): [number, number] => [r[0] + r[2] / 2, r[1] + r[3] / 2];
+  const shows = (r: Rect) => {
+    const [x, y] = centre(r);
+    return x >= p.frame[0] && x <= p.frame[0] + p.frame[2] && y >= p.frame[1] && y <= p.frame[1] + p.frame[3];
+  };
+  const during = timeline.events.filter((e) => e.flowId === p.flowId && e.t >= p.in && e.t <= p.out);
+  const acted = during.filter((e) => e.bbox && (e.kind === "click" || e.kind === "type" || e.kind === "select") && shows(e.bbox)).at(-1);
+  const component = acted?.layout?.component;
+  const aim =
+    (component && worthFraming(component, view) && shows(component) ? component : acted?.bbox) ??
+    (content?.focus && shows(content.focus) ? content.focus : p.frame);
+  // The hand's presses play first (the page moves under it), then the camera moves on the next beat.
+  const presses = hand ? during.filter((e) => e.kind === "click" && e.bbox).map((e) => (e.t - p.in) / speed).filter((at) => at >= 0.6 && at <= seconds - 0.3) : [];
+  const after = presses.length ? Math.max(...presses) + HAND_GONE : 0;
+  const at = Math.max(beat * 2, Math.ceil(after / beat - 1e-6) * beat);
+  if (at + PATH_MOVE > seconds - beat) return undefined;
+  const w = shown / zoom;
+  const h = (w * frame[3]) / frame[2];
+  const [cx, cy] = centre(aim);
+  const x = Math.max(0, Math.min(view.w - w, cx - w / 2));
+  const y = Math.max(0, Math.min(view.h - h, cy - h / 2));
+  return { frame, path: [{ at: r2(at), frame: [Math.round(x), Math.round(y), Math.round(w), Math.round(h)] }] };
+}
+
+/** The moves whose own ending carries the film out of them (a dive, a push through a laptop, the opener's rule): they cut. */
+const OWN_EXIT = new Set<Primitive["type"]>(["wall", "mockup", "pill", "orbit"]);
+
+/** How a new part arrives on the beat, by personality: the big move opens a phrase (four bars), the small one any other bar. */
+const ON_THE_BEAT: Record<Personality, { phrase: Segment["transitionIn"]; bar: Segment["transitionIn"] }> = {
+  energetic: { phrase: "blur-zoom", bar: "zoom-through" },
+  playful: { phrase: "zoom-through", bar: "slide" },
+  corporate: { phrase: "ribbon", bar: "slide" },
+  premium: { phrase: "zoom-through", bar: "fade" },
+};
+
+/**
+ * Transitions on the music: a part that starts a new shot on a bar's downbeat arrives with a move (the big
+ * one on a phrase), starting on that beat. Everything else cuts on its beat: a shot's own parts (label, proof,
+ * second angle, output) are one idea, a part off the downbeat would smear the rhythm, and a move that carries
+ * itself out (and the opener) already has its exit.
+ */
+function onTheBeat(segments: Segment[], start: number, grid: { beat: number; bar: number }, personality: Personality): Segment[] {
+  const perBar = Math.max(1, Math.round(grid.bar / grid.beat));
+  const moves = ON_THE_BEAT[personality];
+  const shotOf = (s: Segment | undefined) => (s && "beatId" in s ? s.beatId : undefined);
+  let t = start;
+  let prev: Segment | undefined;
+  return segments.map((s) => {
+    const beats = Math.round(t / grid.beat);
+    const downbeat = Math.abs(t - beats * grid.beat) < grid.beat * 0.1 && beats % perBar === 0;
+    const carried = !prev || (prev.kind === "primitive" && OWN_EXIT.has(prev.primitive.type));
+    const same = shotOf(s) !== undefined && shotOf(s) === shotOf(prev);
+    const transitionIn = carried || same || !downbeat ? "cut" : beats % (perBar * 4) === 0 ? moves.phrase : moves.bar;
+    t += "seconds" in s ? s.seconds : 0;
+    prev = s;
+    return { ...s, transitionIn };
+  });
+}
+
 /** Options in art direction's order: preferred kinds first, avoided kinds dropped unless nothing else is left. */
 function ranked(options: Option[], prefer: Primitive["type"][] = [], avoid: Primitive["type"][] = []): Option[] {
   const kept = options.filter((c) => !avoid.includes(c.kind));
@@ -461,7 +562,10 @@ export function ledPlan(o: LedInput): LedPlan {
     const made0 = glide ?? option!.make(seconds);
     // The director's headline rides the shot's first proof.
     const headline = call?.headline ?? titled;
-    const first: Primitive = made0.type === "proof" && headline ? { ...made0, headline } : made0;
+    const titledProof: Primitive = made0.type === "proof" && headline ? { ...made0, headline } : made0;
+    // A held proof still moves: the camera pushes in on a beat (a list's hopping highlight keeps its frame still).
+    const push = module.camera === "hold" && titledProof.type === "proof" && !titledProof.path?.length && !titledProof.hops?.length ? pushFor(titledProof, timeline, beat, seconds, o.motion?.cursor === "hand", o.content?.[shot.id]) : undefined;
+    const first: Primitive = push && titledProof.type === "proof" ? { ...titledProof, ...push } : titledProof;
     last = first.type;
     if (first.type === "pill" || first.type === "mockup") once.add(first.type);
     // A pill lasts as long as its typing, the press and a beat of the answer coming: no long spinner.
@@ -544,7 +648,7 @@ export function ledPlan(o: LedInput): LedPlan {
       ...(o.assets?.imagery?.length ? { imagery: o.assets.imagery.slice(0, 6) } : {}),
     },
     intro: { component: "Opener", props: { line: byLang((s) => s.titleCard || s.hook, o.brand?.url ?? "") }, seconds: r2(openerSeconds) },
-    segments,
+    segments: onTheBeat(segments, openerSeconds, grid, o.personality),
     outro: { component: "EndCard", props: { line: byLang((s) => s.cta, "") }, seconds: r2(endSeconds) },
   });
   return { edl, skeleton, dropped };

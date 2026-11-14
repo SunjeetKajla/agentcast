@@ -34,6 +34,14 @@ describe("toJobConfig", () => {
       variants: { aspects: ["16x9", "9x16"], langs: ["en", "hi"], formFactors: ["desktop"] },
       autopilot: true,
     });
+    expect(JobConfig.parse(body).recordMode).toBeUndefined();
+  });
+  test("the Studio switch asks the worker to film frame by frame", () => {
+    const body = toJobConfig("https://www.sarvam.ai", "", { ...DEFAULT_CHOICES, studio: true });
+    expect(JobConfig.parse(body).recordMode).toBe("studio");
+    expect(readBack({ ...DEFAULT_CHOICES, studio: true }, "")).toBe(
+      "A launch video, 16:9 and 9:16 in English, filmed in Studio, with your review of flows, script and preview.",
+    );
   });
 });
 

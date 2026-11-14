@@ -1,16 +1,21 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { execFile } from "node:child_process";
-import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { FlowsFile, ProductOutputs, Timeline, jobPaths } from "@agentcast/shared";
+import { CaptureReport, CapturePlan, CaptureOverrides, EvidenceFile, FlowsFile, ProductOutputs, ReplayPlan, StoredOutputIndex, Timeline, jobPaths } from "@agentcast/shared";
 import { fixtureStages } from "@agentcast/explore";
 import {
   recordFlow,
+  chooseCapture,
   type FlowOptions,
   type FlowRecording,
 } from "@agentcast/recorder";
+import { evidenceOf } from "@agentcast/story";
+import { audioShape } from "@agentcast/video";
+import { readOptional } from "../material.ts";
+import { artifactHash, recover } from "../recovery.ts";
 import type { StageFn } from "./types.ts";
 import { sessionFor } from "./auth.ts";
 import { stub } from "./stub.ts";
@@ -18,33 +23,35 @@ import { stub } from "./stub.ts";
 // record: film each approved flow in local Chromium (PRD §9.3). Owner: Neeraj. Desktop only for now.
 // Each flow is its own Live take (up to three tries); the takes are joined into one recording.mp4 and
 // one timeline.json, with every flow's in/out marked so the script and the edit can find it.
+// recordMode "studio" films every flow on the page's own clock instead (PRD §9.3.3): an even 30 fps
+// however slowly the site paints. In Live, a flow that can't be filmed smoothly also falls back to Studio.
 
 const exec = promisify(execFile);
 const RecordedTake = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.union([z.literal(1), z.literal(2)]),
   key: z.string(),
   timeline: Timeline,
+  capture: CaptureReport.shape.flows.element.optional(),
 });
-const takeKey = (flow: unknown, session: unknown, dpr = SHARP) =>
+const takeKey = (flow: unknown, session: unknown, dpr = SHARP, strategy = "live") =>
   createHash("sha256")
     .update(
       JSON.stringify(
-        dpr === SHARP ? { flow, session } : { flow, session, dpr },
+        { version: 2, flow, session, dpr, strategy },
       ),
     )
     .digest("hex");
 
-// Pixel ratios. Every flow is filmed at 2× (crisp when the edit zooms in). A site that paints too slowly
-// for Chrome to screencast 2× frames smoothly (sarvam.ai: 22–26 fps at 2×, 33–44 fps at 4/3 on an
-// RTX 3050) is filmed again at 4/3: 1920 px wide, still above the 1080p output. One ratio per job, so
-// the takes can be joined without re-encoding.
+// Probe the source before capture. Keep one pixel ratio per job so takes join without re-encoding.
+// A failed motion take changes strategy; it never becomes acceptable merely because retries ran out.
 const SHARP = 2;
 const LIGHT = 4 / 3;
+const STUDIO_REASON = "Filmed frame by frame on the page's own clock: an even 30 fps, real actions, real results.";
 const stalled = (reason: string | undefined) =>
   /stall checks/.test(reason ?? "");
 
 export function makeRecord(
-  deps: { recordFlow?: typeof recordFlow; ffmpeg?: string } = {},
+  deps: { recordFlow?: typeof recordFlow; ffmpeg?: string; probe?: typeof chooseCapture } = {},
 ): StageFn {
   const film = deps.recordFlow ?? recordFlow;
   return async (ctx) => {
@@ -76,11 +83,24 @@ export function makeRecord(
       flowId: string;
       take: Pick<FlowRecording, "path" | "timeline">;
     }[] = [];
+    const overrides = await readOptional(ctx, jobPaths.captureOverrides, CaptureOverrides);
+    const studio = ctx.config.recordMode === "studio";
+    const planHash = artifactHash({ version: 1, flows: approved, session: storageState, ...(studio ? { mode: "studio" } : {}) });
+    const savedPlan = await readOptional(ctx, jobPaths.capturePlan, CapturePlan);
+    const selected = savedPlan?.inputHash === planHash ? savedPlan : studio
+      ? { dpr: SHARP, strategy: "studio" as const, reason: "Studio recording: each flow is filmed frame by frame on the page's own clock, at full sharpness." }
+      : deps.probe || !deps.recordFlow
+      ? await (deps.probe ?? chooseCapture)(approved[0]!.startUrl, { formFactor: "desktop", storageState }, ctx.signal)
+      : { dpr: SHARP, strategy: "live" as const, reason: "Injected recorder" };
+    await ctx.write(jobPaths.capturePlan, CapturePlan, { ...selected, schemaVersion: 2, inputHash: planHash });
+    ctx.log(selected.reason);
+    const captures: CaptureReport["flows"] = [];
     try {
-      let dpr = SHARP;
+      let dpr = selected.dpr;
       for (let pass = 1; ; pass++) {
         let retry = false;
         recorded.length = 0;
+        captures.length = 0;
         for (const [i, flow] of approved.entries()) {
           ctx.progress(i / approved.length, `Recording "${flow.title}"`);
           const options: FlowOptions = {
@@ -93,11 +113,13 @@ export function makeRecord(
               storageState,
               deviceScaleFactor: dpr,
             },
-            // At the lighter ratio there is nothing smoother to try: keep a watchable last take.
-            acceptUneven: dpr === LIGHT,
+            // Failed lighter motion switches to verified settled states.
+            captureMode: overrides?.states.includes(flow.id) ? "states" : selected.strategy,
+            acceptUneven: false,
+            maxTakes: 1,
             // Client-rendered apps can take ~25 s to show their first element (Linear's demo).
             // The first lookup happens before filming starts, so the wait isn't in the video.
-            locate: { timeoutMs: 30_000 },
+            locate: { timeoutMs: 30_000, heal: true, llm: ctx.llm, onLlmEvent: ctx.llmProgress },
             // Audio the product makes while it's recorded, for the film to play (PRD §9.7.8).
             outputs: { dir: ctx.path("record/output") },
             signal: ctx.signal,
@@ -115,7 +137,7 @@ export function makeRecord(
             },
           };
           const checkpoint = `record/desktop/takes/take-${i + 1}.checkpoint.json`;
-          const key = takeKey(flow, storageState, dpr);
+          const key = takeKey(flow, storageState, dpr, options.captureMode);
           let saved: z.infer<typeof RecordedTake> | undefined;
           try {
             const candidate = await ctx.read(checkpoint, RecordedTake);
@@ -135,6 +157,7 @@ export function makeRecord(
                 flowId: flow.id,
                 take: { path: options.outputPath, timeline: saved.timeline },
               });
+              if (saved.capture) captures.push(saved.capture);
               ctx.log(`Reusing the completed recording of "${flow.title}".`);
             } else {
               for (const path of [
@@ -143,12 +166,38 @@ export function makeRecord(
                 ctx.path(checkpoint),
               ])
                 await rm(path, { force: true });
-              const take = await film(flow, options);
+              let take: FlowRecording | undefined;
+              let strategy: "live" | "studio" | "states" = options.captureMode ?? "live";
+              try { take = await film(flow, options); }
+              catch (error) {
+                ctx.signal.throwIfAborted();
+                if (!stalled((error as Error).message)) throw error;
+                if (dpr === SHARP) throw error;
+                // Live can't keep up with this site: film it on the page's clock instead of cutting stills.
+                strategy = "studio";
+                const done = await recover(ctx, { kind: "capture", flowId: flow.id, reason: `Filming "${flow.title}" in Studio; it can't be filmed smoothly live on this machine.` }, { flow, key }, async () => {
+                  for (const path of [options.outputPath, options.timelinePath!]) await rm(path, { force: true });
+                  take = await film(flow, { ...options, captureMode: "studio", browser: { ...options.browser, deviceScaleFactor: SHARP }, maxTakes: 1 });
+                  const capture = { flowId: flow.id, strategy, dpr: SHARP, passed: true, reason: STUDIO_REASON };
+                  await ctx.write(checkpoint, RecordedTake, { schemaVersion: 2, key, timeline: take.timeline, capture });
+                  return "Filmed in Studio";
+                }, approved.length);
+                if (!done) throw new Error("Capture recovery exhausted");
+                if (!take) {
+                  const saved = await ctx.read(checkpoint, RecordedTake);
+                  take = { path: options.outputPath, timeline: saved.timeline } as FlowRecording;
+                }
+              }
+              if (!take) throw new Error("No usable capture");
+              if (take.stall?.status === "failed") throw new Error("A failed smoothness check cannot be promoted to usable footage");
+              const capture: CaptureReport["flows"][number] = { flowId: flow.id, strategy, dpr: strategy === "studio" ? SHARP : dpr, passed: true, reason: strategy === "states" ? "Deliberate cuts between verified states" : strategy === "studio" ? STUDIO_REASON : "Live motion passed capture checks", ...(take.stall ? { p95GapMs: take.stall.p95GapMs, maxGapMs: take.stall.maxGapMs } : {}) };
+              captures.push(capture);
               ctx.signal.throwIfAborted();
               await ctx.write(checkpoint, RecordedTake, {
-                schemaVersion: 1,
+                schemaVersion: 2,
                 key,
                 timeline: take.timeline,
+                capture,
               });
               recorded.push({ flowId: flow.id, take });
             }
@@ -158,7 +207,7 @@ export function makeRecord(
               error instanceof Error
                 ? error.message.split("\n")[0]
                 : "Recording failed";
-            if (dpr === SHARP && stalled(reason)) {
+            if (dpr === SHARP && !studio && stalled(reason)) {
               ctx.log(
                 `"${flow.title}" can't be filmed smoothly at full sharpness: ${reason}`,
                 "warn",
@@ -174,6 +223,7 @@ export function makeRecord(
         }
         if (!retry || pass > 1) break;
         dpr = LIGHT;
+        await ctx.write(jobPaths.capturePlan, CapturePlan, { schemaVersion: 2, inputHash: planHash, dpr, strategy: selected.strategy, reason: "Live capture failed at full resolution; try the lighter ratio once before Studio." });
         ctx.log(
           "This site paints too slowly to film at 2× pixels on this machine. Filming every flow again at 1920 px wide (still above the 1080p output).",
           "warn",
@@ -210,7 +260,16 @@ export function makeRecord(
       ctx.artifact(jobPaths.recording("desktop"));
       const joined = joinTimelines(ctx.jobId, recorded);
       await ctx.write(jobPaths.timeline("desktop"), Timeline, joined);
-      await keepOutputs(ctx, joined);
+      const outputs = await keepOutputs(ctx, joined);
+      await ctx.write(jobPaths.captureReport, CaptureReport, { schemaVersion: 2, flows: captures.filter((c) => joined.flows.some((f) => f.flowId === c.flowId)) });
+      const verified: EvidenceFile["outputs"] = [];
+      for (const out of outputs.outputs) {
+        const shape = await audioShape(ctx.path(out.file), ctx.signal).catch(() => undefined);
+        ctx.signal.throwIfAborted();
+        if (shape) verified.push({ file: out.file, flowId: out.flowId, ...(out.stepId ? { stepId: out.stepId } : {}), t: out.t, seconds: shape.seconds, audible: shape.audible });
+      }
+      const replay = await readOptional(ctx, jobPaths.replayPlan, ReplayPlan);
+      await ctx.write(jobPaths.evidence, EvidenceFile, evidenceOf({ replay, inputHash: artifactHash({ joined, outputs, captures }), flows: approved, timeline: joined, captures: { schemaVersion: 1, flows: captures }, outputs: verified }));
       // recordFlow saved the locators and checks it learned straight to the replay plan.
       ctx.artifact(jobPaths.replayPlan);
       ctx.progress(
@@ -231,18 +290,16 @@ export const record = makeRecord();
 async function keepOutputs(ctx: Parameters<StageFn>[0], timeline: Timeline) {
   const outputs: ProductOutputs["outputs"] = [];
   for (const flow of timeline.flows) {
-    const list = await readFile(ctx.path(`record/output/${flow.flowId}.json`), "utf8").then(
-      (text) => JSON.parse(text) as { file: string; type: string; t: number }[],
-      () => [],
-    );
+    const list = (await readOptional(ctx, `record/output/${flow.flowId}.json`, StoredOutputIndex))?.outputs ?? [];
     for (const out of list) {
       const file = `record/output/${out.file}`;
-      outputs.push({ file, kind: "audio", type: out.type, flowId: flow.flowId, t: Math.round((flow.in + out.t) * 1000) / 1000 });
+      outputs.push({ file, kind: "audio", type: out.type, flowId: flow.flowId, ...(out.stepId ? { stepId: out.stepId } : {}), t: Math.round((flow.in + out.t) * 1000) / 1000 });
       ctx.artifact(file);
     }
   }
-  await ctx.write(jobPaths.outputs, ProductOutputs, { schemaVersion: 1, outputs });
+  await ctx.write(jobPaths.outputs, ProductOutputs, { schemaVersion: 2, outputs });
   if (outputs.length) ctx.log(`Kept ${outputs.length} output(s) the product made while it was recorded.`);
+  return { schemaVersion: 2 as const, outputs };
 }
 
 /** One timeline for the joined recording: each take's times move by the length of the takes before it. */

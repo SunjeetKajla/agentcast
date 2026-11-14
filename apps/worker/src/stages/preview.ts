@@ -26,6 +26,7 @@ import {
   type SfxKind,
   type VideoInput,
 } from "@agentcast/video";
+import { reviewPreview } from "../preview-quality.ts";
 import { agentcastHome } from "../env.ts";
 import type { StageContext } from "../context.ts";
 import type { StageFn } from "./types.ts";
@@ -191,6 +192,7 @@ export const preview: StageFn = async (ctx) => {
   );
   // The reference-look numbers (PRD FR-88), so an edit that stands still or plays quiet shows here.
   const m = await measureVideo(ctx.path(jobPaths.preview), ctx.signal).catch(() => undefined);
+  await reviewPreview(ctx, input, m);
   if (m) {
     const line = `still ${(m.stillShareExEnd * 100).toFixed(0)}% (target ≤ 10%, end card excluded), ${m.lufs ?? "no"} LUFS`;
     ctx.log(`Reference check: ${line}.`, m.stillShareExEnd > 0.1 || (m.lufs !== undefined && Math.abs(m.lufs + 14) > 1.5) ? "warn" : "info");

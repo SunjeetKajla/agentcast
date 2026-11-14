@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Film Review</title>
+<style>
+  :root { --bg: #f4f3ef; --ink: #141414; --muted: #6b6a66; --line: #d8d6cf; --card: #ffffff; --accent: #2a3cf0; --win: #1f8a4c; --lose: #b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111111; --ink: #f1f0ec; --muted: #9a9892; --line: #2c2c2a; --card: #1a1a19; --accent: #7d8bff; --win: #5fd18f; --lose: #ff8a80; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); padding: 14px 16px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; font-weight: 650; }
+  header .meta { color: var(--muted); }
+  header .keys { margin-left: auto; color: var(--muted); font-size: 13px; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font: 12px ui-monospace, monospace; }
+  main { max-width: 1500px; margin: 0 auto; padding: 16px; display: grid; gap: 20px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  section.current { outline: 2px solid var(--accent); outline-offset: 2px; }
+  section h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; display: flex; gap: 10px; align-items: baseline; }
+  section h2 .site { color: var(--muted); font-weight: 400; }
+  section h2 .state { margin-left: auto; font-size: 13px; color: var(--muted); font-weight: 500; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 760px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; }
+  figcaption { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  figcaption b { color: var(--ink); }
+  video { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; display: block; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 7px; padding: 7px 14px; cursor: pointer; }
+  button:hover { border-color: var(--ink); }
+  button.pick { font-weight: 600; }
+  button[disabled] { opacity: .5; cursor: default; }
+  input.note { flex: 1 1 220px; min-width: 0; font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); }
+  .reveal { margin-top: 12px; font-size: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 760px) { .reveal { grid-template-columns: 1fr; } }
+  .reveal table { border-collapse: collapse; width: 100%; }
+  .reveal td { padding: 2px 6px 2px 0; border-bottom: 1px solid var(--line); }
+  .reveal td:first-child { color: var(--muted); width: 45%; }
+  .reveal .won { color: var(--win); font-weight: 650; }
+  .reveal .lost { color: var(--lose); }
+  .sheet { width: 100%; margin-top: 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Which cut is better?</h1>
+  <span class="meta" id="progress"></span>
+  <span class="keys"><kbd>Space</kbd> play both · <kbd>1</kbd> left · <kbd>2</kbd> right · <kbd>3</kbd> same · <kbd>J</kbd>/<kbd>K</kbd> next/previous</span>
+</header>
+<main id="list"></main>
+<script>
+const DATA = /*DATA*/null;
+const list = document.getElementById("list");
+const progress = document.getElementById("progress");
+let current = 0;
+
+function row(label, value) { return `<tr><td>${label}</td><td>${value ?? "–"}</td></tr>`; }
+function table(side, winner) {
+  const s = side;
+  const verdict = winner === "same" ? "" : winner === s.side ? ' class="won"' : ' class="lost"';
+  return `<div><b${verdict}>${s.tag}</b>${winner === s.side ? " (your pick)" : ""}
+    <table>${row("skeleton", s.skeleton)}${row("seconds", s.seconds)}${row("changes / 10 s", s["changes/10s"])}${row("still %", s["still%"])}${row("transitions", `${s.transitions} ${s.transitionKinds || ""}`)}${row("camera moves", `${s.cameraMoves}/${s.footageParts}`)}${row("on the beat", s.onBeat)}${row("worst drift off the beat", s.driftMs != null ? s.driftMs + " ms" : null)}${row("longest part", s.longest + " s")}${row("loudness", s.lufs + " LUFS")}</table></div>`;
+}
+function showReveal(el, r, winner) {
+  el.querySelector(".reveal").innerHTML = table(r.left, winner) + table(r.right, winner);
+  el.querySelector("figure:nth-child(1) figcaption b").textContent = r.left.tag;
+  el.querySelector("figure:nth-child(2) figcaption b").textContent = r.right.tag;
+  el.querySelector(".state").textContent = winner === "same" ? "picked: same" : `picked: ${winner === r.left.side ? r.left.tag : r.right.tag}`;
+}
+function count() {
+  const done = DATA.jobs.filter((j) => j.done).length;
+  progress.textContent = `${DATA.a} vs ${DATA.b} · ${done} of ${DATA.jobs.length} picked · sides are shuffled until you pick`;
+}
+
+DATA.jobs.forEach((j, i) => {
+  const el = document.createElement("section");
+  el.id = j.job;
+  el.innerHTML = `<h2>${j.job}<span class="site">${j.site}</span><span class="state"></span></h2>
+    <div class="pair">
+      <figure><figcaption><b>Left</b><span>1</span></figcaption><video src="/film/left/${j.job}#t=0.6" preload="metadata" controls playsinline></video></figure>
+      <figure><figcaption><b>Right</b><span>2</span></figcaption><video src="/film/right/${j.job}#t=0.6" preload="metadata" controls playsinline></video></figure>
+    </div>
+    <div class="controls">
+      <button class="play">Play both</button>
+      <button class="pick" data-pick="left">Left is better</button>
+      <button class="pick" data-pick="same">Same</button>
+      <button class="pick" data-pick="right">Right is better</button>
+      <input class="note" placeholder="Why? (optional, saved with your pick)" maxlength="2000">
+    </div>
+    <div class="reveal"></div>`;
+  const videos = el.querySelectorAll("video");
+  el.querySelector(".play").onclick = () => playBoth(el);
+  el.querySelectorAll("button.pick").forEach((b) => (b.onclick = () => pick(i, b.dataset.pick)));
+  el.addEventListener("focusin", () => focus(i, false));
+  el.addEventListener("pointerdown", () => focus(i, false));
+  list.appendChild(el);
+  if (j.done) fetch(`/reveal/${j.job}`).then((r) => r.json()).then((r) => showReveal(el, r, j.done));
+});
+
+function playBoth(el) {
+  const [a, b] = el.querySelectorAll("video");
+  const playing = !a.paused || !b.paused;
+  for (const v of [a, b]) { if (playing) v.pause(); else { v.currentTime = 0; v.play(); } }
+}
+async function pick(i, which) {
+  const j = DATA.jobs[i];
+  const el = document.getElementById(j.job);
+  const note = el.querySelector(".note").value.trim();
+  el.querySelectorAll("button.pick").forEach((b) => (b.disabled = true));
+  try {
+    const res = await fetch("/pick", { method: "POST", body: JSON.stringify({ job: j.job, pick: which, ...(note ? { note } : {}) }) });
+    if (!res.ok) throw new Error(await res.text());
+    const r = await res.json();
+    j.done = r.winner;
+    showReveal(el, r, r.winner);
+    count();
+    if (i + 1 < DATA.jobs.length) focus(i + 1, true);
+  } catch (e) {
+    alert(`Couldn't save the pick: ${e.message}`);
+  } finally {
+    el.querySelectorAll("button.pick").forEach((b) => (b.disabled = false));
+  }
+}
+function focus(i, scroll) {
+  current = Math.max(0, Math.min(DATA.jobs.length - 1, i));
+  document.querySelectorAll("section").forEach((s, k) => s.classList.toggle("current", k === current));
+  if (scroll) document.querySelectorAll("section")[current].scrollIntoView({ behavior: "smooth", block: "start" });
+}
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input")) return;
+  const el = document.querySelectorAll("section")[current];
+  if (e.key === " ") { e.preventDefault(); playBoth(el); }
+  else if (e.key === "1") pick(current, "left");
+  else if (e.key === "2") pick(current, "right");
+  else if (e.key === "3") pick(current, "same");
+  else if (e.key === "j") focus(current + 1, true);
+  else if (e.key === "k") focus(current - 1, true);
+});
+count();
+focus(DATA.jobs.findIndex((j) => !j.done) >= 0 ? DATA.jobs.findIndex((j) => !j.done) : 0, false);
+</script>
+</body>
+</html>

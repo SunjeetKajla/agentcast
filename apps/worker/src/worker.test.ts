@@ -575,3 +575,40 @@ describe("lifecycle", () => {
     expect(job.stages.understand.attempts).toBe(2);
   });
 });
+
+test("a capture-quality repair preserves flow approval and reopens script approval", async () => {
+  const { PipelineRepair } = await import("./recovery.ts");
+  let previews = 0, records = 0;
+  const worker = startWith({
+    record: async (ctx) => { records++; return stages.record(ctx); },
+    preview: async () => { if (++previews === 1) throw new PipelineRepair("record", "Recapturing a selected shot"); },
+  });
+  const { id } = await create(worker, config());
+  await until(worker, id, waitingAt("gate-flows"));
+  await decide(worker, id, "gate-flows", { action: "approve" });
+  await until(worker, id, waitingAt("gate-script"));
+  await decide(worker, id, "gate-script", { action: "approve" });
+  const repaired = await until(worker, id, (j) => j.stages.record.attempts === 2 && j.stages["gate-script"].status === "waiting");
+  expect(repaired.stages["gate-flows"].status).toBe("done");
+  expect(repaired.stages["gate-flows"].attempts).toBe(1);
+  await expect(readFile(join(home, "jobs", id, "gates/gate-script.json"))).rejects.toMatchObject({ code: "ENOENT" });
+  expect(records).toBe(2);
+  await decide(worker, id, "gate-script", { action: "approve" });
+  await until(worker, id, waitingAt("gate-preview"));
+});
+
+test("preview approval cannot bypass a failed quality report through the API", async () => {
+  const { QualityReport } = await import("@agentcast/shared");
+  const worker = startWith({ preview: async (ctx) => {
+    await ctx.write(jobPaths.quality, QualityReport, { schemaVersion: 1, inputHash: "test", passed: false, checks: ["source audio"], issues: [{ code: "audio.absent", severity: "error", repair: "audio", message: "Output audio is absent" }] });
+  } });
+  const { id } = await create(worker, config());
+  for (const gate of ["gate-flows", "gate-script"]) {
+    await until(worker, id, waitingAt(gate));
+    await decide(worker, id, gate, { action: "approve" });
+  }
+  await until(worker, id, waitingAt("gate-preview"));
+  const result = await decide(worker, id, "gate-preview", { action: "approve" });
+  expect(result.statusCode).toBe(400);
+  expect((await worker.orchestrator.get(id))!.stages["gate-preview"].status).toBe("waiting");
+});

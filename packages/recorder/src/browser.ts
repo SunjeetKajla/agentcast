@@ -77,6 +77,9 @@ export async function launchRecorderBrowser(
     const stealth = StealthPlugin();
     // Never let a spoofed GPU string turn a software fallback into a hardware success.
     stealth.enabledEvasions.delete("webgl.vendor");
+    // Its stand-in iframe window breaks sites that read the pixel ratio through an iframe to detect
+    // browser zoom: Sarvam then "corrects" body zoom to 1/DPR and every take is filmed at half size.
+    stealth.enabledEvasions.delete("iframe.contentWindow");
     // Keep Playwright's configured mobile/custom UA intact.
     if (mobile || options.userAgent)
       stealth.enabledEvasions.delete("user-agent-override");

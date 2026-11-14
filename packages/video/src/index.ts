@@ -34,3 +34,6 @@ export { loadMusicLibrary, musicDir, musicStyle, pickTrack } from "./music.ts";
 export { ink, readableOn, contrastOf, luminanceOf, mixHex } from "./ink.ts";
 export { timeMap, boxMap, remapEdl, remapStoryboard, type Retake } from "./remap.ts";
 export { measureVideo, type VideoMeasure } from "./measure.ts";
+export { temporalIssues, repairTemporalEdl } from "./quality.ts";
+export { stutterWindows, measureMotion } from "./motion-quality.ts";
+export { playbackCorrelation, verifyPlayback } from "./output-quality.ts";

@@ -42,9 +42,12 @@ export async function withRecordingImagery(o: { kit: BrandKit; dir: string; reco
   if (o.kit.imagery.some((i) => i.from === "recording")) return undefined;
   const times: number[] = [];
   // The opening second (scroll-in animations), then as each action settles.
-  for (const t of [0.1, 0.6, 1.2, ...o.timeline.events.map((e) => e.t + 0.6)]) if (t < o.timeline.duration - 0.2 && !times.some((x) => Math.abs(x - t) < 0.4)) times.push(t);
+  const samples = o.timeline.flows.flatMap((flow) => [flow.in + 0.1, flow.in + 0.6, ...o.timeline.events.filter((e) => e.flowId === flow.flowId && e.kind === "settled").map((e) => Math.min(flow.out - 0.1, e.t + 0.1))]);
+  // Sample every flow before spending the remaining budget on later states.
+  const perFlow = o.timeline.flows.map((f) => f.in + 0.6);
+  for (const t of [...perFlow, ...samples]) if (t < o.timeline.duration - 0.2 && !times.some((x) => Math.abs(x - t) < 0.4)) times.push(t);
   const more = await collectImagery({
-    sources: [{ file: o.recording, at: times.slice(0, 10), from: "recording" }],
+    sources: [{ file: o.recording, at: times.slice(0, 18), from: "recording" }],
     dir: join(o.dir, "brief/imagery"),
     rel: "brief/imagery",
     have: { imagery: o.kit.imagery, colours: o.kit.colours },

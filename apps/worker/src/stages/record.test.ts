@@ -195,8 +195,8 @@ describe("record stage", () => {
     const timeline = await ctx.read(jobPaths.timeline("desktop"), Timeline);
     expect(timeline.flows.map((f) => f.flowId)).toEqual(["flow-export", "flow-template"]);
     expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining("1920 px wide"), "warn");
-    // Uneven footage is only acceptable at the lighter ratio, where nothing smoother can be filmed.
-    expect(film.mock.calls.map(([, o]) => o.acceptUneven)).toEqual([false, false, true, true]);
+    // A lighter resolution must pass the same checks; failed takes are never promoted.
+    expect(film.mock.calls.map(([, o]) => o.acceptUneven)).toEqual([false, false, false, false]);
   });
 
   it("does not turn cancellation into a recoverable failed flow", async () => {
@@ -239,4 +239,34 @@ describe("record stage", () => {
       /No approved flows/,
     );
   });
+});
+
+it("films a flow Live can't keep up with in Studio instead of accepting uneven footage", async () => {
+  const ok = fakeFilm();
+  const film = vi.fn(async (flow: Flow, options: FlowOptions) => {
+    if (options.captureMode !== "studio") throw new FlowRecordingError([{ attempt: 1, status: "failed", reason: "Live recording failed stall checks" }]);
+    return ok(flow, options);
+  });
+  await makeRecord({ recordFlow: film })(ctx);
+  expect(film.mock.calls.every(([, o]) => o.acceptUneven === false)).toBe(true);
+  expect(film.mock.calls.map(([, o]) => o.captureMode)).toEqual(["live", "live", "studio"]);
+  // Studio doesn't depend on paint speed, so it films at full sharpness again.
+  expect(film.mock.calls.at(-1)![1].browser?.deviceScaleFactor).toBe(2);
+  const { CaptureReport, EvidenceFile } = await import("@agentcast/shared");
+  const report = await ctx.read(jobPaths.captureReport, CaptureReport);
+  expect(report.flows[0]).toMatchObject({ strategy: "studio", dpr: 2 });
+  expect((await ctx.read(jobPaths.evidence, EvidenceFile)).moments.every((m) => m.capture === "studio")).toBe(true);
+});
+
+it("films every flow in Studio when the job asks for it, without probing", async () => {
+  ctx = { ...ctx, config: { ...ctx.config, recordMode: "studio" } };
+  const probe = vi.fn();
+  const film = vi.fn(fakeFilm());
+  await makeRecord({ recordFlow: film, probe })(ctx);
+  expect(probe).not.toHaveBeenCalled();
+  expect(film.mock.calls.map(([, o]) => o.captureMode)).toEqual(film.mock.calls.map(() => "studio"));
+  expect(film.mock.calls.every(([, o]) => o.browser?.deviceScaleFactor === 2)).toBe(true);
+  const { CapturePlan, CaptureReport } = await import("@agentcast/shared");
+  expect((await ctx.read(jobPaths.capturePlan, CapturePlan)).strategy).toBe("studio");
+  expect((await ctx.read(jobPaths.captureReport, CaptureReport)).flows.every((f) => f.strategy === "studio")).toBe(true);
 });

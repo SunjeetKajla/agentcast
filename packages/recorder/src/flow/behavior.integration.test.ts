@@ -83,7 +83,9 @@ describe.skipIf(!available)("flow behavior in Chromium", () => {
       now: () => performance.now() - started,
       timeoutMs: 1500,
     });
-    expect(report.reason).toBe("dom-stable");
+    // Either quiet rule may land first (no requests: network-quiet at 500 ms, DOM-quiet ~300 ms after
+    // the 180 ms change is seen); both mean settled. Only a timeout would be wrong.
+    expect(["dom-stable", "network-idle"]).toContain(report.reason);
     expect(report.elapsedMs).toBeGreaterThanOrEqual(430);
     expect(report.elapsedMs).toBeLessThan(1400);
     expect(report.motion.length).toBeGreaterThan(0);

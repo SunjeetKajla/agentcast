@@ -56,7 +56,7 @@ export type Normalized = {
 
 /**
  * Turns one flow run's reported steps into a shared `Flow`:
- * - a leading `navigate` becomes the start URL; later ones are flagged (the recorder can't replay them yet)
+ * - a leading `navigate` becomes the start URL; later explicit stable same-product navigations are preserved
  * - targets are cleaned (a typed value reported as the target text is dropped) and password-like fields marked secret
  * - reported results stay descriptions, never checks. Spike S2: agents report a flow's eventual URL on
  *   every step, drop hash routes and paraphrase text, and a wrong check fails a good take. The local
@@ -121,8 +121,14 @@ export function toFlow(
       const to = abs(urlish(raw.value) ?? urlish(raw.result_url_path));
       if (steps.length === 0) {
         if (to) startUrl = to;
-      } else
-        issues.push(`step ${i + 1} jumps to a URL instead of clicking there`);
+      } else if (urlish(raw.value) && to && !SESSION_ID.test(new URL(to).pathname)) {
+        try {
+          const value = productEntry(to, ctx.productUrl);
+          steps.push({ id: `s${steps.length + 1}`, action: "navigate", value });
+        } catch {
+          issues.push(`step ${i + 1} jumps to a URL outside the authorized product`);
+        }
+      } else issues.push(`step ${i + 1} jumps to a URL without a stable explicit navigation target`);
       continue;
     }
     if (action === "wait" && !raw.value) continue;

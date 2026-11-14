@@ -231,6 +231,7 @@ export function facts(job: Job): [string, string][] {
     ["Outputs", `${variantMatrix(v).length} ${variantMatrix(v).length === 1 ? "video" : "videos"}: ${v.aspects.map((a) => SIZE[a] ?? a).join(" and ")} in ${v.langs.map((l) => LANG[l] ?? l).join(" and ")}`],
     ["Sign-in", job.config.auth.mode === "public" ? "Public site" : job.config.auth.mode === "sign-in-once" ? "Signed in once, on the worker’s machine" : "Saved credentials"],
     ["Review gates", job.config.autopilot ? "Off: runs on autopilot" : "Flows, script and preview"],
+    ["Recording", job.config.recordMode === "studio" ? "Studio: frame by frame on the page’s clock" : "Live, in real time"],
     ["Your prompt", [job.config.stylePrompt.trim(), job.config.focusPrompt?.trim() && `focus on ${job.config.focusPrompt.trim()}`].filter(Boolean).join(" · ") || "None"],
   ];
 }

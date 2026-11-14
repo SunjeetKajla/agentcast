@@ -20,6 +20,7 @@ export {
   type LiveControls,
   type LiveRecording,
 } from "./live.ts";
+export { recordStudio, startStudioClock, studioClockScript, STUDIO_FPS, type StudioClock } from "./studio.ts";
 export {
   startScreencast,
   type CaptureOptions,
@@ -80,3 +81,4 @@ export {
   type HygieneOptions,
 } from "./flow/hygiene.ts";
 export { audioInJson, watchOutputs, type OutputOptions } from "./flow/output.ts";
+export { chooseCapture } from "./probe.ts";

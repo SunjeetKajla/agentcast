@@ -1,3 +1,4 @@
+import { repairTemporalEdl } from "@agentcast/video";
 // The render input for a job's edit, read from its artifacts the way the preview stage builds it.
 import { access, copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -103,7 +104,10 @@ async function artOf(
   return { direction, kit, ...(outputs ? { outputs } : {}), ...(brand ? { brand } : {}) };
 }
 
-export async function rebuiltEdl(root: string, seed: string, skeletonId = "auto", art = false, options: { liveKit?: boolean; director?: boolean } = {}): Promise<Edl> {
+/** What a music-led rebuild chose, for the eval's report. */
+export type RebuiltPlan = { skeleton?: string; track?: string };
+
+export async function rebuiltEdl(root: string, seed: string, skeletonId = "auto", art = false, options: { liveKit?: boolean; director?: boolean; onPlan?: (plan: RebuiltPlan) => void } = {}): Promise<Edl> {
   const read = async <T>(rel: string, schema: { parse(v: unknown): T }) =>
     schema.parse(JSON.parse(await readFile(join(root, rel), "utf8")));
   const maybe = <T>(p: Promise<T>) => p.catch(() => undefined);
@@ -148,8 +152,9 @@ export async function rebuiltEdl(root: string, seed: string, skeletonId = "auto"
       });
       const { edl, dropped } = film.plan;
       console.log(`${seed}: skeleton ${film.plan.skeleton.id}, music ${film.track?.id ?? "none"}, ${filmSeconds(edl).toFixed(1)} s${dropped.length ? `, left out ${dropped.map((d) => `${d.beatId} (${d.reason})`).join(", ")}` : ""}`);
+      options.onPlan?.({ skeleton: film.plan.skeleton.id, ...(film.track ? { track: film.track.id } : {}) });
       if (film.track) await premixMusic(planMusic(film.track, filmSeconds(edl), edl.outro.seconds), join(musicDir(), film.track.file), join(root, MUSIC_FILE));
-      return edl;
+      return repairTemporalEdl(edl, timeline).edl;
     }
     // The skeleton: art direction's, one named on the command line, or the one the worker would pick for this product.
     const references = await loadReferenceLibrary();
@@ -173,8 +178,9 @@ export async function rebuiltEdl(root: string, seed: string, skeletonId = "auto"
       ...(brand ? { brand } : {}),
     });
     console.log(`${seed}: skeleton ${skeleton?.id ?? "default"}, ${filmSeconds(edl).toFixed(1)} s${dropped.length ? `, left out ${dropped.map((d) => `${d.beatId} (${d.reason})`).join(", ")}` : ""}`);
+    options.onPlan?.({ ...(skeleton ? { skeleton: skeleton.id } : {}), ...(track ? { track: track.id } : {}) });
     if (track) await premixMusic(planMusic(track, filmSeconds(edl), edl.outro.seconds), join(musicDir(), track.file), join(root, MUSIC_FILE));
-    return edl;
+    return repairTemporalEdl(edl, timeline).edl;
   }
   const voices = voiced(config)
     ? (await Promise.all(langs.map((lang) => maybe(read(jobPaths.voice(lang), Voiceover))))).filter((v) => v !== undefined)

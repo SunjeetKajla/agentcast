@@ -36,7 +36,7 @@ function Seg<T extends string | boolean>({
 
 const KIND_NAME: Record<VideoMode, string> = { launch: "Launch video", tutorial: "Tutorial", sales: "Sales demo" };
 
-/** Every setting, stated: "Launch video · music-led · 16:9 and 9:16 · English · public site · you approve each gate". */
+/** Every setting, stated: "Launch video · music-led · 16:9 and 9:16 · English · public site · live recording · you approve each gate". */
 export function summary(c: ComposerChoices): string[] {
   return [
     KIND_NAME[c.mode],
@@ -44,6 +44,7 @@ export function summary(c: ComposerChoices): string[] {
     c.aspects.map((a) => (a === "16x9" ? "16:9" : "9:16")).join(" and "),
     c.langs.map((l) => (l === "hi" ? "Hindi" : "English")).join(" and "),
     c.auth === "sign-in-once" ? "sign in once" : "public site",
+    c.studio ? "Studio recording" : "live recording",
     c.autopilot ? "autopilot" : "you approve each gate",
   ];
 }
@@ -112,6 +113,17 @@ export default function ComposerSettings({ promptId }: { promptId: string }) {
               c.auth === "sign-in-once"
                 ? "When the job starts, a Chrome window opens on the worker’s machine. Sign in there, then press “I’m signed in” on the job page. Your password stays in Chrome."
                 : undefined
+            }
+          />
+          <Seg
+            label="Recording"
+            options={[{ value: false, label: "Live" }, { value: true, label: "Studio, frame by frame" }]}
+            isOn={(v) => c.studio === v}
+            onPick={(v) => pick({ studio: v })}
+            hint={
+              c.studio
+                ? "The page runs on our clock, so slow or always-moving sites still film at an even 30 fps. Recording takes a few times longer."
+                : "Filmed in real time. A flow that can’t be filmed smoothly switches to Studio on its own."
             }
           />
           <Seg

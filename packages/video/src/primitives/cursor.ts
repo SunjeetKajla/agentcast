@@ -32,6 +32,9 @@ const GLIDE = 0.5;
  * The cursor's timeline, as scene script (`S`, `tl` in scope): it comes in from below right before the first
  * press, glides to each, turns into the hand just before it and presses on it, then fades.
  */
+/** Seconds from a last press until the hand has faded out: a camera move waits for it. */
+export const HAND_GONE = 0.85;
+
 export function cursorScript(presses: Press[], dur: number): string {
   if (!presses.length) return "";
   const first = presses[0]!;
@@ -53,7 +56,7 @@ export function cursorScript(presses: Press[], dur: number): string {
     );
   });
   const last = presses.at(-1)!;
-  lines.push(`tl.to(cur, { opacity: 0, duration: 0.25 }, ${Math.min(dur - 0.25, last.at + 0.6).toFixed(3)});`);
+  lines.push(`tl.to(cur, { opacity: 0, duration: 0.25 }, ${Math.min(dur - 0.25, last.at + HAND_GONE - 0.25).toFixed(3)});`);
   return lines.join("\n  ");
 }
 

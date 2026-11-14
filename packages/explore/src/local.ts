@@ -487,6 +487,7 @@ export function localBrowserAdapter(
           const started = Date.now();
           const steps = [];
           const dropped: string[] = [];
+          let healed = false;
           for (const step of flow.steps) {
             options.signal?.throwIfAborted();
             const before = await page.locator("body").innerText();
@@ -504,6 +505,20 @@ export function localBrowserAdapter(
                 step,
               );
             if (optional && !target) continue;
+            if (!target && step.target && options.healing && !healed) {
+              healed = true;
+              const resolved = await import("@agentcast/recorder").then((recorder) => recorder.resolveTarget(page, step, {
+                signal: options.signal ?? new AbortController().signal,
+                timeoutMs: 2000, heal: true, llm: options.healing!.llm,
+                onLlmEvent: options.healing!.onEvent, secretValues: [],
+              })).catch(() => undefined);
+              options.signal?.throwIfAborted();
+              if (resolved?.entry) {
+                const recorder = await import("@agentcast/recorder");
+                const spec = recorder.parseLocator(resolved.entry.locator);
+                if (spec) target = { locator: resolved.locator, spec, strategy: resolved.entry.strategy };
+              }
+            }
             if (
               ["click", "type", "select", "hover"].includes(step.action) &&
               !target
@@ -518,6 +533,8 @@ export function localBrowserAdapter(
                 locator: serializeLocator(target.spec),
                 lastOk: new Date().toISOString(),
               };
+            if (target && step.action !== "scroll")
+              await reveal(page, target.locator, options.signal);
             // A click with no stated outcome must change the page, as the recorder will demand.
             const shape =
               step.action === "click" && !step.expect?.length
@@ -717,18 +734,28 @@ async function resolveSemantic(
   | undefined
 > {
   const specs: SemanticLocator[] = [];
-  const name = target.text || target.label;
-  if (target.role && name)
-    specs.push({ kind: "role", role: target.role as "button", name });
+  // Agents sometimes report an id as the text (`playground-tab-tts`) and the visible name as the
+  // label ("Text to Speech"): try each role under each name they gave.
+  const names = [...new Set([target.text, target.label].filter(Boolean) as string[])];
+  const asRole = (role: string) => {
+    for (const each of names) specs.push({ kind: "role", role: role as "button", name: each });
+  };
+  // Agents also mix up clickable roles: Sarvam's demo tabs (`role="tab"`) are reported as buttons,
+  // Linear's sidebar "Agent" link as a button. Kin roles come before label and text matches;
+  // a link only last, since following the wrong one leaves the page (Sarvam's footer repeats
+  // "Text to Speech" as a link).
+  const KIN: Record<string, string[]> = { button: ["tab", "menuitem"], tab: ["button"], menuitem: ["button", "tab"] };
+  if (target.role) {
+    asRole(target.role);
+    for (const role of KIN[target.role] ?? []) asRole(role);
+  }
   if (target.label) specs.push({ kind: "label", name: target.label });
   if (target.placeholder)
     specs.push({ kind: "placeholder", name: target.placeholder });
   if (target.text) specs.push({ kind: "text", name: target.text });
-  // Agents mix up links and buttons (Linear's sidebar "Agent" is a link reported as a button,
-  // beside two real "Agent" buttons): the same name under another clickable role, if unique.
-  if (target.role && name)
-    for (const role of ["link", "button", "tab", "menuitem"] as const)
-      if (role !== target.role) specs.push({ kind: "role", role, name });
+  if (target.role && names.length)
+    for (const role of ["link", "button", "tab", "menuitem"])
+      if (role !== target.role && !(KIN[target.role] ?? []).includes(role)) asRole(role);
   const candidates = specs.map((spec) => ({
     spec,
     strategy: spec.kind as LocatorStrategy,
@@ -762,6 +789,19 @@ async function resolveSemantic(
     if (Date.now() >= until || ambiguous && Date.now()-started>=2000) return undefined;
     await delay(250, undefined, { signal });
   }
+}
+
+/**
+ * Bring an off-screen target into view and let it settle before acting. Sections that hydrate when
+ * they scroll into view drop a click that arrives with the scroll (Sarvam's demo tabs), and the
+ * scroll alone would otherwise count as the click's change.
+ */
+async function reveal(page: Page, locator: Locator, signal?: AbortSignal) {
+  const box = await locator.boundingBox({ timeout: 1000 }).catch(() => null);
+  const size = page.viewportSize();
+  if (!box || !size || (box.y >= 0 && box.y + box.height <= size.height)) return;
+  await locator.scrollIntoViewIfNeeded({ timeout: 1500 }).catch(() => {});
+  await delay(600, undefined, { signal });
 }
 
 /** Popup dismissal can be absent in another fresh visit; it is not the product's payoff. */

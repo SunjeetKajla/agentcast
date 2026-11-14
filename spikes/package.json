@@ -5,14 +5,15 @@
   "type": "module",
   "description": "Throwaway Phase 0 experiments, one folder per person (spikes/<name>-*). Results go in spikes/RESULTS.md.",
   "dependencies": {
-    "playwright-core": "^1.64.1",
-    "@agentcast/shared": "workspace:*",
-    "@agentcast/video": "workspace:*",
     "@agentcast/director": "workspace:*",
-    "@agentcast/recorder": "workspace:*",
-    "@agentcast/story": "workspace:*",
     "@agentcast/explore": "workspace:*",
-    "@agentcast/llm": "workspace:*"
+    "@agentcast/llm": "workspace:*",
+    "@agentcast/recorder": "workspace:*",
+    "@agentcast/shared": "workspace:*",
+    "@agentcast/story": "workspace:*",
+    "@agentcast/video": "workspace:*",
+    "playwright-core": "^1.64.1",
+    "zod": "^4.6.7"
   },
   "scripts": {
     "bench": "tsx s9-bench/bench.ts",
@@ -23,6 +24,7 @@
     "brand-capture": "tsx s14-brand/capture.ts",
     "brand-checkpoint": "tsx s14-brand/film.ts",
     "brand-capture-sarvam": "tsx s14-brand/capture-sarvam.ts",
-    "brand-sarvam": "tsx s14-brand/film-sarvam.ts"
+    "brand-sarvam": "tsx s14-brand/film-sarvam.ts",
+    "eval": "tsx s15-eval/eval.ts"
   }
 }

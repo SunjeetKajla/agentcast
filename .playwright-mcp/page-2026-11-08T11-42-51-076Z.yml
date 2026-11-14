@@ -1,0 +1,519 @@
+- generic [active] [ref=f7e1]:
+  - banner [ref=f7e3]:
+    - generic [ref=f7e9]:
+      - link [ref=f7e10] [cursor=pointer]:
+        - /url: /
+        - img "Sarvam AI" [ref=f7e12]
+      - generic [ref=f7e14]:
+        - button "Talk to Us" [ref=f7e16] [cursor=pointer]
+        - button "Toggle menu" [ref=f7e18]
+  - main [ref=f7e22]:
+    - generic [ref=f7e23]:
+      - generic [ref=f7e25]:
+        - generic [ref=f7e28]:
+          - img "Sarvam Motif" [ref=f7e29]
+          - generic [ref=f7e30]:
+            - paragraph [ref=f7e31]: Indus Cowork
+            - generic [ref=f7e32]:
+              - heading "Hire an AI teammate that finishes the work" [level=1] [ref=f7e33]
+              - paragraph [ref=f7e34]: Give a task to an Indus Cowork teammate the way you would a colleague. It plans the work, connects to your apps, researches what it needs, and improves its own output until the job is done.
+          - generic [ref=f7e36]:
+            - link [ref=f7e37] [cursor=pointer]:
+              - /url: /contact-us
+              - button "Talk to Us" [ref=f7e38]
+            - link [ref=f7e40] [cursor=pointer]:
+              - /url: "#how-it-works"
+              - button "See how it works" [ref=f7e41]
+        - generic [ref=f7e47]:
+          - generic [ref=f7e48]:
+            - generic [ref=f7e49]: Your teammates
+            - generic [ref=f7e55]:
+              - button [pressed] [ref=f7e56]:
+                - generic [ref=f7e61]:
+                  - paragraph [ref=f7e62]: Sales Outbound
+                  - paragraph [ref=f7e63]: Go-to-market
+              - button [ref=f7e64]:
+                - generic [ref=f7e70]:
+                  - paragraph [ref=f7e71]: Paid Media
+                  - paragraph [ref=f7e72]: Marketing
+              - button [ref=f7e73]:
+                - generic [ref=f7e77]:
+                  - paragraph [ref=f7e78]: Product Performance
+                  - paragraph [ref=f7e79]: Growth
+              - button [ref=f7e80]:
+                - generic [ref=f7e87]:
+                  - paragraph [ref=f7e88]: Chief of Staff
+                  - paragraph [ref=f7e89]: Operations
+              - button [ref=f7e90]:
+                - generic [ref=f7e99]:
+                  - paragraph [ref=f7e100]: Account Manager
+                  - paragraph [ref=f7e101]: Customer Success
+              - button [ref=f7e102]:
+                - generic [ref=f7e111]:
+                  - paragraph [ref=f7e112]: Cluster Health Monitor
+                  - paragraph [ref=f7e113]: Engineering
+          - generic [ref=f7e114]:
+            - generic [ref=f7e115]:
+              - paragraph [ref=f7e116]: Sales Outbound
+              - generic [ref=f7e117]: Go-to-market
+            - paragraph [ref=f7e122]: Work the new inbound list before EOD and draft outreach.
+            - paragraph [ref=f7e125]: Your teammate is working...
+      - generic [ref=f7e127]:
+        - generic [ref=f7e131]:
+          - heading "It runs the whole task, start to finish." [level=2] [ref=f7e132]: It runs the wholetask, start to finish.
+          - paragraph [ref=f7e133]: Every teammate plans, researches, and checks its own work, so you hand off the outcome and not the steps.
+        - list [ref=f7e134]:
+          - listitem [ref=f7e135]:
+            - generic [ref=f7e136]:
+              - generic [ref=f7e137]:
+                - heading "Plans the work before it starts." [level=3] [ref=f7e138]
+                - paragraph [ref=f7e139]: It turns your request into a to-do list, then works through it step by step so nothing gets skipped.
+                - link "Talk to Us" [ref=f7e141] [cursor=pointer]:
+                  - /url: /contact-us
+                - list [ref=f7e143]:
+                  - listitem [ref=f7e144]: Breaks the task into steps
+                  - listitem [ref=f7e147]: Orders the work itself
+                  - listitem [ref=f7e150]: Tracks progress as it goes
+              - generic [ref=f7e154]:
+                - paragraph [ref=f7e155]: To-do
+                - generic [ref=f7e156]:
+                  - generic [ref=f7e157]: Gather the inputs
+                  - generic [ref=f7e162]: Draft the outline
+                  - generic [ref=f7e167]: Write the report
+                  - generic [ref=f7e170]: Review and hand off
+          - listitem [ref=f7e173]:
+            - generic [ref=f7e174]:
+              - generic [ref=f7e175]:
+                - heading "Researches on its own." [level=3] [ref=f7e176]
+                - paragraph [ref=f7e177]: Web search is built in. The teammate finds what it needs, then updates its plan based on what it learns.
+                - link "Talk to Us" [ref=f7e179] [cursor=pointer]:
+                  - /url: /contact-us
+                - list [ref=f7e181]:
+                  - listitem [ref=f7e182]: Searches the web as it works
+                  - listitem [ref=f7e185]: Pulls from your connected apps
+                  - listitem [ref=f7e188]: Re-plans when it learns something new
+              - generic [ref=f7e192]:
+                - paragraph [ref=f7e193]: Searching the web
+                - generic [ref=f7e194]:
+                  - generic [ref=f7e195]: market size and growth
+                  - generic [ref=f7e198]: competitor positioning
+                  - generic [ref=f7e201]: recent launches
+                  - paragraph [ref=f7e204]: Adding 2 new steps from what it found.
+          - listitem [ref=f7e205]:
+            - generic [ref=f7e206]:
+              - generic [ref=f7e207]:
+                - heading "Improves until the work holds up." [level=3] [ref=f7e208]
+                - paragraph [ref=f7e209]: It reviews what it produced, refines the weak spots, and keeps going until the result is good enough to hand back for your approval.
+                - link "Talk to Us" [ref=f7e211] [cursor=pointer]:
+                  - /url: /contact-us
+                - list [ref=f7e213]:
+                  - listitem [ref=f7e214]: Reviews its own output
+                  - listitem [ref=f7e217]: Refines until it is happy
+                  - listitem [ref=f7e220]: Returns it for your approval
+              - generic [ref=f7e224]:
+                - generic [ref=f7e225]:
+                  - paragraph [ref=f7e226]: Self-review
+                  - generic [ref=f7e227]: Pass 3
+                - generic [ref=f7e228]:
+                  - generic [ref=f7e229]: Claims are sourced
+                  - generic [ref=f7e234]: Reads cleanly
+                  - generic [ref=f7e239]: Ready to hand off for approval.
+      - generic [ref=f7e241]:
+        - generic [ref=f7e246]:
+          - heading "The building blocks of a teammate" [level=2] [ref=f7e247]: The building blocksof a teammate
+          - paragraph [ref=f7e248]: Connect your apps, teach new skills, hire teammates, schedule their work, and give them a memory. Assemble the teammate your work needs.
+        - list [ref=f7e250]:
+          - listitem [ref=f7e251]:
+            - generic [ref=f7e256]:
+              - paragraph [ref=f7e257]: Skills
+              - heading "Teach any skill, or let AI write it" [level=3] [ref=f7e258]
+              - paragraph [ref=f7e259]: Create as many skills as you need. There is even a skill that builds new skills, so you can spin up capabilities with a prompt.
+          - listitem [ref=f7e260]:
+            - generic [ref=f7e267]:
+              - paragraph [ref=f7e268]: Teammates
+              - heading "Hire agents into Slack and Indus Chat" [level=3] [ref=f7e269]
+              - paragraph [ref=f7e270]: Teammates are agents you connect to Slack or Indus Chat, then message like any colleague on the team.
+          - listitem [ref=f7e271]:
+            - generic [ref=f7e277]:
+              - paragraph [ref=f7e278]: Scheduled tasks
+              - heading "Recurring work that runs itself" [level=3] [ref=f7e279]
+              - paragraph [ref=f7e280]: Set up daily reports or weekly summaries once. They run on their own schedule without you triggering each one.
+          - listitem [ref=f7e281]:
+            - generic [ref=f7e287]:
+              - paragraph [ref=f7e288]: Knowledge base
+              - heading "A memory every chat can draw on" [level=3] [ref=f7e289]
+              - paragraph [ref=f7e290]: Store the documents and context your teammates should always know. It stays available across every chat and task.
+          - listitem [ref=f7e291]:
+            - generic [ref=f7e298]:
+              - paragraph [ref=f7e299]: Built-in research
+              - heading "Web search on every task" [level=3] [ref=f7e300]
+              - paragraph [ref=f7e301]: Every teammate can search the web as it works, so it plans with current information and not just what it was told.
+      - region [ref=f7e302]:
+        - generic [ref=f7e303]:
+          - generic [ref=f7e304]:
+            - paragraph [ref=f7e305]: Connected to your work
+            - heading "Plugs into the stack you already run on" [level=2] [ref=f7e306]
+          - paragraph [ref=f7e307]: Connect the tools your team already uses. With more than 100 connectors, your teammates can work where your work already lives.
+        - generic [ref=f7e308]:
+          - generic [ref=f7e309]:
+            - heading "Productivity" [level=3] [ref=f7e310]
+            - list [ref=f7e311]:
+              - listitem [ref=f7e312]:
+                - generic [ref=f7e320]: Gmail
+              - listitem [ref=f7e321]:
+                - generic [ref=f7e332]: Google Calendar
+              - listitem [ref=f7e333]:
+                - generic [ref=f7e337]: Google Docs
+              - listitem [ref=f7e338]:
+                - generic [ref=f7e347]: Google Drive
+              - listitem [ref=f7e348]:
+                - generic [ref=f7e352]: Google Sheets
+              - listitem [ref=f7e353]:
+                - generic [ref=f7e360]: Slack
+              - listitem [ref=f7e361]:
+                - generic [ref=f7e366]: Notion
+              - listitem [ref=f7e367]:
+                - generic [ref=f7e374]: Airtable
+          - generic [ref=f7e375]:
+            - heading "Data" [level=3] [ref=f7e376]
+            - list [ref=f7e377]:
+              - listitem [ref=f7e378]:
+                - generic [ref=f7e404]: Metabase
+              - listitem [ref=f7e405]:
+                - generic [ref=f7e412]: PostHog
+              - listitem [ref=f7e413]:
+                - generic [ref=f7e417]: BigQuery
+              - listitem [ref=f7e418]:
+                - generic [ref=f7e422]: Snowflake
+          - generic [ref=f7e423]:
+            - heading "Engineering" [level=3] [ref=f7e424]
+            - list [ref=f7e425]:
+              - listitem [ref=f7e426]:
+                - generic [ref=f7e430]: GitHub
+              - listitem [ref=f7e431]:
+                - generic [ref=f7e435]: Linear
+              - listitem [ref=f7e436]:
+                - generic [ref=f7e442]: Jira
+              - listitem [ref=f7e443]:
+                - generic [ref=f7e447]: Sentry
+          - paragraph [ref=f7e448]: And more, including Asana, Calendly, Dropbox, Canva, Apify, DataRobot, PagerDuty and Vercel.
+      - generic [ref=f7e450]:
+        - generic [ref=f7e451]:
+          - generic [ref=f7e452]: Skills
+          - heading "Teach it once. Every teammate knows it." [level=2] [ref=f7e453]
+          - paragraph [ref=f7e454]: A skill is a repeatable way of doing something, written down. Create as many as you need, share them across teammates, and improve them over time. There is even a skill that writes new skills, so a prompt is enough to spin one up.
+          - generic [ref=f7e455]:
+            - generic [ref=f7e456]:
+              - heading "Written by AI" [level=3] [ref=f7e457]
+              - paragraph [ref=f7e458]: Describe the outcome. The skill-creator drafts the steps for you.
+            - generic [ref=f7e459]:
+              - heading "Shared across the team" [level=3] [ref=f7e460]
+              - paragraph [ref=f7e461]: Publish a skill once and any teammate can use it.
+            - generic [ref=f7e462]:
+              - heading "Gets better with use" [level=3] [ref=f7e463]
+              - paragraph [ref=f7e464]: Edit a skill as the work changes and every teammate picks up the update.
+        - generic [ref=f7e466]:
+          - generic [ref=f7e467]:
+            - generic [ref=f7e472]:
+              - generic [ref=f7e473]: weekly-revenue-readout
+              - generic [ref=f7e474]: Skill
+            - generic [ref=f7e475]: Ops
+          - generic [ref=f7e476]:
+            - generic [ref=f7e477]: Steps
+            - generic [ref=f7e478]:
+              - generic [ref=f7e479]: "1"
+              - generic [ref=f7e480]: Pull the week's numbers from the connected data source
+            - generic [ref=f7e481]:
+              - generic [ref=f7e482]: "2"
+              - generic [ref=f7e483]: Compare against the prior week and the plan
+            - generic [ref=f7e484]:
+              - generic [ref=f7e485]: "3"
+              - generic [ref=f7e486]: Explain the movement, not just the delta
+            - generic [ref=f7e487]:
+              - generic [ref=f7e488]: "4"
+              - generic [ref=f7e489]: Draft the readout and park it for review
+            - generic [ref=f7e490]: Drafted by the skill-creator
+      - generic [ref=f7e492]:
+        - generic [ref=f7e496]:
+          - heading "Runs while you sleep" [level=2] [ref=f7e497]
+          - paragraph [ref=f7e498]: Teammates do not wait to be asked. Set the schedule once and the work lands on its own, so your day starts with the output, not the to-do list.
+        - list [ref=f7e500]:
+          - listitem [ref=f7e501]:
+            - generic [ref=f7e502]: 6:00
+            - heading "Overnight cluster check" [level=3] [ref=f7e506]
+            - paragraph [ref=f7e507]: Health report waiting in the knowledge base before anyone logs on.
+          - listitem [ref=f7e508]:
+            - generic [ref=f7e509]: 8:00
+            - heading "Morning standup digest" [level=3] [ref=f7e513]
+            - paragraph [ref=f7e514]: Yesterday's movement across your tools, summarised and posted to Slack.
+          - listitem [ref=f7e515]:
+            - generic [ref=f7e516]: 12:00
+            - heading "Inbox, cleared" [level=3] [ref=f7e520]
+            - paragraph [ref=f7e521]: Replies drafted and parked, the two that need you flagged.
+          - listitem [ref=f7e522]:
+            - generic [ref=f7e523]: 17:00
+            - heading "Spend watch" [level=3] [ref=f7e527]
+            - paragraph [ref=f7e528]: Wasted budget caught in real time, with a fix ready to approve
+          - listitem [ref=f7e529]:
+            - generic [ref=f7e530]: Fri
+            - heading "Weekly readout" [level=3] [ref=f7e534]
+            - paragraph [ref=f7e535]: The numbers and the reason behind them, drafted for your review.
+      - generic [ref=f7e539]:
+        - generic [ref=f7e540]:
+          - heading "Message an agent like a teammate" [level=2] [ref=f7e544]: Message an agentlike a teammate
+          - link [ref=f7e545] [cursor=pointer]:
+            - /url: /contact-us
+            - button "Talk to Us" [ref=f7e546]
+        - list [ref=f7e548]:
+          - listitem [ref=f7e549]:
+            - generic [ref=f7e550]: "01"
+            - generic [ref=f7e553]:
+              - heading "Hand over the task" [level=3] [ref=f7e554]
+              - paragraph [ref=f7e555]: Message a teammate in Slack or Indus Chat the way you would a colleague. It plans the work as a to-do list before it starts.
+          - listitem [ref=f7e556]:
+            - generic [ref=f7e557]: "02"
+            - generic [ref=f7e560]:
+              - heading "It works on its own" [level=3] [ref=f7e561]
+              - paragraph [ref=f7e562]: The teammate searches the web, uses your connected apps, and figures out each next step without waiting for you. You watch progress on the task bar.
+          - listitem [ref=f7e563]:
+            - generic [ref=f7e564]: "03"
+            - generic [ref=f7e566]:
+              - heading "It improves until it is done" [level=3] [ref=f7e567]
+              - paragraph [ref=f7e568]: It reviews its own output, updates the to-do list as it learns, and keeps going until the work is finished. Then it returns the result for your approval.
+      - generic [ref=f7e569]:
+        - generic [ref=f7e573]:
+          - heading "Give each teammate a job" [level=2] [ref=f7e574]
+          - paragraph [ref=f7e575]: Point a teammate at a role and let it run. Every result comes back for your review before anything goes out.
+        - generic [ref=f7e576]:
+          - generic [ref=f7e577]:
+            - heading "Sales Outbound" [level=3] [ref=f7e578]
+            - paragraph [ref=f7e579]: Researches accounts, scores contacts on intent, drafts email and LinkedIn in your voice, and leaves a review list for you to approve.
+          - generic [ref=f7e580]:
+            - heading "Talent Scout" [level=3] [ref=f7e581]
+            - paragraph [ref=f7e582]: Sources candidates, screens against the role, drafts warm outreach, and hands you a shortlist.
+          - generic [ref=f7e583]:
+            - heading "Paid Media" [level=3] [ref=f7e584]
+            - paragraph [ref=f7e585]: Watches spend and cost per result, flags wasted budget, and recommends the moves. It never changes a campaign without your yes.
+          - generic [ref=f7e586]:
+            - heading "Product Performance" [level=3] [ref=f7e587]
+            - paragraph [ref=f7e588]: Pulls the funnel, spots the drop-offs, and writes the weekly readout with the reason, not just the number.
+          - generic [ref=f7e589]:
+            - heading "Chief of Staff" [level=3] [ref=f7e590]
+            - paragraph [ref=f7e591]: Chases owners on blockers, prepares your reviews, and keeps a running record of every decision.
+      - generic [ref=f7e593]:
+        - generic [ref=f7e594]:
+          - heading "Sovereign by default" [level=2] [ref=f7e595]
+          - paragraph [ref=f7e596]: Powerful teammates you can hand real work to, without handing over control.
+        - generic [ref=f7e597]:
+          - generic [ref=f7e598]:
+            - heading "Your data stays in your workspace" [level=3] [ref=f7e599]
+            - paragraph [ref=f7e600]: Keep knowledge bases and task history together in your workspace. Teammates use the connected apps you authorise.
+          - generic [ref=f7e601]:
+            - heading "Nothing ships without your yes" [level=3] [ref=f7e602]
+            - paragraph [ref=f7e603]: Teammates draft and prepare the work. Sending, merging and making changes wait for your approval.
+          - generic [ref=f7e604]:
+            - heading "Every task leaves a trail" [level=3] [ref=f7e605]
+            - paragraph [ref=f7e606]: Review what each teammate did, step by step, with a live record of the task.
+          - generic [ref=f7e607]:
+            - heading "Built on Sarvam's sovereign stack" [level=3] [ref=f7e608]
+            - paragraph [ref=f7e609]: Runs on Sarvam’s own models and infrastructure, with data residency in India for Indian deployments.
+      - generic [ref=f7e610]:
+        - generic [ref=f7e611]:
+          - generic [ref=f7e615]:
+            - heading "Security your team can review" [level=2] [ref=f7e616]
+            - paragraph [ref=f7e617]: Review the controls behind your teammates and the supporting documents in Sarvam’s Trust Center.
+          - link "Explore the Trust Center" [ref=f7e618] [cursor=pointer]:
+            - /url: /trust-center
+        - generic [ref=f7e619]:
+          - generic [ref=f7e628]:
+            - heading "Data residency" [level=3] [ref=f7e629]
+            - paragraph [ref=f7e630]: Data for Indian deployments is stored in India. Workspace knowledge and task history stay together under your team’s controls.
+          - generic [ref=f7e634]:
+            - heading "Certifications" [level=3] [ref=f7e635]
+            - paragraph [ref=f7e636]: Sarvam holds ISO 27001:2022 certification and SOC 2 Type I. Supporting documents are available through our Trust Center.
+          - generic [ref=f7e641]:
+            - heading "Access controls" [level=3] [ref=f7e642]
+            - paragraph [ref=f7e643]: Role-based access and single sign-on help manage who can use your workspace. Audit logs record activity for review.
+          - generic [ref=f7e649]:
+            - heading "Encryption" [level=3] [ref=f7e650]
+            - paragraph [ref=f7e651]: Your data is encrypted at rest and in transit, protecting stored information and connections between services.
+      - generic [ref=f7e653]:
+        - heading "Your questions, answered" [level=2] [ref=f7e657]
+        - generic "Frequently asked questions" [ref=f7e658]:
+          - generic [ref=f7e659]:
+            - heading [level=3] [ref=f7e660]:
+              - button "How can my team get access?" [ref=f7e661] [cursor=pointer]
+            - region "How can my team get access?":
+              - generic [ref=f7e665]: Indus Cowork is not generally available yet. Talk to us about your team’s workflows and access to the product.
+          - generic [ref=f7e666]:
+            - heading [level=3] [ref=f7e667]:
+              - button "How is Indus Cowork different from a chat assistant?" [ref=f7e668] [cursor=pointer]
+            - region "How is Indus Cowork different from a chat assistant?":
+              - generic [ref=f7e672]: A chat assistant answers a question. A Cowork teammate plans the work, researches and acts inside your connected apps. It reviews its output and brings the result back for your approval.
+          - generic [ref=f7e673]:
+            - heading [level=3] [ref=f7e674]:
+              - button "Which apps can a teammate connect to?" [ref=f7e675] [cursor=pointer]
+            - region "Which apps can a teammate connect to?":
+              - generic [ref=f7e679]: There are more than 100 connectors to popular apps, covering productivity, data, and engineering tools. You can also bring your own connector for anything custom.
+          - generic [ref=f7e680]:
+            - heading [level=3] [ref=f7e681]:
+              - button "Can I create my own skills?" [ref=f7e682] [cursor=pointer]
+            - region "Can I create my own skills?":
+              - generic [ref=f7e686]: Yes. Create as many skills as you need. There is a skill-creator skill too, so you can use AI to build new skills for your own purpose.
+          - generic [ref=f7e687]:
+            - heading [level=3] [ref=f7e688]:
+              - button "How do I work with a teammate day to day?" [ref=f7e689] [cursor=pointer]
+            - region "How do I work with a teammate day to day?":
+              - generic [ref=f7e693]: Teammates connect to Slack or Indus Chat. You message them like any colleague, and they can also run scheduled tasks on their own.
+          - generic [ref=f7e694]:
+            - heading [level=3] [ref=f7e695]:
+              - button "Do I stay in control of what a teammate does?" [ref=f7e696] [cursor=pointer]
+            - region "Do I stay in control of what a teammate does?":
+              - generic [ref=f7e700]: Yes. Teammates come back for your approval, and every task shows a live progress trail of what was done.
+          - generic [ref=f7e701]:
+            - heading [level=3] [ref=f7e702]:
+              - button "Where does my data go?" [ref=f7e703] [cursor=pointer]
+            - region "Where does my data go?":
+              - generic [ref=f7e707]: Your knowledge bases and task history stay within your workspace. Data for Indian deployments is stored in India and encrypted at rest and in transit. Your teammates use the connected apps you authorise to carry out tasks.
+      - generic [ref=f7e710]:
+        - paragraph [ref=f7e712]: Meet your first teammate.
+        - link "Talk to Us" [ref=f7e720] [cursor=pointer]:
+          - /url: /contact-us
+  - contentinfo [ref=f7e724]:
+    - generic [ref=f7e726]:
+      - generic [ref=f7e727]:
+        - generic [ref=f7e728]:
+          - link [ref=f7e729] [cursor=pointer]:
+            - /url: /
+            - img "Sarvam AI" [ref=f7e730]
+          - paragraph [ref=f7e731]: AI for all from India
+          - generic [ref=f7e732]:
+            - img "ISO Certified" [ref=f7e734]
+            - img "SOC 2 Type I" [ref=f7e736]
+        - generic [ref=f7e737]:
+          - paragraph [ref=f7e738]: Find us at
+          - generic [ref=f7e739]:
+            - link "LinkedIn" [ref=f7e740] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/sarvam-ai
+            - link "X" [ref=f7e743] [cursor=pointer]:
+              - /url: https://x.com/SarvamAI
+            - link "YouTube" [ref=f7e746] [cursor=pointer]:
+              - /url: https://youtube.com/@sarvamai
+            - link "GitHub" [ref=f7e749] [cursor=pointer]:
+              - /url: https://github.com/sarvamai
+            - link "Discord" [ref=f7e752] [cursor=pointer]:
+              - /url: https://discord.com/invite/5rAsykttcs
+            - link "Instagram" [ref=f7e755] [cursor=pointer]:
+              - /url: https://www.instagram.com/sarvam.ai_official
+        - generic [ref=f7e759]:
+          - paragraph [ref=f7e760]: © 2026 Axonwise Private Limited. All rights reserved.
+          - paragraph [ref=f7e761]: 732, Chinmaya Mission Hospital Road, Indiranagar Stage 1, Bengaluru, Karnataka 560038
+      - generic [ref=f7e763]:
+        - generic [ref=f7e764]:
+          - heading "Products" [level=3] [ref=f7e765]
+          - list [ref=f7e766]:
+            - listitem [ref=f7e767]:
+              - link "Content Studio" [ref=f7e768] [cursor=pointer]:
+                - /url: /products/content-studio
+            - listitem [ref=f7e769]:
+              - link "Token Factory" [ref=f7e770] [cursor=pointer]:
+                - /url: /token-factory
+            - listitem [ref=f7e771]:
+              - link "Document AI" [ref=f7e772] [cursor=pointer]:
+                - /url: /products/doc-agents
+            - listitem [ref=f7e773]:
+              - link "Work Agents" [ref=f7e774] [cursor=pointer]:
+                - /url: /products/work-agents
+            - listitem [ref=f7e775]:
+              - link "Coding Agents" [ref=f7e776] [cursor=pointer]:
+                - /url: /products/coding-agents
+            - listitem [ref=f7e777]:
+              - link "Sarvam Edge" [ref=f7e778] [cursor=pointer]:
+                - /url: /products/edge
+            - listitem [ref=f7e779]:
+              - link "Model Training" [ref=f7e780] [cursor=pointer]:
+                - /url: /products/model-training
+        - generic [ref=f7e781]:
+          - heading "APIs" [level=3] [ref=f7e782]
+          - list [ref=f7e783]:
+            - listitem [ref=f7e784]:
+              - link "Text to Speech" [ref=f7e785] [cursor=pointer]:
+                - /url: /apis/text-to-speech
+            - listitem [ref=f7e786]:
+              - link "Speech to Text" [ref=f7e787] [cursor=pointer]:
+                - /url: /apis/speech-to-text
+            - listitem [ref=f7e788]:
+              - link "Doc Digitisation" [ref=f7e789] [cursor=pointer]:
+                - /url: /apis/document-digitisation
+            - listitem [ref=f7e790]:
+              - link "Translation" [ref=f7e791] [cursor=pointer]:
+                - /url: /apis/translation
+            - listitem [ref=f7e792]:
+              - link "Models" [ref=f7e793] [cursor=pointer]:
+                - /url: /models
+        - generic [ref=f7e794]:
+          - heading "Resources" [level=3] [ref=f7e795]
+          - list [ref=f7e796]:
+            - listitem [ref=f7e797]:
+              - link "Blogs" [ref=f7e798] [cursor=pointer]:
+                - /url: /blogs
+            - listitem [ref=f7e799]:
+              - link "Building AI Agents" [ref=f7e800] [cursor=pointer]:
+                - /url: /blogs/building-ai-agents
+            - listitem [ref=f7e801]:
+              - link "Events" [ref=f7e802] [cursor=pointer]:
+                - /url: /events
+            - listitem [ref=f7e803]:
+              - link "Customer Stories" [ref=f7e804] [cursor=pointer]:
+                - /url: /stories
+            - listitem [ref=f7e805]:
+              - link "Documentation" [ref=f7e806] [cursor=pointer]:
+                - /url: https://docs.sarvam.ai/sarvam-api-docs
+            - listitem [ref=f7e807]:
+              - link "API Pricing" [ref=f7e808] [cursor=pointer]:
+                - /url: /api-pricing
+            - listitem [ref=f7e809]:
+              - link "Integrations" [ref=f7e810] [cursor=pointer]:
+                - /url: /integrations
+            - listitem [ref=f7e811]:
+              - link "Startup Program" [ref=f7e812] [cursor=pointer]:
+                - /url: /startup-program
+            - listitem [ref=f7e813]:
+              - link "Sarvam Champions" [ref=f7e814] [cursor=pointer]:
+                - /url: /sarvam-champions
+        - generic [ref=f7e815]:
+          - heading "Company" [level=3] [ref=f7e816]
+          - list [ref=f7e817]:
+            - listitem [ref=f7e818]:
+              - link "About Us" [ref=f7e819] [cursor=pointer]:
+                - /url: /about-us
+            - listitem [ref=f7e820]:
+              - link "Careers" [ref=f7e821] [cursor=pointer]:
+                - /url: /careers
+            - listitem [ref=f7e822]:
+              - link "Contact Us" [ref=f7e823] [cursor=pointer]:
+                - /url: /contact-us
+            - listitem [ref=f7e824]:
+              - link "Brand" [ref=f7e825] [cursor=pointer]:
+                - /url: /brand
+            - listitem [ref=f7e826]:
+              - link "Brand Guidelines" [ref=f7e827] [cursor=pointer]:
+                - /url: /brand-guidelines
+            - listitem [ref=f7e828]:
+              - link "Partnerships" [ref=f7e829] [cursor=pointer]:
+                - /url: /partnerships
+        - generic [ref=f7e830]:
+          - heading "Legal" [level=3] [ref=f7e831]
+          - list [ref=f7e832]:
+            - listitem [ref=f7e833]:
+              - link "Trust Center" [ref=f7e834] [cursor=pointer]:
+                - /url: /trust-center
+            - listitem [ref=f7e835]:
+              - link "Terms of Service" [ref=f7e836] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=f7e837]:
+              - link "Privacy Policy" [ref=f7e838] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=f7e839]:
+              - link "EULA" [ref=f7e840] [cursor=pointer]:
+                - /url: /eula

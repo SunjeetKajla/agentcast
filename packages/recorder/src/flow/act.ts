@@ -12,6 +12,8 @@ export interface ActuatorOptions {
   signal: AbortSignal;
   now(): number;
   motion<T>(work: () => Promise<T>): Promise<T>;
+  /** Wait on the recording's clock (Studio's virtual time); wall-clock delay when absent. */
+  sleep?(ms: number): Promise<void>;
   /** Injectable randomness for reproducible rehearsals. Must return [0,1]. */
   random?: () => number;
   /** Called as the action is about to happen: the pointer is there and anything covering the target has gone. */
@@ -89,7 +91,9 @@ export function createActuator(page: Page, options: ActuatorOptions) {
     return value;
   };
   const pause = (ms: number) =>
-    delay(Math.max(0, ms), undefined, { signal: options.signal });
+    options.sleep
+      ? options.sleep(Math.max(0, ms))
+      : delay(Math.max(0, ms), undefined, { signal: options.signal });
   const move = async (
     to: Point,
   ): Promise<NonNullable<TimelineEvent["cursor"]>> => {

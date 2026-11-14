@@ -1,0 +1,110 @@
+{
+  "about": "The eval set: saved jobs whose recordings are frozen into ~/.agentcast/eval/jobs/ (eval freeze) and re-cut on every change (eval run). Each job is cut music-led, with art direction from the rules table, the way the worker makes a launch film. A job may pin a skeleton; otherwise the worker's pick is part of what's being tested. Held-out jobs are for checking a change, not for tuning one: don't look at them while you work.",
+  "defaults": {
+    "led": true,
+    "art": true,
+    "height": 540,
+    "aspect": "16x9"
+  },
+  "jobs": [
+    {
+      "id": "job_mw77gh8x9dbb6d",
+      "site": "sarvam.ai",
+      "why": "40 s recording with the element map; voice product with an output"
+    },
+    {
+      "id": "job_mw6o12r65ef81c",
+      "site": "sarvam.ai",
+      "why": "element map; a second take of the same product"
+    },
+    {
+      "id": "job_mw7qm1500b3b8a",
+      "site": "sarvam.ai",
+      "why": "element map; short recording (13 s), so few modules"
+    },
+    {
+      "id": "job_mvmno3l73a2772",
+      "site": "linear.app",
+      "why": "dark SaaS app, board and list views"
+    },
+    {
+      "id": "job_mvn8okfx618eb0",
+      "site": "linear.app",
+      "why": "dark SaaS app, a different flow"
+    },
+    {
+      "id": "job_mvmoy4njdfc2fa",
+      "site": "ui.shadcn.com",
+      "why": "light, dense component docs"
+    },
+    {
+      "id": "job_mvnb7t4ia70cc2",
+      "site": "reactbits.dev",
+      "why": "an always-animating site",
+      "heldOut": true
+    },
+    {
+      "id": "job_mvms09epbaba85",
+      "site": "amazon.com",
+      "why": "busy, image-heavy e-commerce page",
+      "heldOut": true
+    },
+    {
+      "id": "job_mwg8lm4p5d5a20",
+      "site": "plausible.io",
+      "why": "analytics dashboard (Plausible's public live demo): stat tiles, a line chart, tabbed tables; the agents kept one 2-step flow, so a 4.7 s recording: a stress case for very little footage"
+    },
+    {
+      "id": "job_mwg99dts5674f8",
+      "site": "v0.app",
+      "why": "AI app builder signed out: a prompt box and a template gallery (lovable.dev's category; lovable shows a bot check to automated Chrome)"
+    },
+    {
+      "id": "job_mwgaluat9f714f",
+      "site": "excalidraw.com",
+      "why": "canvas app with no sign-in: drawing shapes by hand"
+    },
+    {
+      "id": "job_mwgbd8c5cfd525",
+      "site": "resend.com",
+      "why": "developer SaaS: polished dark site with code, 3D and product UI"
+    },
+    {
+      "id": "job_mwgbp6oa2ab4b9",
+      "site": "raycast.com",
+      "why": "launcher: marketing site built around an interactive keyboard and command UI"
+    },
+    {
+      "id": "job_mwgcpwej8ce461",
+      "site": "posthog.com",
+      "why": "product analytics: playful desktop-style site with windows and product screenshots"
+    },
+    {
+      "id": "job_mwgcyupa247c4d",
+      "site": "dub.co",
+      "why": "link attribution: light site with dashboard and chart previews",
+      "heldOut": true
+    },
+    {
+      "id": "job_mwgdgpcv8a50df",
+      "site": "cal.com",
+      "why": "scheduling: light site with booking and calendar UI",
+      "heldOut": true
+    },
+    {
+      "id": "job_mwgdtxzg1d2a11",
+      "site": "framer.com",
+      "why": "website builder: design-heavy site with canvas previews Recorded while the TinyFish wallet was empty, so its flows are local Chrome's guided tour, not agent-found; re-add after topping up."
+    },
+    {
+      "id": "job_mwgdzsdoa5edfd",
+      "site": "vercel.com",
+      "why": "deploy platform: minimal dark site, gradients and globe Recorded while the TinyFish wallet was empty, so its flows are local Chrome's guided tour, not agent-found; re-add after topping up."
+    },
+    {
+      "id": "job_mwge3p9q2742d6",
+      "site": "supabase.com",
+      "why": "Postgres platform: dark developer site with table and SQL UI Recorded while the TinyFish wallet was empty, so its flows are local Chrome's guided tour, not agent-found; re-add after topping up."
+    }
+  ]
+}

@@ -12,6 +12,8 @@ import type {
   Timeline,
   Voiceover,
 } from "@agentcast/shared";
+import { EvidenceFile, FilmPlan } from "@agentcast/shared";
+import { writeArtifact } from "@agentcast/shared/node";
 import { compileComposition, moveSeconds, type VideoInput } from "@agentcast/video";
 import { COMPOSITION } from "./composition.ts";
 
@@ -44,6 +46,8 @@ export type WorkspaceInput = {
   voices: Voiceover[];
   baseline: Edl;
   brand?: Brand;
+  evidence?: EvidenceFile;
+  filmPlan?: FilmPlan;
   /** A frame of each footage beat (beat id → local JPEG), as evidence of what the shot shows. */
   frames?: Record<string, string>;
   /**
@@ -64,6 +68,8 @@ export async function prepareWorkspace(w: WorkspaceInput): Promise<void> {
   await mkdir(join(w.dir, "stills"), { recursive: true });
   await json(w.dir, "data/creative-brief.json", w.creative);
   if (w.product) await json(w.dir, "data/product-brief.json", w.product);
+  if (w.evidence) await writeArtifact(join(w.dir, "data/evidence.json"), EvidenceFile, w.evidence);
+  if (w.filmPlan) await writeArtifact(join(w.dir, "data/film-plan.json"), FilmPlan, w.filmPlan);
   if (w.brand) await json(w.dir, "data/brand.json", w.brand);
   await json(w.dir, "data/storyboard.json", w.storyboard);
   for (const script of w.scripts) await json(w.dir, `data/script.${script.lang}.json`, script);
@@ -133,7 +139,9 @@ export function directorBrief(
   return `# DIRECTOR.md
 
 You are the editor of a short demo video of a real web product. The footage is recorded already; your
-job is the edit. \`edl.json\` is the edit plan. It starts as a working baseline made by rules. **Improve
+job is the edit. When present, read \`data/evidence.json\` before choosing shots: it identifies locally observed moments, settled-state cuts, actual outputs and limitations. \`data/film-plan.json\` contains creative hypotheses, not accomplished product behavior. Keep demonstrated claims within the evidence. Preserve verified product playback. During page scrolling, use a steady wide frame and reframe after it settles; a crop must keep its subject throughout the selected interval.
+
+\`edl.json\` is the edit plan. It starts as a working baseline made by rules. **Improve
 it** so the video does what the creative brief asks, then stop. ${
     scenes
       ? "Edit `edl.json` and the scene files in `composition/compositions/` (see **The composition** below). Use the Read, Write, Edit and Grep tools for files: the check and the snapshot below are the only shell commands you can run."
